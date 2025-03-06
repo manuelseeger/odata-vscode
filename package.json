@@ -1,0 +1,79 @@
+{
+  "name": "odata",
+  "displayName": "OData",
+  "description": "OData Query Language Support",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.98.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "odata.helloWorld",
+        "title": "Hello World"
+      }
+    ],
+    "configuration": {
+      "id": "odata",
+      "type": "object",
+      "title": "OData",
+      "properties": {
+        "odata.metadata.map": {
+          "type": "array",
+          "description": "Associate OData metadata files in the current project and provide completion",
+          "default": [],
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "default": "http://services.odata.org/V4/TripPinServiceRW",
+                "description": "A URL to OData endpoint."
+              },
+              "path": {
+                "type": "string",
+                "default": "/user.metadata.xml",
+                "description": "Absolute path to a local metadata file"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "20.x",
+    "@types/vscode": "^1.98.0",
+    "@types/xml2js": "^0.4.14",
+    "@typescript-eslint/eslint-plugin": "^8.25.0",
+    "@typescript-eslint/parser": "^8.25.0",
+    "@vscode/test-cli": "^0.0.10",
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^9.21.0",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
+    "webpack": "^5.98.0",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "@odata2ts/odata2ts": "^0.39.1",
+    "xml2js": "^0.6.2"
+  }
+}
