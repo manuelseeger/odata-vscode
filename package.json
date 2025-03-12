@@ -12,10 +12,39 @@
   "activationEvents": [],
   "main": "./dist/extension.js",
   "contributes": {
+    "languages": [
+      {
+        "id": "odata",
+        "aliases": [
+          "OData",
+          "odata"
+        ],
+        "extensions": [
+          ".odata"
+        ],
+        "configuration": "./odata.configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "odata",
+        "scopeName": "source.odata",
+        "path": "./syntaxes/odata.tmLanguage.json"
+      }
+    ],
     "commands": [
       {
         "command": "odata.helloWorld",
         "title": "Hello World"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "odata.odata-participant",
+        "name": "odata",
+        "fullName": "OData",
+        "description": "OData Query",
+        "isSticky": true
       }
     ],
     "configuration": {
@@ -23,6 +52,15 @@
       "type": "object",
       "title": "OData",
       "properties": {
+        "odata.metadata.filterNs": {
+          "type": "array",
+          "description": "Filter namespaces in the OData metadata file",
+          "default": [
+          ],
+          "items": {
+            "type": "string"
+          }
+        },
         "odata.metadata.map": {
           "type": "array",
           "description": "Associate OData metadata files in the current project and provide completion",
@@ -66,6 +104,7 @@
     "@typescript-eslint/parser": "^8.25.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
+    "copy-webpack-plugin": "^13.0.0",
     "eslint": "^9.21.0",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
@@ -74,6 +113,8 @@
   },
   "dependencies": {
     "@odata2ts/odata2ts": "^0.39.1",
+    "@xmldom/xmldom": "^0.9.8",
+    "tiktoken": "^1.0.20",
     "xml2js": "^0.6.2"
   }
 }

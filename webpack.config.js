@@ -1,7 +1,7 @@
 //@ts-check
 
 'use strict';
-
+const CopyPlugin = require("copy-webpack-plugin");
 const path = require('path');
 
 //@ts-check
@@ -44,5 +44,12 @@ const extensionConfig = {
   infrastructureLogging: {
     level: "log", // enables logging required for problem matchers
   },
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: "./node_modules/tiktoken/tiktoken_bg.wasm" },
+      ],
+    }),
+  ],
 };
 module.exports = [ extensionConfig ];
