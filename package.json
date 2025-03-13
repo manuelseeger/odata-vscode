@@ -40,7 +40,7 @@
     ],
     "chatParticipants": [
       {
-        "id": "odata.odata-participant",
+        "id": "odata.odata-chat",
         "name": "odata",
         "fullName": "OData",
         "description": "OData Query",

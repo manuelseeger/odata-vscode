@@ -16,6 +16,8 @@ import { ODataVersions } from "@odata2ts/odata-core";
 
 import { DOMParser, XMLSerializer, Element } from "@xmldom/xmldom";
 
+import { config } from "./configuration";
+
 function getServiceName(schemas: Array<SchemaV3 | SchemaV4>) {
     // auto-detection of first namespace with defined EntityTypes
     // NOTE: we make use of PascalCase here to enforce valid class names
@@ -73,10 +75,7 @@ export function getFilteredMetadataXml(text: string): string {
         return "";
     }
 
-    const config = vscode.workspace.getConfiguration("odata");
-    const namespacesToRemove: string[] = config.get("metadata.filterNs", []);
-
-    cleanNamespacesFromXmlTree(root, namespacesToRemove);
+    cleanNamespacesFromXmlTree(root, config.metadata.filterNs);
 
     const serializer = new XMLSerializer();
     const cleanedXml = serializer.serializeToString(xmlDoc);

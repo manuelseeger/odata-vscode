@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 
-import { handler } from './chat-participant';
+import { chatHandler } from './chat';
 
 interface ODataMetadataConfiguration {
 	map: Array<IODataMetadataConfigurationMapEntry>;
@@ -19,21 +19,15 @@ export function activate(context: vscode.ExtensionContext) {
 	// Now provide the implementation of the command with registerCommand
 	// The commandId parameter must match the command field in package.json
 	const disposable = vscode.commands.registerCommand('odata.helloWorld', async () => {
-
-
 		const config = vscode.workspace.getConfiguration('odata').get('metadata') as ODataMetadataConfiguration;
-
 		const metadataXml = await vscode.workspace.fs.readFile(vscode.Uri.file(config.map[0].path));
-
 	});
 
-
 	// create participant
-	const odataParticipant = vscode.chat.createChatParticipant('odata.odata-participant', handler);
+	const odataParticipant = vscode.chat.createChatParticipant('odata.odata-chat', chatHandler);
 
 	// add icon to participant
 	odataParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'assets', 'icon-odata.png');
-
 
 	context.subscriptions.push(disposable);
 }

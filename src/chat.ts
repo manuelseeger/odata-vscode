@@ -20,7 +20,7 @@ Examples, but use the properties from the metadata in your answers:
 {{base}}/RequestedEntities?$expand=RelatedEntity&$filter=Name eq 'John'&$select=Name, Age, RelatedEntity/ParentId`;
 
 // define a chat handler
-export const handler: vscode.ChatRequestHandler = async (
+export const chatHandler: vscode.ChatRequestHandler = async (
     request: vscode.ChatRequest,
     context: vscode.ChatContext,
     stream: vscode.ChatResponseStream,
