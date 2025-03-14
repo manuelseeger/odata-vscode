@@ -14,7 +14,7 @@ import { NamingHelper } from "./odata2ts/data-model/NamingHelper";
 
 import { ODataVersions } from "@odata2ts/odata-core";
 
-import { DOMParser, XMLSerializer, Element } from "@xmldom/xmldom";
+import { DOMParser, XMLSerializer, Element, Document } from "@xmldom/xmldom";
 
 import { config } from "./configuration";
 
@@ -63,6 +63,25 @@ export async function digestMetadata(metadataXml: string): Promise<DataModel> {
     return dataModel;
 }
 
+export function isMetadataXml(text: string): boolean {
+    const parser = new DOMParser();
+    try {
+        const xmlDoc = parser.parseFromString(text, "text/xml");
+        return isMetadata(xmlDoc);
+    }
+    catch (error) {
+        return false;
+    }
+}
+
+export function isMetadata(xmlDoc: Document): boolean {
+    const root = xmlDoc.documentElement;
+    if (!root || root.namespaceURI !== "http://schemas.microsoft.com/ado/2007/06/edmx") {
+        return false;
+    }
+    return true;
+}
+
 
 export function getFilteredMetadataXml(text: string): string {
 
@@ -70,9 +89,9 @@ export function getFilteredMetadataXml(text: string): string {
     const xmlDoc = parser.parseFromString(text, "text/xml");
 
     const root = xmlDoc.documentElement;
-    if (!root || root.namespaceURI !== "http://schemas.microsoft.com/ado/2007/06/edmx") {
-        //stream.markdown("Current editor does not appear to be a valid metadata file");
-        return "";
+
+    if (!root || !isMetadata(xmlDoc)) {
+        throw new Error("The provided XML is not valid OData metadata.");
     }
 
     cleanNamespacesFromXmlTree(root, config.metadata.filterNs);
@@ -81,7 +100,6 @@ export function getFilteredMetadataXml(text: string): string {
     const cleanedXml = serializer.serializeToString(xmlDoc);
 
     return cleanedXml;
-
 }
 
 

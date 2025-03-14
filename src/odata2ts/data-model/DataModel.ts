@@ -65,6 +65,7 @@ export class DataModel {
   private readonly namespace2Alias: { [ns: string]: string };
   private aliases: Record<string, string> = {};
   private container: EntityContainerModel = { entitySets: {}, singletons: {}, functions: {}, actions: {} };
+  private nameSpaces: string[] = [];
 
   constructor(
     namespaces: Array<NamespaceWithAlias>,
@@ -78,7 +79,13 @@ export class DataModel {
       }
       return col;
     }, {});
+    this.nameSpaces = namespaces.map((ns) => ns[0]);
   }
+
+  public getNamespaces() {
+    return this.nameSpaces;
+  }
+
 
   /**
    * OData version: 2.0 or 4.0.

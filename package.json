@@ -25,6 +25,36 @@
         "configuration": "./odata.configuration.json"
       }
     ],
+    "views": {
+      "explorer": [
+        {
+          "icon": "assets/icon-odata.png",
+          "id": "odata.profiles-view",
+          "name": "OData Endpoint Profiles"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "odata.editProfile",
+          "when": "viewItem == odata.profile",
+          "group": "inline"
+        },
+        {
+          "command": "odata.deleteProfile",
+          "when": "viewItem == odata.profile",
+          "group": "inline"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "odata.addProfile",
+          "when": "view == odata.profiles-view",
+          "group": "navigation"
+        }
+      ]
+    },
     "grammars": [
       {
         "language": "odata",
@@ -34,8 +64,26 @@
     ],
     "commands": [
       {
-        "command": "odata.helloWorld",
-        "title": "Hello World"
+        "command": "odata.getMetadata",
+        "title": "OData: Get Metadata"
+      },
+      {
+        "command": "odata.selectProfile",
+        "title": "OData: Select Endpoint Profile"
+      },
+      {
+        "command": "odata.addProfile",
+        "title": "OData: Add Endpoint Profile"
+      },
+      {
+        "command": "odata.editProfile",
+        "title": "Edit HTTP Profile",
+        "when": "viewItem == profile"
+      },
+      {
+        "command": "odata.deleteProfile",
+        "title": "Delete HTTP Profile",
+        "when": "viewItem == profile"
       }
     ],
     "chatParticipants": [
@@ -52,11 +100,15 @@
       "type": "object",
       "title": "OData",
       "properties": {
+        "defaultFormat": {
+          "type": "string",
+          "description": "Default format for OData responses",
+          "default": "json"
+        },
         "odata.metadata.filterNs": {
           "type": "array",
           "description": "Filter namespaces in the OData metadata file",
-          "default": [
-          ],
+          "default": [],
           "items": {
             "type": "string"
           }
@@ -99,6 +151,7 @@
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
     "@types/vscode": "^1.98.0",
+    "@types/vscode-webview": "^1.57.5",
     "@types/xml2js": "^0.4.14",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
