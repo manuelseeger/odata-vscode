@@ -2,10 +2,13 @@ import * as vscode from 'vscode';
 import { isMetadataXml } from './metadata';
 import { getExtensionContext } from './util';
 
+
 import { EndpointProfileMap, Profile, AuthKind } from './profiles';
 
 
 import { config } from './configuration';
+import { getRequestInit } from './client';
+
 
 export async function selectMetadata() {
     const fileUri = await vscode.window.showOpenDialog({
@@ -54,6 +57,7 @@ export async function addEndpointProfile() {
     let password: string | undefined;
     let token: string | undefined;
     let cert: vscode.Uri | undefined;
+    let key: vscode.Uri | undefined;
 
     switch (auth) {
         case AuthKind.Basic:
@@ -70,7 +74,14 @@ export async function addEndpointProfile() {
                 canSelectMany: false,
                 openLabel: "Select certificate"
             });
-            cert = certs ? certs[0] : undefined;
+            const keys = await vscode.window.showOpenDialog({
+                canSelectFiles: true,
+                canSelectFolders: false,
+                canSelectMany: false,
+                openLabel: "Select key"
+            });
+            cert = certs ? vscode.Uri.file(certs[0].fsPath) : undefined;
+            key = keys ? vscode.Uri.file(keys[0].fsPath) : undefined;
             break;
         default:
 
@@ -83,7 +94,8 @@ export async function addEndpointProfile() {
             username: username || "",
             password: password,
             token: token,
-            cert: cert
+            cert: cert,
+            key: key
         }
     };
 
@@ -108,9 +120,9 @@ export async function getEndpointMetadata(): Promise<string> {
         return "";
     }
 
-    if (profile.metadata) {
-        return profile.metadata;
-    }
+    //f (profile.metadata) {
+    //    return profile.metadata;
+    //}
     const metadata = await requestProfileMetadata(profile);
     profile.metadata = metadata;
     const profiles = context.globalState.get<EndpointProfileMap>("odata.profiles", {});
@@ -142,23 +154,33 @@ async function requestProfileMetadata(profile: Profile): Promise<string> {
     //const storagePath = context.globalStorageUri.fsPath; // Safe storage location
     // Save the metadata to a file
 
-    const r = new Request(profile.baseUrl + "/$metadata", {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/xml'
-        }
+    const requestInit = await getRequestInit(profile);
+    //process.env.NODE_OPTIONS = "--openssl-legacy-provider";
+    //process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+    /*
+    const cert = await vscode.workspace.fs.readFile(vscode.Uri.file(profile.auth.cert!.path));
+    const key = await vscode.workspace.fs.readFile(vscode.Uri.file(profile.auth.key!.path));
+
+    const agent = new Agent({
+        connect: {
+            cert: cert.toString(),
+            key: key.toString()
+        },
     });
+    requestInit.dispatcher = agent;
 
-    switch (profile.auth.kind) {
-        case AuthKind.Basic:
-            r.headers.set('Authorization', 'Basic ' + Buffer.from(profile.auth.username + ":" + profile.auth.password).toString('base64'));
-            break;
-    }
+*/
+    requestInit.headers.set('Accept', 'application/xml');
 
-    const res = await fetch(r);
+    const metadataUrl = `${profile.baseUrl}$metadata`;
+
+    console.log(requestInit);
+    const res = await fetch(metadataUrl, requestInit);
+    console.log(res);
     if (!res.ok) {
-        vscode.window.showErrorMessage("Failed to fetch metadata.");
-        return "";
+        vscode.window.showErrorMessage(`Failed to fetch metadata: ${res.status} ${res.statusText}`);
+
     }
     const metadata = await res.text();
     return metadata;

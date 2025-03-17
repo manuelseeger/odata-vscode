@@ -13,6 +13,7 @@ interface IProfileAuthentication {
     password?: string;
     token?: string;
     cert?: vscode.Uri;
+    key?: vscode.Uri;
 }
 
 export interface Profile {
