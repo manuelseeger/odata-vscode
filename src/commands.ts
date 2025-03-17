@@ -1,13 +1,14 @@
 import * as vscode from 'vscode';
 import { isMetadataXml } from './metadata';
 import { getExtensionContext } from './util';
-
-
+import https from 'https';
 import { EndpointProfileMap, Profile, AuthKind } from './profiles';
 
-
+import { request, fetch } from 'undici'
 import { config } from './configuration';
 import { getRequestInit } from './client';
+
+
 
 
 export async function selectMetadata() {
@@ -155,29 +156,14 @@ async function requestProfileMetadata(profile: Profile): Promise<string> {
     // Save the metadata to a file
 
     const requestInit = await getRequestInit(profile);
-    //process.env.NODE_OPTIONS = "--openssl-legacy-provider";
-    //process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-    /*
-    const cert = await vscode.workspace.fs.readFile(vscode.Uri.file(profile.auth.cert!.path));
-    const key = await vscode.workspace.fs.readFile(vscode.Uri.file(profile.auth.key!.path));
-
-    const agent = new Agent({
-        connect: {
-            cert: cert.toString(),
-            key: key.toString()
-        },
-    });
-    requestInit.dispatcher = agent;
-
-*/
     requestInit.headers.set('Accept', 'application/xml');
 
     const metadataUrl = `${profile.baseUrl}$metadata`;
 
     console.log(requestInit);
     const res = await fetch(metadataUrl, requestInit);
-    console.log(res);
+
     if (!res.ok) {
         vscode.window.showErrorMessage(`Failed to fetch metadata: ${res.status} ${res.statusText}`);
 
@@ -199,17 +185,10 @@ export async function runQuery(query: string) {
 
     query = query.trim() + `&$format=json`;
 
-    const r = new Request(query);
 
-    switch (profile.auth.kind) {
-        case AuthKind.Basic:
-            r.headers.set('Authorization', 'Basic ' + Buffer.from(profile.auth.username + ":" + profile.auth.password).toString('base64'));
-            break;
-    }
+    const r = await getRequestInit(profile);
 
-
-
-    const res = await fetch(r);
+    const res = await fetch(query, r);
 
     let format;
     const contentType = res.headers.get('Content-Type');

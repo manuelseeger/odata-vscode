@@ -1,7 +1,9 @@
+
 import * as vscode from 'vscode';
 import { config } from './configuration';
 import { AuthKind, Profile } from './profiles';
 import { setGlobalDispatcher, Agent, Dispatcher } from "undici";
+
 
 
 declare global {
@@ -10,6 +12,7 @@ declare global {
         headers: Headers;
     }
 }
+
 
 export async function getRequestInit(profile: Profile): Promise<RequestInit> {
     const r: RequestInit & { headers: Headers } = {
@@ -48,3 +51,4 @@ export async function getRequestInit(profile: Profile): Promise<RequestInit> {
 
     return r;
 }
+
