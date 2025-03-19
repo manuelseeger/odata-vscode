@@ -3,6 +3,10 @@
   "displayName": "OData",
   "description": "OData Query Language Support",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manuelseeger/odata-vscode.git"
+  },
   "engines": {
     "vscode": "^1.98.0"
   },
@@ -93,7 +97,6 @@
         "icon": "$(edit)",
         "when": "viewItem == profile"
       },
-      
       {
         "command": "odata.requestMetadata",
         "title": "Request Endpoint Metadata",
@@ -168,7 +171,8 @@
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "vsce-latest": "vsce package -o odata-vscode-latest.vsix"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -184,6 +188,7 @@
     "eslint": "^9.21.0",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
+    "vsce": "^2.15.0",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1"
   },
