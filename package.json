@@ -37,14 +37,19 @@
     "menus": {
       "view/item/context": [
         {
+          "command": "odata.requestMetadata",
+          "when": "viewItem == odata.profile",
+          "group": "inline@1"
+        },
+        {
           "command": "odata.editProfile",
           "when": "viewItem == odata.profile",
-          "group": "inline"
+          "group": "inline@2"
         },
         {
           "command": "odata.deleteProfile",
           "when": "viewItem == odata.profile",
-          "group": "inline"
+          "group": "inline@3"
         }
       ],
       "view/title": [
@@ -73,16 +78,26 @@
       },
       {
         "command": "odata.addProfile",
-        "title": "OData: Add Endpoint Profile"
-      },
-      {
-        "command": "odata.editProfile",
-        "title": "Edit HTTP Profile",
-        "when": "viewItem == profile"
+        "title": "OData: Add Endpoint Profile",
+        "icon": "$(add)"
       },
       {
         "command": "odata.deleteProfile",
         "title": "Delete HTTP Profile",
+        "icon": "$(trash)",
+        "when": "viewItem == profile"
+      },
+      {
+        "command": "odata.editProfile",
+        "title": "Edit HTTP Profile",
+        "icon": "$(edit)",
+        "when": "viewItem == profile"
+      },
+      
+      {
+        "command": "odata.requestMetadata",
+        "title": "Request Endpoint Metadata",
+        "icon": "$(refresh)",
         "when": "viewItem == profile"
       }
     ],
@@ -100,9 +115,17 @@
       "type": "object",
       "title": "OData",
       "properties": {
-        "defaultFormat": {
+        "odata.defaultFormat": {
           "type": "string",
           "description": "Default format for OData responses",
+          "enum": [
+            "json",
+            "xml"
+          ],
+          "enumDescriptions": [
+            "JSON",
+            "XML"
+          ],
           "default": "json"
         },
         "odata.metadata.filterNs": {
@@ -166,6 +189,8 @@
   },
   "dependencies": {
     "@odata2ts/odata2ts": "^0.39.1",
+    "@vscode-elements/elements-lite": "^0.3.0",
+    "@vscode/codicons": "^0.0.36",
     "@xmldom/xmldom": "^0.9.8",
     "tiktoken": "^1.0.20",
     "undici": "^6.21.2",

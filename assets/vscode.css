@@ -1,0 +1,33 @@
+.codicon:hover {
+  cursor: pointer;
+}
+
+
+#headersContainer input {
+  width: 30%;
+}
+
+#headersContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: left;
+  margin-bottom: 10px;
+}
+
+#headersContainer .icon {
+  display: inline-block;
+  vertical-align: bottom;
+}
+
+#clientCertFields .icon {
+  position: absolute; top: 50%; right: 8px; transform: translateY(-50%); cursor: pointer;;
+}
+
+#clientCertFields input[type="text"] {
+  padding-right: 30px;
+}
+
+#clientCertFields div {
+  position: relative; display: inline-block;
+}

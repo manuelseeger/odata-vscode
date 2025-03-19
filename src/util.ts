@@ -4,8 +4,6 @@ export function hasProperty(obj: unknown, key: string): boolean {
     return typeof obj === "object" && obj !== null && key in obj;
 }
 
-
-
 let extensionContext: vscode.ExtensionContext;
 
 export function setExtensionContext(context: vscode.ExtensionContext) {

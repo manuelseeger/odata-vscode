@@ -4,6 +4,8 @@
 const CopyPlugin = require("copy-webpack-plugin");
 const path = require('path');
 
+
+
 //@ts-check
 /** @typedef {import('webpack').Configuration} WebpackConfig **/
 
@@ -17,7 +19,8 @@ const extensionConfig = {
     // the bundle is stored in the 'dist' folder (check package.json), 📖 -> https://webpack.js.org/configuration/output/
     path: path.resolve(__dirname, 'dist'),
     filename: 'extension.js',
-    libraryTarget: 'commonjs2'
+    libraryTarget: 'commonjs2',
+    publicPath: ''
   },
   externals: {
     vscode: 'commonjs vscode' // the vscode-module is created on-the-fly and must be excluded. Add other modules that cannot be webpack'ed, 📖 -> https://webpack.js.org/configuration/externals/
@@ -37,6 +40,10 @@ const extensionConfig = {
             loader: 'ts-loader'
           }
         ]
+      },
+      {
+        test: /\.wasm$/,
+        type: "webassembly/async"
       }
     ]
   },
@@ -49,7 +56,7 @@ const extensionConfig = {
       patterns: [
         { from: "./node_modules/tiktoken/tiktoken_bg.wasm" },
       ],
-    }),
+    })
   ],
 };
 module.exports = [ extensionConfig ];

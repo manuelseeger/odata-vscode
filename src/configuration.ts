@@ -1,28 +1,32 @@
 import * as vscode from "vscode";
 
-type ODataFormat = "json" | "xml";
+export type ODataFormat = "json" | "xml";
 
-interface IODataMetadataConfigurationMapEntry {
+export interface IODataMetadataConfigurationMapEntry {
     url: string;
     path: string;
 }
 
-interface IODataMetadataConfiguration {
+export interface IODataMetadataConfiguration {
     filterNs: string[];
     map: IODataMetadataConfigurationMapEntry[];
 }
 
-interface IODataConfiguration {
-    metadata: IODataMetadataConfiguration;
-    defaultFormat: ODataFormat;
+interface IODataHttpClientConfiguration {
+    customHeaders: { [key: string]: string };
 }
 
+export interface IODataConfiguration {
+    metadata: IODataMetadataConfiguration;
+    defaultFormat: ODataFormat;
+
+}
 
 const extensionSettings = vscode.workspace.getConfiguration("odata");
 
 const config: IODataConfiguration = {
     metadata: extensionSettings.get("metadata") as IODataMetadataConfiguration,
-    defaultFormat: extensionSettings.get("defaultFormat") as ODataFormat
+    defaultFormat: extensionSettings.get("defaultFormat") as ODataFormat,
 };
 
 

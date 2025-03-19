@@ -34,8 +34,6 @@ export const chatHandler: vscode.ChatRequestHandler = async (
         cl100kBase.special_tokens,
         cl100kBase.pat_str
     );
-    const metadataDocuments: string[] = [];
-
     const extensionContext = getExtensionContext();
 
     const profile = extensionContext.globalState.get<Profile>("selectedProfile");
@@ -43,58 +41,10 @@ export const chatHandler: vscode.ChatRequestHandler = async (
         vscode.window.showWarningMessage('No profile selected.');
         return;
     }
-    /*
-    const metadata = extensionContext.globalState.get<string>("selectedMetadata");
-    if (metadata) {
-        metadataDocuments.push(metadata);
-    }
-    
-    const metadataReferences = request.references.map(async (ref) => {
-        let uri: vscode.Uri | undefined;
-        if (ref.value instanceof vscode.Uri) {
-            uri = ref.value;
-        } else if (hasProperty(ref.value, "uri")) {
-            uri = (ref.value as { uri: vscode.Uri }).uri;
-        }
-        if (!uri || uri.scheme !== "file") {
-            return;
-        }
-        const text = await vscode.workspace.fs.readFile(uri);
-        if (isMetadataXml(text.toString())) {
-            return text.toString();
-        }
-    });
-    
-    (await Promise.all(metadataReferences))
-        .filter((metadataReference) => {
-            return metadataReference !== undefined;
-        })
-        .map((metadataReference) => metadataDocuments.push(metadataReference as string));
-    
-    if (metadataDocuments.length === 0) {
-        const editor = vscode.window.activeTextEditor;
-    
-        if (editor) {
-            const document = editor.document;
-            const text = document.getText();
-            if (isMetadataXml(text)) {
-                metadataDocuments.push(text);
-            }
-        }
-    }
-    
-    
-    if (metadataDocuments.length === 0) {
-        vscode.window.showWarningMessage('No metadata document found, provide as context or open in editor.');
-        return;
-    }
-    
-    const text = metadataDocuments[0];
-    */
 
     const text = profile.metadata;
     if (!text || !isMetadataXml(text)) {
-        vscode.window.showWarningMessage('No metadata document found, provide as context or open in editor.');
+        vscode.window.showWarningMessage('No metadata document found, check and update profile');
         return;
     }
 
@@ -150,18 +100,32 @@ export const chatHandler: vscode.ChatRequestHandler = async (
     for await (const fragment of chatResponse.text) {
         stream.markdown(fragment);
         buffer.push(fragment);
+        const codeBlocks = extractCodeBlocks(buffer.join(''));
+        if (codeBlocks.length === 1) {
+            const query = codeBlocks[0].trim();
+            stream.button({
+                title: 'Run',
+                command: 'odata.runQuery',
+                arguments: [query]
+            });
+            // clear buffer
+            buffer.length = 0;
+        }
     }
-    const response = buffer.join('');
 
+
+    /*
     const codeBlocks = extractCodeBlocks(response);
 
-    let query = codeBlocks[0] || '';
-
-    stream.button({
-        title: 'Run',
-        command: 'odata.runQuery',
-        arguments: [query]
-    });
+    for (const codeBlock of codeBlocks) {
+        const query = codeBlock.trim();
+        stream.button({
+            title: 'Run',
+            command: 'odata.runQuery',
+            arguments: [query]
+        });
+    }
+        */
 };
 
 
