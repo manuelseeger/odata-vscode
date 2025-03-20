@@ -108,6 +108,11 @@ export const chatHandler: vscode.ChatRequestHandler = async (
                 command: 'odata.runQuery',
                 arguments: [query]
             });
+            stream.button({
+                title: 'Open',
+                command: 'odata.openQuery',
+                arguments: [query]
+            });
             // clear buffer
             buffer.length = 0;
         }
