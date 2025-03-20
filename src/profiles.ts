@@ -99,6 +99,10 @@ export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem>
                     }
 
                     this.context.globalState.update('odata.profiles', profiles);
+
+                    if (profiles.length === 1) {
+                        this.context.globalState.update('selectedProfile', profiles[0]);
+                    }
                     this.refresh();
                     vscode.window.showInformationMessage(`Profile "${message.data.name}" ${profile ? 'updated' : 'added'}!`);
                     panel.dispose();
@@ -128,8 +132,8 @@ export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem>
     }
 
     private _getWebViewContent(webview: vscode.Webview, profile?: Profile): string {
-        const scriptPathOnDisk = vscode.Uri.joinPath(this.context.extensionUri, 'assets', 'main.js');
-        const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
+
+        const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'assets', 'main.js'));
 
         const styles = [
             'assets/vscode.css',
@@ -252,7 +256,7 @@ function getNonce() {
 }
 
 
-function getFiltersForType(type: string): { [name: string]: string[] } | undefined {
+function getFiltersForType(type: string): { [name: string]: string[] } {
     switch (type) {
         case 'cert':
         case 'key':
@@ -260,7 +264,7 @@ function getFiltersForType(type: string): { [name: string]: string[] } | undefin
         case 'pfx':
             return { 'PFX Files': ['pfx', 'p12'] };
         default:
-            return undefined;
+            return { 'All Files': ['*'] };
     }
 }
 

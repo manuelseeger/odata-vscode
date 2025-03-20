@@ -138,26 +138,6 @@
           "items": {
             "type": "string"
           }
-        },
-        "odata.metadata.map": {
-          "type": "array",
-          "description": "Associate OData metadata files in the current project and provide completion",
-          "default": [],
-          "items": {
-            "type": "object",
-            "properties": {
-              "url": {
-                "type": "string",
-                "default": "http://services.odata.org/V4/TripPinServiceRW",
-                "description": "A URL to OData endpoint."
-              },
-              "path": {
-                "type": "string",
-                "default": "/user.metadata.xml",
-                "description": "Absolute path to a local metadata file"
-              }
-            }
-          }
         }
       }
     }
