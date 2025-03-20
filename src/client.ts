@@ -42,8 +42,7 @@ export async function getRequestInit(profile: Profile): Promise<RequestInit> {
                 const pfx = await vscode.workspace.fs.readFile(vscode.Uri.file(profile.auth.pfx.path));
                 r.dispatcher = new Agent({
                     connect: {
-                        pfx: pfx.toString(),
-                        passphrase: profile.auth.passphrase
+                        pfx: [{ buf: Buffer.from(pfx), passphrase: profile.auth.passphrase }],
                     },
                 });
             } else if (profile.auth.cert && profile.auth.key) {
