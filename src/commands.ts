@@ -7,6 +7,7 @@ import { Profile, AuthKind } from './profiles';
 import { fetch } from 'undici';
 import { ODataFormat } from './configuration';
 import { getRequestInit } from './client';
+import { open } from 'fs';
 
 export async function selectMetadata() {
     const fileUri = await vscode.window.showOpenDialog({
@@ -122,6 +123,7 @@ export async function requestProfileMetadata(profile: Profile): Promise<string> 
 
 
 export async function runQuery(query: string) {
+    openQuery(query);
     const context = getExtensionContext();
     const profile = context.globalState.get<Profile>("selectedProfile");
     if (!profile) {
