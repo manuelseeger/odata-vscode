@@ -17,10 +17,10 @@ import { ODataVersions } from "@odata2ts/odata-core";
 import { DOMParser, XMLSerializer, Element, Document } from "@xmldom/xmldom";
 
 import { config } from "./configuration";
+import { Profile } from './profiles';
 
 function getServiceName(schemas: Array<SchemaV3 | SchemaV4>) {
     // auto-detection of first namespace with defined EntityTypes
-    // NOTE: we make use of PascalCase here to enforce valid class names
     const detectedSchema = schemas.find((schema) => schema.$.Namespace && schema.EntityType?.length) || schemas[0];
     const serviceName = detectedSchema.$.Namespace;
     return serviceName;

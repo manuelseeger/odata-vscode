@@ -96,7 +96,7 @@ export class ODataDefaultCompletionItemProvider implements vscode.CompletionItem
 
         const methods = odataMethods["V2"];
         const methodCompletions = methods.map(methodObj => {
-            const item = new vscode.CompletionItem(methodObj.name, vscode.CompletionItemKind.Function);
+            const item = new vscode.CompletionItem(methodObj.name, vscode.CompletionItemKind.Function,);
             item.documentation = methodObj.doc;
             return item;
         });
@@ -130,9 +130,9 @@ export class ODataSystemQueryCompletionItemProvider implements vscode.Completion
     provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): vscode.ProviderResult<vscode.CompletionList> {
         if (document.getWordRangeAtPosition(position, /\$[a-zA-Z]*/)) {
             // Merge system query options from both V2 and V4 into a single list for completion.
-            const optionsV2 = odataSystemQueryOptions["V2"];
-            const optionsV4 = odataSystemQueryOptions["V4"];
-            const combinedOptions = [...optionsV2, ...optionsV4];
+            // We don't differentiate between V2 and V4 for system query options as many services
+            // mix and match them between versions.
+            const combinedOptions = [...odataSystemQueryOptions["V2"], ...odataSystemQueryOptions["V4"]];
             const completionItems = combinedOptions.map(option => {
                 const completion = new vscode.CompletionItem(option.name, vscode.CompletionItemKind.Keyword);
                 // Remove the leading "$" for insertText and filterText

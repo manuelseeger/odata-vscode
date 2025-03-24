@@ -154,8 +154,10 @@
     "test": "vscode-test",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata-v4.01.abnf",
-    "peggy": "peggy -o src/parser/parser.js src/parser/odata.peggy"
-    
+    "peggy": "peggy -o src/parser/parser.js src/parser/odata.peggy",
+    "jest": "jest",
+    "pre-testparser": "peggy -o src/parser/parser.js src/parser/odata.peggy",
+    "testparser": "node test/parser.test.js"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -170,6 +172,7 @@
     "abnf": "^4.3.1",
     "copy-webpack-plugin": "^13.0.0",
     "eslint": "^9.21.0",
+    "jest": "^29.7.0",
     "peggy": "^4.2.0",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
