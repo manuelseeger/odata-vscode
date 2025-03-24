@@ -61,7 +61,7 @@
 		},
 		{
 			"name": "keyword.control.odata",
-			"match": "\\$(apply|count|filter|orderby|select|skip|top|expand|format|inlinecount|compute|schemaversion)\\b"
+			"match": "\\$(select|filter|orderby|top|skip|expand|format|inlinecount|apply|search|count|skiptoken|compute|schemaversion)\\b"
 		},
 		{
 			"name": "keyword.other.odata",
@@ -85,7 +85,7 @@
 		},
 		{
 			"name": "entity.name.function.odata",
-			"match": "\\b(concat|contains|endswith|indexof|length|startswith|substring|tolower|toupper|trim|date|day|fractionalseconds|hour|maxdatetime|mindatetime|minute|month|now|second|time|totaloffsetminutes|totalseconds|year|ceiling|floor|round|cast|isof|geo\\.distance|geo\\.intersects|geo\\.length|any|all)\\b"
+			"match": "\\b(concat|contains|endswith|indexof|length|startswith|substring|substringof|replace|tolower|toupper|trim|abs|mod|date|day|fractionalseconds|hour|maxdatetime|mindatetime|minute|month|now|second|time|totaloffsetminutes|totalseconds|year|ceiling|floor|round|cast|isof|geo\\.distance|geo\\.intersects|geo\\.length|any|all)\\b"
 		},
 		{
 			"name": "entity.name.function.odata",
