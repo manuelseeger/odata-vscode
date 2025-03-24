@@ -152,7 +152,10 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
-    "vsce-latest": "vsce package -o odata-vscode-latest.vsix"
+    "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
+    "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata-v4.01.abnf",
+    "peggy": "peggy -o src/parser/parser.js src/parser/odata.peggy"
+    
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -164,8 +167,10 @@
     "@typescript-eslint/parser": "^8.25.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
+    "abnf": "^4.3.1",
     "copy-webpack-plugin": "^13.0.0",
     "eslint": "^9.21.0",
+    "peggy": "^4.2.0",
     "ts-loader": "^9.5.2",
     "typescript": "^5.7.3",
     "vsce": "^2.15.0",
