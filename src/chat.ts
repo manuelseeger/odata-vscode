@@ -14,7 +14,7 @@ OData Version: {{version}}
 Metadata: 
 {{metadata}}
 
-Use this is a base for the generated queries: {{base}}
+Use this Uri is a base for the generated queries: {{base}}
 
 Examples, but use the properties from the metadata in your answers: 
 {{base}}/RequestedEntities?$filter=Name eq 'John'
@@ -49,10 +49,7 @@ export const chatHandler: vscode.ChatRequestHandler = async (
     }
 
     const cleanedXml = getFilteredMetadataXml(text);
-
     const dataModel = await digestMetadata(cleanedXml);
-
-    const namespaces = dataModel.getNamespaces();
 
     const replacements: Record<string, string> = {
         metadata: cleanedXml,
@@ -72,9 +69,8 @@ export const chatHandler: vscode.ChatRequestHandler = async (
     }
     encoding.free();
 
-    // initialize the messages array with the prompt
     const messages = [vscode.LanguageModelChatMessage.User(prompt)];
-    // get all the previous participant messages
+
     const previousMessages = context.history.filter(
         h => h instanceof vscode.ChatResponseTurn
     );
@@ -87,15 +83,9 @@ export const chatHandler: vscode.ChatRequestHandler = async (
         });
         messages.push(vscode.LanguageModelChatMessage.Assistant(fullMessage));
     });
-
-    // add in the user's message
     messages.push(vscode.LanguageModelChatMessage.User(request.prompt));
-
-    // send the request
     const chatResponse = await request.model.sendRequest(messages, {}, token);
 
-
-    // stream and buffer the response
     const buffer = [];
     for await (const fragment of chatResponse.text) {
         stream.markdown(fragment);
@@ -103,36 +93,26 @@ export const chatHandler: vscode.ChatRequestHandler = async (
         const codeBlocks = extractCodeBlocks(buffer.join(''));
         if (codeBlocks.length === 1) {
             const query = codeBlocks[0].trim();
+
             stream.button({
                 title: 'Run',
                 command: 'odata.runQuery',
-                arguments: [query]
-            });
-            stream.button({
-                title: 'Open',
-                command: 'odata.openQuery',
-                arguments: [query]
+                arguments: [query],
+                tooltip: 'Run the generated query and show results'
             });
             // clear buffer
             buffer.length = 0;
         }
     }
-
-
-    /*
-    const codeBlocks = extractCodeBlocks(response);
-
-    for (const codeBlock of codeBlocks) {
-        const query = codeBlock.trim();
-        stream.button({
-            title: 'Run',
-            command: 'odata.runQuery',
-            arguments: [query]
-        });
-    }
-        */
 };
 
+function makeInlineButtonString(title: string, command: string, args: Record<string, string>): string {
+    const argsString = Object.entries(args)
+        .map(([key, value]) => `${key}=${value}`)
+        .join('&');
+    const commandString = argsString ? `${command}?${encodeURIComponent(argsString)}` : command;
+    return `[${title}](command:${commandString})`;
+}
 
 function extractCodeBlocks(response: string): string[] {
     const codeBlockRegex = /```(?:\w+)?\n([\s\S]*?)\n```/g;
