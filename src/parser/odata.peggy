@@ -1,10 +1,25 @@
-root
-  = odataUri
-  / header
-  / primitiveValue
-
+root 
+ = odataUri:odataUri
+  / header:header
+  / primitiveValue:primitiveValue
+  {
+    return {
+      odataUri: odataUri,
+      header: header,
+      primitiveValue: primitiveValue
+    }
+  }
+ 
+ 
 odataUri
-  = serviceRoot odataRelativeUri?
+  = s:serviceRoot o:odataRelativeUri?
+  {
+    return {
+      serviceRoot: s,
+      odataRelativeUri: o
+    }
+  }
+
 
 header
   = content_id
@@ -42,13 +57,21 @@ primitiveValue
 
 serviceRoot
   = ("https"i / "http"i) "://" host (":" port)? "/" (segment_nz "/")*
+ { return text() }
 
 odataRelativeUri
   = "$batch"i ("?" batchOptions)?
   / "$entity"i "?" entityOptions
   / "$entity"i "/" optionallyQualifiedEntityTypeName "?" entityCastOptions
   / "$metadata"i ("?" metadataOptions)? context?
-  / resourcePath ("?" queryOptions)?
+  / r:resourcePath q:("?" queryOptions)?
+  {
+    return {
+      resourcePath: r,
+      queryOptions: q
+    }
+  }
+  
 
 content_id
   = "Content-ID"i ":" OWS request_id
@@ -190,6 +213,18 @@ queryOptions
 
 OWS
   = (SP / HTAB)*
+
+MWS
+  = (SP / HTAB / CR / LF / CRLF)*
+
+CR 
+  = "\r"
+
+LF
+  = "\n"
+
+CRLF
+  = CR LF
 
 request_id
   = unreserved+
@@ -572,6 +607,7 @@ namespacePart
 
 odataIdentifier
   = identifierLeadingCharacter identifierCharacter|..127|
+   { return  text() }
 
 expand
   = ("$expand"i / "expand"i) EQ expandItem (COMMA expandItem)*
@@ -1439,6 +1475,7 @@ pchar_no_SQUOTE
   / "="
   / ":"
   / "@"
+  / SP // not spec but most services allow
 
 geographyPrefix
   = "geography"i
