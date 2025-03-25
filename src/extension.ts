@@ -7,8 +7,10 @@ import { getEndpointMetadata, selectProfile, runQuery, openQuery, requestProfile
 import { ProfileItem } from './profiles';
 import { ODataDefaultCompletionItemProvider, ODataSystemQueryCompletionItemProvider } from './completions';
 import { MetadataModelService } from './services/MetadataModelService';
-
+import { ODataDiagnosticProvider } from './diagnostics';
 export const ODataMode: vscode.DocumentFilter = { language: 'odata' };
+let diagnosticCollection: vscode.DiagnosticCollection;
+
 
 export function activate(context: vscode.ExtensionContext) {
 	setExtensionContext(context);
@@ -52,6 +54,13 @@ export function activate(context: vscode.ExtensionContext) {
 	const systemQueryCompleteProvider = new ODataSystemQueryCompletionItemProvider();
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(ODataMode,
 		systemQueryCompleteProvider, ...systemQueryCompleteProvider.triggerCharacters));
+
+	diagnosticCollection = vscode.languages.createDiagnosticCollection('odata');
+
+	const diagnosticsProvider = new ODataDiagnosticProvider(diagnosticCollection);
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
+		diagnosticsProvider.onDidChangeTextDocument(event.document);
+	}));
 
 }
 
