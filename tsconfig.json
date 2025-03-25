@@ -20,6 +20,8 @@
 	
 	},
 	"exclude": [
-			"playground"
+			"playground",
+			"**/*.test.ts",
+			"**/*.test.js",
 		],
 }

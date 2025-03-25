@@ -1,10 +1,25 @@
-dummyStartRule
-  = odataUri
-  / header
-  / primitiveValue
-
+root 
+ = odataUri:odataUri
+  / header:header
+  / primitiveValue:primitiveValue
+  {
+    return {
+      odataUri: odataUri,
+      header: header,
+      primitiveValue: primitiveValue
+    }
+  }
+ 
+ 
 odataUri
-  = serviceRoot odataRelativeUri?
+  = s:serviceRoot MWS o:odataRelativeUri? MWS
+  {
+    return {
+      serviceRoot: s,
+      odataRelativeUri: o
+    }
+  }
+
 
 header
   = content_id
@@ -16,7 +31,7 @@ header
   / prefer
 
 primitiveValue
-  = booleanValue
+  = v:(booleanValue
   / guidValue
   / durationValue
   / dateTimeOffsetValue
@@ -38,17 +53,30 @@ primitiveValue
   / int16Value
   / int32Value
   / int64Value
-  / binaryValue
+  / binaryValue )
+  {
+    return Array.isArray(v) ? v.join("") : v;
+  }
 
 serviceRoot
   = ("https"i / "http"i) "://" host (":" port)? "/" (segment_nz "/")*
+ { return text() }
 
 odataRelativeUri
-  = "$batch"i ("?" batchOptions)?
+  = MWS r:( "$batch"i ("?" batchOptions)?
   / "$entity"i "?" entityOptions
   / "$entity"i "/" optionallyQualifiedEntityTypeName "?" entityCastOptions
   / "$metadata"i ("?" metadataOptions)? context?
-  / resourcePath ("?" queryOptions)?
+  / resourcePath ) 
+  MWS 
+  q:( "?" MWS queryOptions)? 
+  {
+    return {
+      resourcePath: r,
+      queryOptions: q
+    }
+  }
+  
 
 content_id
   = "Content-ID"i ":" OWS request_id
@@ -117,7 +145,7 @@ fullPolygonLiteral
 decimalValue
   = SIGN? DIGIT+ ("." DIGIT+)? ("e"i SIGN? DIGIT+)?
   / nanInfinity
-
+  
 doubleValue
   = decimalValue
 
@@ -172,7 +200,7 @@ context
   = "#" contextFragment
 
 resourcePath
-  = entitySetName collectionNavigation?
+  = v:(entitySetName collectionNavigation?
   / singletonEntity singleNavigation?
   / actionImportCall
   / entityColFunctionImportCall collectionNavigation?
@@ -183,13 +211,28 @@ resourcePath
   / primitiveFunctionImportCall primitivePath?
   / functionImportCallNoParens querySegment?
   / crossjoin querySegment?
-  / "$all"i ("/" optionallyQualifiedEntityTypeName)?
+  / "$all"i ("/" optionallyQualifiedEntityTypeName)? )
+  { return text()}
 
 queryOptions
-  = queryOption ("&" queryOption)*
+  // allow line breaks between query options
+  = queryOption ( MWS "&" MWS queryOption)*
 
 OWS
   = (SP / HTAB)*
+
+MWS
+  = (SP / HTAB / CR / LF / CRLF)*
+  { return; }
+
+CR 
+  = "\r"
+
+LF
+  = "\n"
+
+CRLF
+  = CR LF
 
 request_id
   = unreserved+
@@ -268,8 +311,9 @@ singleEnumValue
   / enumMemberValue
 
 COMMA
-  = ","
-  / "%2C"i
+  // allow line breaks between commas
+  = MWS ","
+  / "%2C"i MWS
 
 sridLiteral
   = "SRID"i EQ DIGIT|1..5| SEMI
@@ -495,7 +539,8 @@ enumMemberValue
   = int64Value
 
 EQ
-  = "="
+  // allow line breaks between equals
+  = MWS "=" MWS
 
 SEMI
   = ";"
@@ -511,8 +556,9 @@ geoLiteral
   / polygonLiteral
 
 CLOSE
-  = ")"
-  / "%29"
+  // allow line breaks between close parens
+  = MWS ")"
+  / "%29" MWS
 
 lineStringData
   = OPEN positionLiteral (COMMA positionLiteral)+ CLOSE
@@ -572,6 +618,7 @@ namespacePart
 
 odataIdentifier
   = identifierLeadingCharacter identifierCharacter|..127|
+   { return  text() }
 
 expand
   = ("$expand"i / "expand"i) EQ expandItem (COMMA expandItem)*
@@ -670,8 +717,9 @@ primitiveFunctionImport
   = odataIdentifier
 
 OPEN
-  = "("
-  / "%28"
+  // allow line breaks between open parens
+  = MWS "("
+  / "%28" MWS
 
 systemQueryOption
   = compute
@@ -732,9 +780,11 @@ other_delims
 
 customName
   = qchar_no_AMP_EQ_AT_DOLLAR (qchar_no_AMP_EQ)*
+  { return text() }
 
 customValue
-  = (qchar_no_AMP)*
+  = chars:(qchar_no_AMP)* 
+  { return chars.join(""); }
 
 qchar_no_AMP
   = unreserved
@@ -747,6 +797,7 @@ qchar_no_AMP
   / "$"
   / "'"
   / "="
+  
 
 identifierLeadingCharacter
   = ALPHA
@@ -905,7 +956,8 @@ parameterName
   = odataIdentifier
 
 BWS_h
-  = (SP / HTAB)*
+  // allow line breaks for optional whitespace
+  = MWS
 
 scheme
   = ALPHA (ALPHA / DIGIT / "+" / "-" / ".")*
@@ -1028,7 +1080,7 @@ primitiveFunction
   = odataIdentifier
 
 primitiveLiteral
-  = nullValue
+  = v:(nullValue
   / booleanValue
   / guidValue
   / dateTimeOffsetValueInUrl
@@ -1059,7 +1111,10 @@ primitiveLiteral
   / geometryMultiPoint
   / geometryMultiPolygon
   / geometryPoint
-  / geometryPolygon
+  / geometryPolygon)
+  {
+    return text()
+  }
 
 computeItem
   = commonExpr RWS "as"i RWS computedProperty
@@ -1068,7 +1123,8 @@ orderbyItem
   = commonExpr (RWS ("asc"i / "desc"i))?
 
 BWS
-  = (SP / HTAB / "%20" / "%09")*
+  // allow line breaks between BWS
+  = (SP / HTAB / "%20" / "%09" / CR / LF / CRLF)*
 
 searchExpr
   = (searchParenExpr / searchNegateExpr / searchPhrase / searchWord) (searchOrExpr / searchAndExpr)?
@@ -1085,7 +1141,10 @@ arrayOrObject
   / object
 
 commonExpr
-  = (primitiveLiteral / arrayOrObject / rootExpr / firstMemberExpr / functionExpr / negateExpr / methodCallExpr / parenExpr / castExpr / isofExpr / notExpr) (addExpr / subExpr / mulExpr / divExpr / divbyExpr / modExpr)? (eqExpr / neExpr / ltExpr / leExpr / gtExpr / geExpr / hasExpr / inExpr)? (andExpr / orExpr)?
+  = (primitiveLiteral / arrayOrObject / rootExpr / firstMemberExpr / functionExpr / negateExpr / methodCallExpr / parenExpr / castExpr / isofExpr / notExpr)
+    ((addExpr / subExpr / mulExpr / divExpr / divbyExpr / modExpr))?
+    ((eqExpr / neExpr / ltExpr / leExpr / gtExpr / geExpr / hasExpr / inExpr))?
+    ((andExpr / orExpr))?
 
 authority
   = (userinfo "@")? host (":" port)?
@@ -1259,7 +1318,8 @@ geometryPolygon
   = geometryPrefix SQUOTE fullPolygonLiteral SQUOTE
 
 RWS
-  = (SP / HTAB / "%20" / "%09")+
+  // We allow CR/LF for mandatory whitespace 
+  = (SP / HTAB / "%20" / "%09" / CR / LF / CRLF)+
 
 computedProperty
   = odataIdentifier
@@ -1305,7 +1365,7 @@ quotation_mark
   / "%22"
 
 array
-  = begin_array (valueInUrl (value_separator valueInUrl)*)? end_array
+  = begin_array vals:(valueInUrl (value_separator valueInUrl)*)? end_array 
 
 object
   = begin_object (member (value_separator member)*)? end_object
@@ -1439,6 +1499,7 @@ pchar_no_SQUOTE
   / "="
   / ":"
   / "@"
+  / SP // not spec but most services allow
 
 geographyPrefix
   = "geography"i
@@ -1648,6 +1709,7 @@ pct_encoded_no_DQUOTE
 
 stringInUrl
   = quotation_mark charInJSON* quotation_mark
+  { return text() }
 
 name_separator
   = BWS COLON BWS
