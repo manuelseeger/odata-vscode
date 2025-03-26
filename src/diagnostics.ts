@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { SyntaxError, LocationRange, ParsedTree } from './parser/syntaxparser';
+import { SyntaxError, LocationRange, ParsedTree, ParseSuccessHandler, ParseResult, ParseSyntaxErrorHandler } from './parser/syntaxparser';
 import { MetadataModelService } from './services/MetadataModelService';
 import { Profile } from './profiles';
 import { DataModel } from './odata2ts/data-model/DataModel';
@@ -23,14 +23,13 @@ export class ODataDiagnosticProvider {
      * @param uri vscode.Uri of the document to set the diagnostics for
      * @param error SyntaxError to set as a diagnostic 
      */
-    public handleSyntaxError(uri: vscode.Uri, error: SyntaxError) {
+    public handleSyntaxError: ParseSyntaxErrorHandler = (uri: vscode.Uri, error: SyntaxError) => {
         const diagnostics: vscode.Diagnostic[] = [];
         const range = rangeFromPeggyRange(error.location);
         const diagnostic = new vscode.Diagnostic(range, error.message, vscode.DiagnosticSeverity.Error);
         diagnostics.push(diagnostic);
         this.diagnostics.set(uri, diagnostics);
-    }
-
+    };
 
     /**
      * Add metadata aware warning diagnostics to the diagnostics collection.
@@ -41,9 +40,9 @@ export class ODataDiagnosticProvider {
      * the metadata model.
      * 
      * @param uri vscode.Uri of the document to set the diagnostics for
-     * @param tree ODataUri object representing the parsed OData query
+     * @param result ODataUri object representing the parsed OData query
      */
-    public async handleParseSucess(uri: vscode.Uri, tree: ParsedTree) {
+    public handleParseSucess: ParseSuccessHandler = async (uri: vscode.Uri, result: ParseResult) => {
         const diagnostics: vscode.Diagnostic[] = [];
         this.diagnostics.set(uri, diagnostics);
 
@@ -56,10 +55,10 @@ export class ODataDiagnosticProvider {
             return;
         }
 
-        this.diagnoseResourcePath(diagnostics, metadata, tree, profile!);
+        this.diagnoseResourcePath(diagnostics, metadata, result.tree, profile!);
 
         this.diagnostics.set(uri, diagnostics);
-    }
+    };
 
     private diagnoseResourcePath(diagnostics: vscode.Diagnostic[], metadata: DataModel, tree: ParsedTree, profile: Profile) {
         const resourcePath = tree.odataRelativeUri!.resourcePath;

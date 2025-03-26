@@ -1,13 +1,12 @@
-import * as vscode from 'vscode';
-import { isMetadataXml } from './metadata';
-import { getExtensionContext } from './util';
+import * as vscode from "vscode";
+import { isMetadataXml } from "./metadata";
+import { getExtensionContext } from "./util";
 
-import { Profile, AuthKind } from './profiles';
+import { Profile, AuthKind } from "./profiles";
 
-import { fetch } from 'undici';
-import { ODataFormat } from './configuration';
-import { getRequestInit } from './client';
-import { open } from 'fs';
+import { fetch } from "undici";
+import { ODataFormat } from "./configuration";
+import { getRequestInit } from "./client";
 
 export async function selectMetadata() {
     const fileUri = await vscode.window.showOpenDialog({
@@ -15,8 +14,8 @@ export async function selectMetadata() {
         openLabel: "Select metadata file",
         filters: {
             "XML Files": ["xml", "edmx"],
-            "All Files": ["*"]
-        }
+            "All Files": ["*"],
+        },
     });
     if (fileUri && fileUri[0]) {
         const filePath = fileUri[0];
@@ -51,7 +50,7 @@ export async function getEndpointMetadata(): Promise<string> {
     const metadata = await requestProfileMetadata(profile);
     profile.metadata = metadata;
     const profiles = context.globalState.get<Profile[]>("odata.profiles", []);
-    const index = profiles.findIndex(p => p.baseUrl === profile.baseUrl);
+    const index = profiles.findIndex((p) => p.baseUrl === profile.baseUrl);
     if (index >= 0) {
         profiles[index] = profile;
     } else {
@@ -68,15 +67,15 @@ export async function selectProfile() {
         return;
     }
     const profileName = await vscode.window.showQuickPick(
-        profiles.map(p => p.name),
+        profiles.map((p) => p.name),
         {
-            placeHolder: "Select an endpoint"
-        }
+            placeHolder: "Select an endpoint",
+        },
     );
     if (!profileName) {
         return;
     }
-    const profile = profiles.find(p => p.name === profileName);
+    const profile = profiles.find((p) => p.name === profileName);
     context.globalState.update("selectedProfile", profile);
 }
 
@@ -88,23 +87,22 @@ export async function openQuery(query: string) {
     }
     const uri = vscode.Uri.parse(`untitled:${profile.name}.odata`);
     let doc = await vscode.workspace.openTextDocument(uri);
-    doc = await vscode.languages.setTextDocumentLanguage(doc, 'odata');
+    doc = await vscode.languages.setTextDocumentLanguage(doc, "odata");
 
     const editor = await vscode.window.showTextDocument(doc, { preview: false });
-    await editor.edit(editBuilder => {
+    await editor.edit((editBuilder) => {
         editBuilder.insert(new vscode.Position(0, 0), query);
     });
-    await vscode.commands.executeCommand('editor.action.formatDocument');
+    await vscode.commands.executeCommand("editor.action.formatDocument");
 }
-
 
 export async function requestProfileMetadata(profile: Profile): Promise<string> {
     // request the /$metadata endpoint via http using the profile details
     const context = getExtensionContext();
 
     const requestInit = await getRequestInit(profile);
-    requestInit.headers.set('Accept', 'application/xml');
-    const metadataUrl = `${profile.baseUrl.replace(/\/+$/, '')}/$metadata`;
+    requestInit.headers.set("Accept", "application/xml");
+    const metadataUrl = `${profile.baseUrl.replace(/\/+$/, "")}/$metadata`;
     let response: Response;
     try {
         response = await fetch(metadataUrl, requestInit);
@@ -114,13 +112,14 @@ export async function requestProfileMetadata(profile: Profile): Promise<string> 
     }
 
     if (!response.ok) {
-        vscode.window.showErrorMessage(`Failed to fetch metadata: ${response.status} ${response.statusText}`);
+        vscode.window.showErrorMessage(
+            `Failed to fetch metadata: ${response.status} ${response.statusText}`,
+        );
         return "";
     }
     const metadata = await response.text();
     return metadata;
 }
-
 
 export async function runQuery(query: string) {
     openQuery(query);
@@ -130,25 +129,27 @@ export async function runQuery(query: string) {
         return;
     }
 
-    const defaultFormat = vscode.workspace.getConfiguration("odata").get("defaultFormat") as ODataFormat;
+    const defaultFormat = vscode.workspace
+        .getConfiguration("odata")
+        .get("defaultFormat") as ODataFormat;
 
-    // strip leading http verb 
-    query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, '');
+    // strip leading http verb
+    query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
     query = query.trim();
-    if (!query.endsWith('$count')) {
+    if (!query.endsWith("$count")) {
         query += `&$format=${defaultFormat}`;
     }
 
     const r = await getRequestInit(profile);
     const res = await fetch(query, r);
 
-    let format = 'txt';
-    const contentType = res.headers.get('Content-Type');
+    let format = "txt";
+    const contentType = res.headers.get("Content-Type");
     if (contentType) {
-        if (contentType.includes('json')) {
-            format = 'json';
-        } else if (contentType.includes('xml')) {
-            format = 'xml';
+        if (contentType.includes("json")) {
+            format = "json";
+        } else if (contentType.includes("xml")) {
+            format = "xml";
         }
     }
 
@@ -159,13 +160,10 @@ export async function runQuery(query: string) {
     const editor = await vscode.window.showTextDocument(doc, { preview: false });
     const newContent = await res.text();
 
-    const entireRange = new vscode.Range(
-        doc.positionAt(0),
-        doc.positionAt(doc.getText().length)
-    );
-    await editor.edit(editBuilder => {
+    const entireRange = new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length));
+    await editor.edit((editBuilder) => {
         editBuilder.replace(entireRange, newContent);
     });
 
-    await vscode.commands.executeCommand('editor.action.formatDocument');
+    await vscode.commands.executeCommand("editor.action.formatDocument");
 }

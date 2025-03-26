@@ -60,7 +60,7 @@ primitiveValue
 
 serviceRoot
   = ("https"i / "http"i) "://" host (":" port)? "/" (segment_nz "/")*
- { return { value: text(), span: location() } }
+ { return { value: text(), span: location(), type: "serviceRoot" } }
 
 odataRelativeUri
   = MWS r:( "$batch"i ("?" batchOptions)?
@@ -212,7 +212,7 @@ resourcePath
   / functionImportCallNoParens querySegment?
   / crossjoin querySegment?
   / "$all"i ("/" optionallyQualifiedEntityTypeName)? )
-  { return { value: text(), span: location() } }
+  { return { value: text(), span: location(), type: "resourcePath" } }
 
 queryOptions
   // allow line breaks between query options
