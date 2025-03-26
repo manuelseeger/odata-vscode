@@ -1,5 +1,5 @@
-import { parse, SyntaxError, LocationRange, ParserTracer } from './parser.js';
-import * as vscode from 'vscode';
+import { parse, SyntaxError, LocationRange, ParserTracer } from "./parser.js";
+import * as vscode from "vscode";
 
 export type ParseSyntaxErrorHandler = (uri: vscode.Uri, error: SyntaxError) => void;
 export type ParseSuccessHandler = (uri: vscode.Uri, result: ParseResult) => void;
@@ -25,22 +25,25 @@ export interface SyntaxLocation {
     span: LocationRange;
     type: SyntaxLocationType;
 }
-export interface ServiceRoot extends SyntaxLocation { }
-export interface ResourcePath extends SyntaxLocation { }
+export interface ServiceRoot extends SyntaxLocation {}
+export interface ResourcePath extends SyntaxLocation {}
 
-export interface SelectItem extends SyntaxLocation { }
-export interface PropertyPath extends SyntaxLocation { }
+export interface SelectItem extends SyntaxLocation {}
+export interface PropertyPath extends SyntaxLocation {}
 
 export interface ODataRelativeUri {
     resourcePath: ResourcePath;
     queryOptions?: any;
 }
 
-export type SyntaxLocationType = "resourcePath" | "selectItem" | "propertyPath" | "serviceRoot";
+export type SyntaxLocationType =
+    | "resourcePath"
+    | "selectItem"
+    | "propertyPath"
+    | "serviceRoot"
+    | "systemQueryOption";
 
 export class SyntaxParser {
-
-
     private _debounceTimer: NodeJS.Timeout | undefined;
     private _lastDocument: vscode.TextDocument | null = null;
     private _instance: SyntaxParser | null = null;
@@ -50,8 +53,7 @@ export class SyntaxParser {
     private _syntaxErrorHandlers: Array<ParseSyntaxErrorHandler> = [];
     private _parseSuccessHandlers: Array<ParseSuccessHandler> = [];
 
-    constructor() {
-    }
+    constructor() {}
 
     public getInstance() {
         if (!this._instance) {
@@ -61,7 +63,7 @@ export class SyntaxParser {
     }
 
     public handleChangeTextDocument(document: vscode.TextDocument) {
-        if (document.languageId !== 'odata') {
+        if (document.languageId !== "odata") {
             return;
         }
         this._lastDocument = document;
@@ -103,7 +105,7 @@ export class SyntaxParser {
     }
 
     private _process(document: vscode.TextDocument) {
-        if (document.languageId !== 'odata') {
+        if (document.languageId !== "odata") {
             return;
         }
         const text = document.getText();
@@ -113,32 +115,33 @@ export class SyntaxParser {
             this._lastResult = this._postProcess(this._lastTree!);
 
             if (this._lastResult) {
-                this._parseSuccessHandlers.forEach(handler => handler(document.uri, this._lastResult!));
+                this._parseSuccessHandlers.forEach((handler) =>
+                    handler(document.uri, this._lastResult!),
+                );
             }
         } catch (error) {
             if (error instanceof SyntaxError) {
-                this._syntaxErrorHandlers.forEach(handler => handler(document.uri, error));
+                this._syntaxErrorHandlers.forEach((handler) => handler(document.uri, error));
             } else {
-                console.error('Unexpected parsing error:', error);
+                console.error("Unexpected parsing error:", error);
             }
         }
     }
 
     private _postProcess(tree: ParsedTree): ParseResult {
-
         const locations: SyntaxLocation[] = [];
 
         const processNode = (node: any): any => {
             if (Array.isArray(node)) {
                 return node
-                    .map(item => processNode(item))
-                    .filter(item => item !== null && item !== undefined);
-            } else if (node !== null && typeof node === 'object') {
+                    .map((item) => processNode(item))
+                    .filter((item) => item !== null && item !== undefined);
+            } else if (node !== null && typeof node === "object") {
                 const cleaned: Record<string, any> = {};
                 if (node.span) {
                     locations.push(node as unknown as SyntaxLocation);
                 }
-                Object.keys(node).forEach(key => {
+                Object.keys(node).forEach((key) => {
                     const value = processNode(node[key]);
                     if (value !== null && value !== undefined) {
                         cleaned[key] = value;
@@ -156,7 +159,8 @@ export class SyntaxParser {
 function rangeFromPeggyRange(span: LocationRange): vscode.Range {
     return new vscode.Range(
         new vscode.Position(span.start.line - 1, span.start.column - 1),
-        new vscode.Position(span.end.line - 1, span.end.column - 1));
+        new vscode.Position(span.end.line - 1, span.end.column - 1),
+    );
 }
 
-export * from './parser.js';
+export * from "./parser.js";

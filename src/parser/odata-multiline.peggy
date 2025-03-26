@@ -12,7 +12,7 @@ root
  
  
 odataUri
-  = s:serviceRoot MWS o:odataRelativeUri? MWS
+  = MWS s:serviceRoot MWS o:odataRelativeUri? MWS
   {
     return {
       serviceRoot: s,
@@ -722,7 +722,7 @@ OPEN
   / "%28" MWS
 
 systemQueryOption
-  = compute
+  = v:(compute
   / deltatoken
   / expand
   / filter
@@ -736,7 +736,14 @@ systemQueryOption
   / skip
   / skiptoken
   / top
-  / index
+  / index )
+  {
+    return {
+      value: v,
+      span: location(),
+      type: "systemQueryOption"
+    }  
+  }
 
 aliasAndValue
   = parameterAlias EQ parameterValue

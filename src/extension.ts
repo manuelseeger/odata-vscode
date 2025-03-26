@@ -19,6 +19,7 @@ import {
 import { MetadataModelService } from "./services/MetadataModelService";
 import { ODataDiagnosticProvider } from "./diagnostics";
 import { SyntaxParser } from "./parser/syntaxparser";
+import { ODataDocumentFormatter } from "./formatting";
 export const ODataMode: vscode.DocumentFilter = { language: "odata" };
 
 let diagnosticCollection: vscode.DiagnosticCollection;
@@ -111,6 +112,11 @@ export function activate(context: vscode.ExtensionContext) {
         vscode.workspace.onDidChangeTextDocument((event) => {
             syntaxParser.handleChangeTextDocument(event.document);
         }),
+    );
+
+    const odataFormatter = new ODataDocumentFormatter(syntaxParser, context);
+    context.subscriptions.push(
+        vscode.languages.registerDocumentFormattingEditProvider(ODataMode, odataFormatter),
     );
 }
 
