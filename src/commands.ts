@@ -8,6 +8,9 @@ import { fetch } from "undici";
 import { ODataFormat } from "./configuration";
 import { getRequestInit } from "./client";
 
+let queryDocument: vscode.TextDocument | undefined = undefined;
+let resultDocument: vscode.TextDocument | undefined = undefined;
+
 export async function selectMetadata() {
     const fileUri = await vscode.window.showOpenDialog({
         canSelectMany: false,
@@ -85,14 +88,20 @@ export async function openQuery(query: string) {
     if (!profile) {
         return;
     }
-    const uri = vscode.Uri.parse(`untitled:${profile.name}.odata`);
-    let doc = await vscode.workspace.openTextDocument(uri);
-    doc = await vscode.languages.setTextDocumentLanguage(doc, "odata");
+    if (!queryDocument) {
+        let doc = await vscode.workspace.openTextDocument({ language: "odata", content: query });
+        queryDocument = doc;
+    }
 
-    const editor = await vscode.window.showTextDocument(doc, { preview: false });
+    const editor = await vscode.window.showTextDocument(queryDocument, { preview: false });
+    const entireRange = new vscode.Range(
+        queryDocument.positionAt(0),
+        queryDocument.positionAt(queryDocument.getText().length),
+    );
     await editor.edit((editBuilder) => {
-        editBuilder.insert(new vscode.Position(0, 0), query);
+        editBuilder.replace(entireRange, query);
     });
+
     await vscode.commands.executeCommand("editor.action.formatDocument");
 }
 
@@ -136,7 +145,7 @@ export async function runQuery(query: string) {
     // strip leading http verb
     query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
     query = query.trim();
-    if (!query.endsWith("$count")) {
+    if (!query.endsWith("$count") && !query.includes("$format")) {
         query += `&$format=${defaultFormat}`;
     }
 
@@ -153,14 +162,22 @@ export async function runQuery(query: string) {
         }
     }
 
-    // Use a fixed untitled document URI so that we reuse the same editor.
-    const outputUri = vscode.Uri.parse(`untitled:OData Query Results.${format}`);
-    let doc = await vscode.workspace.openTextDocument(outputUri);
-    doc = await vscode.languages.setTextDocumentLanguage(doc, format);
-    const editor = await vscode.window.showTextDocument(doc, { preview: false });
     const newContent = await res.text();
+    if (!resultDocument) {
+        let doc = await vscode.workspace.openTextDocument({
+            language: format,
+            content: newContent,
+        });
+        resultDocument = doc;
+    }
 
-    const entireRange = new vscode.Range(doc.positionAt(0), doc.positionAt(doc.getText().length));
+    resultDocument = await vscode.languages.setTextDocumentLanguage(resultDocument, format);
+
+    const editor = await vscode.window.showTextDocument(resultDocument, { preview: false });
+    const entireRange = new vscode.Range(
+        resultDocument.positionAt(0),
+        resultDocument.positionAt(resultDocument.getText().length),
+    );
     await editor.edit((editBuilder) => {
         editBuilder.replace(entireRange, newContent);
     });
