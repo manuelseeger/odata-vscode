@@ -1,5 +1,8 @@
 import * as vscode from 'vscode';
-import { parse, SyntaxError, LocationRange } from './parser/parser.js';
+import { SyntaxError, LocationRange, ParsedTree } from './parser/syntaxparser';
+import { MetadataModelService } from './services/MetadataModelService';
+import { Profile } from './profiles';
+import { DataModel } from './odata2ts/data-model/DataModel';
 
 function rangeFromPeggyRange(span: LocationRange): vscode.Range {
     return new vscode.Range(
@@ -9,51 +12,79 @@ function rangeFromPeggyRange(span: LocationRange): vscode.Range {
 
 
 export class ODataDiagnosticProvider {
-    private _debounceTimer: NodeJS.Timeout | undefined;
-    private _lastDocument: vscode.TextDocument | null = null;
 
-
-    constructor(private diagnostics: vscode.DiagnosticCollection) {
+    constructor(private diagnostics: vscode.DiagnosticCollection, private metadataService: MetadataModelService, private context: vscode.ExtensionContext) {
 
     }
 
-    public onDidChangeTextDocument(document: vscode.TextDocument) {
-        if (document.languageId !== 'odata') {
-            return;
-        }
-        this._lastDocument = document;
-        if (this._debounceTimer) {
-            clearTimeout(this._debounceTimer);
-        }
-        this._debounceTimer = setTimeout(() => {
-            this._updateDiagnostics(this._lastDocument!);
-        }, 500);
+    /**
+     * Add syntax errors from parsing a document's OData text to the diagnostics collection.
+     * 
+     * @param uri vscode.Uri of the document to set the diagnostics for
+     * @param error SyntaxError to set as a diagnostic 
+     */
+    public handleSyntaxError(uri: vscode.Uri, error: SyntaxError) {
+        const diagnostics: vscode.Diagnostic[] = [];
+        const range = rangeFromPeggyRange(error.location);
+        const diagnostic = new vscode.Diagnostic(range, error.message, vscode.DiagnosticSeverity.Error);
+        diagnostics.push(diagnostic);
+        this.diagnostics.set(uri, diagnostics);
     }
 
-    private _updateDiagnostics(document: vscode.TextDocument) {
-        if (document.languageId !== 'odata') {
-            return;
-        }
+
+    /**
+     * Add metadata aware warning diagnostics to the diagnostics collection.
+     * 
+     * This method is called when the OData query is successfully parsed.
+     * It checks identified parts of the OData query against the metadata model and 
+     * adds warnings to the diagnostics collection if the parts can't be found in 
+     * the metadata model.
+     * 
+     * @param uri vscode.Uri of the document to set the diagnostics for
+     * @param tree ODataUri object representing the parsed OData query
+     */
+    public async handleParseSucess(uri: vscode.Uri, tree: ParsedTree) {
+        const diagnostics: vscode.Diagnostic[] = [];
+        this.diagnostics.set(uri, diagnostics);
+
+        const document = await vscode.workspace.openTextDocument(uri);
         const text = document.getText();
 
-        if (text.length === 0) {
-            this.diagnostics.set(document.uri, []);
+        const profile = this.context.globalState.get<Profile>('selectedProfile');
+        const metadata = await this.metadataService.getModel(profile!);
+        if (!metadata) {
             return;
         }
-        const diagnostics: vscode.Diagnostic[] = [];
 
-        try {
-            const parsed = parse(text);
-        } catch (error) {
-            if (error instanceof SyntaxError) {
-                const range = rangeFromPeggyRange(error.location);
-                const diagnostic = new vscode.Diagnostic(range, error.message, vscode.DiagnosticSeverity.Error);
-                diagnostics.push(diagnostic);
-            } else {
-                console.error('Unexpected error:', error);
-            }
+        this.diagnoseResourcePath(diagnostics, metadata, tree, profile!);
+
+        this.diagnostics.set(uri, diagnostics);
+    }
+
+    private diagnoseResourcePath(diagnostics: vscode.Diagnostic[], metadata: DataModel, tree: ParsedTree, profile: Profile) {
+        const resourcePath = tree.odataRelativeUri!.resourcePath;
+        const resourcePathName = resourcePath.value;
+        const entityContainer = metadata.getEntityContainer();
+        if (!entityContainer) {
+            return;
         }
 
-        this.diagnostics.set(document.uri, diagnostics);
+        const members = [
+            ...Object.values(entityContainer.entitySets),
+            ...Object.values(entityContainer.singletons),
+            ...Object.values(entityContainer.functions),
+            ...Object.values(entityContainer.actions),
+        ];
+
+        const matchingMember = members.find(member => member.name === resourcePathName);
+        if (!matchingMember) {
+            const range = rangeFromPeggyRange(resourcePath.span);
+            const diagnostic = new vscode.Diagnostic(
+                range,
+                `Resource path '${resourcePathName}' not found in the entity container of profile ${profile.name}.`,
+                vscode.DiagnosticSeverity.Warning
+            );
+            diagnostics.push(diagnostic);
+        }
     }
 }

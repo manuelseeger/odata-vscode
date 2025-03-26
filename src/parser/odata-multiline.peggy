@@ -60,7 +60,7 @@ primitiveValue
 
 serviceRoot
   = ("https"i / "http"i) "://" host (":" port)? "/" (segment_nz "/")*
- { return text() }
+ { return { value: text(), span: location() } }
 
 odataRelativeUri
   = MWS r:( "$batch"i ("?" batchOptions)?
@@ -212,7 +212,7 @@ resourcePath
   / functionImportCallNoParens querySegment?
   / crossjoin querySegment?
   / "$all"i ("/" optionallyQualifiedEntityTypeName)? )
-  { return text()}
+  { return { value: text(), span: location() } }
 
 queryOptions
   // allow line breaks between query options
@@ -814,12 +814,22 @@ expandItem
   / optionallyQualifiedEntityTypeName "/" expandPath
 
 selectItem
-  = STAR
+  = (STAR
   / allOperationsInSchema
   / selectProperty
   / optionallyQualifiedActionName
   / optionallyQualifiedFunctionName
-  / (optionallyQualifiedEntityTypeName / optionallyQualifiedComplexTypeName) "/" (selectProperty / optionallyQualifiedActionName / optionallyQualifiedFunctionName)
+  / (optionallyQualifiedEntityTypeName 
+  / optionallyQualifiedComplexTypeName) "/" (selectProperty 
+  / optionallyQualifiedActionName 
+  / optionallyQualifiedFunctionName) )
+  {
+    return {
+      value: text(),
+      span: location(),
+      type: "selectItem"
+    }
+  }
 
 complexProperty
   = odataIdentifier
@@ -1774,7 +1784,16 @@ charInJSON
   / escape (quotation_mark / escape / ("/" / "%2F"i) / "b"i / "f"i / "n"i / "r"i / "t"i / "u"i HEXDIG|4|)
 
 propertyPathExpr
-  = (entityColNavigationProperty collectionNavigationExpr? / entityNavigationProperty singleNavigationExpr? / complexColProperty complexColPathExpr? / complexProperty complexPathExpr? / primitiveColProperty collectionPathExpr? / primitiveProperty primitivePathExpr? / streamProperty primitivePathExpr?)
+  = (entityColNavigationProperty collectionNavigationExpr? 
+  / entityNavigationProperty singleNavigationExpr? 
+  / complexColProperty complexColPathExpr? 
+  / complexProperty complexPathExpr? 
+  / primitiveColProperty collectionPathExpr? 
+  / primitiveProperty primitivePathExpr? 
+  / streamProperty primitivePathExpr?)
+  {
+    return { value: text(), type: "propertyPath", span: location() }
+  }
 
 lambdaPredicateExpr
   = boolCommonExpr

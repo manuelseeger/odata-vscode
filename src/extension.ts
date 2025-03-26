@@ -5,10 +5,12 @@ import { setExtensionContext } from './util';
 import { Profile, ProfileTreeProvider } from './profiles';
 import { getEndpointMetadata, selectProfile, runQuery, openQuery, requestProfileMetadata } from './commands';
 import { ProfileItem } from './profiles';
-import { ODataDefaultCompletionItemProvider, ODataSystemQueryCompletionItemProvider } from './completions';
+import { ODataDefaultCompletionItemProvider, ODataMetadataCompletionItemProvider, ODataSystemQueryCompletionItemProvider } from './completions';
 import { MetadataModelService } from './services/MetadataModelService';
 import { ODataDiagnosticProvider } from './diagnostics';
+import { SyntaxParser } from './parser/syntaxparser';
 export const ODataMode: vscode.DocumentFilter = { language: 'odata' };
+
 let diagnosticCollection: vscode.DiagnosticCollection;
 
 
@@ -47,21 +49,29 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const metadataService = MetadataModelService.getInstance();
 
-	const defaultCompleteProvider = new ODataDefaultCompletionItemProvider(metadataService);
+	const defaultCompletionProvider = new ODataDefaultCompletionItemProvider(metadataService);
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(ODataMode,
-		defaultCompleteProvider, ...defaultCompleteProvider.triggerCharacters));
+		defaultCompletionProvider, ...defaultCompletionProvider.triggerCharacters));
 
-	const systemQueryCompleteProvider = new ODataSystemQueryCompletionItemProvider();
+	const systemQueryCompletionProvider = new ODataSystemQueryCompletionItemProvider();
 	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(ODataMode,
-		systemQueryCompleteProvider, ...systemQueryCompleteProvider.triggerCharacters));
+		systemQueryCompletionProvider, ...systemQueryCompletionProvider.triggerCharacters));
+
+	const metadataCompletionProvider = new ODataMetadataCompletionItemProvider(metadataService, context);
+	context.subscriptions.push(vscode.languages.registerCompletionItemProvider(ODataMode,
+		metadataCompletionProvider, ...metadataCompletionProvider.triggerCharacters));
 
 	diagnosticCollection = vscode.languages.createDiagnosticCollection('odata');
 
-	const diagnosticsProvider = new ODataDiagnosticProvider(diagnosticCollection);
-	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
-		diagnosticsProvider.onDidChangeTextDocument(event.document);
-	}));
+	const syntaxParser = new SyntaxParser();
+	const diagnosticsProvider = new ODataDiagnosticProvider(diagnosticCollection, metadataService, context);
 
+	syntaxParser.onSyntaxError(diagnosticsProvider.handleSyntaxError.bind(diagnosticsProvider));
+	syntaxParser.onParseSuccess(diagnosticsProvider.handleParseSucess.bind(diagnosticsProvider));
+
+	context.subscriptions.push(vscode.workspace.onDidChangeTextDocument(event => {
+		syntaxParser.handleChangeTextDocument(event.document);
+	}));
 }
 
 // This method is called when your extension is deactivated

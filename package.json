@@ -144,6 +144,7 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
+    "precompile": "npm run peggy-compile",
     "compile": "webpack",
     "watch": "webpack --watch",
     "package": "webpack --mode production --devtool hidden-source-map",
@@ -154,7 +155,7 @@
     "test": "vscode-test",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
-    "peggy": "peggy --trace --dts -o src/parser/parser.js src/parser/odata.peggy",
+    "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
     "jest": "jest",
     "pre-testparser": "peggy --trace --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
     "testparser": "node test/parser.test.js"

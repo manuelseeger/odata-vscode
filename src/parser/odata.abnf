@@ -1,3 +1,9 @@
+;
+; OData ABNF Construction Rules Version 4.01 with single quotes replaced by 
+; double quotes
+;
+
+
 ;     OData Version 4.01
 ;     OASIS Standard
 ;     23 April 2020
