@@ -1041,11 +1041,11 @@ allOperationsInSchema
   = namespace "." STAR
 
 selectProperty
-  = primitiveProperty
+  = selectPath (OPEN selectOption (SEMI selectOption)* CLOSE / "/" selectProperty)? // need to select path first otherwise primitiveProperty will be selected (greedy)
+  / primitiveProperty
   / primitiveAnnotationInQuery
   / (primitiveColProperty / primitiveColAnnotationInQuery) (OPEN selectOptionPC (SEMI selectOptionPC)* CLOSE)?
   / navigationProperty
-  / selectPath (OPEN selectOption (SEMI selectOption)* CLOSE / "/" selectProperty)?
 
 optionallyQualifiedActionName
   = (namespace ".")? action
