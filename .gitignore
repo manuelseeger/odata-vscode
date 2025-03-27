@@ -2,3 +2,6 @@ node_modules/
 dist/
 playground/
 *.vsix
+.env
+.artifacts/
+.secrets

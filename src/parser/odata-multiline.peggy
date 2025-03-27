@@ -1408,8 +1408,16 @@ rootExpr
   = "$root/"i (entitySetName keyPredicate / singletonEntity) singleNavigationExpr?
 
 firstMemberExpr
-  = memberExpr
-  / inscopeVariableExpr ("/" memberExpr)?
+  = v:( inscopeVariableExpr ("/" memberExpr)? // greedy lookahead for memberExpr
+  / memberExpr)
+  {
+    return {
+      value: v,
+      span: location(),
+      type: "firstMemberExpr"
+    }
+  }
+
 
 functionExpr
   = (namespace ".")? (entityColFunction functionExprParameters collectionNavigationExpr? / entityFunction functionExprParameters singleNavigationExpr? / complexColFunction functionExprParameters complexColPathExpr? / complexFunction functionExprParameters complexPathExpr? / primitiveColFunction functionExprParameters collectionPathExpr? / primitiveFunction functionExprParameters primitivePathExpr?)

@@ -21,7 +21,7 @@ export interface ParseResult {
 }
 
 export interface SyntaxLocation {
-    value: string;
+    value: string | Array<unknown>;
     span: LocationRange;
     type: SyntaxLocationType;
 }
@@ -37,7 +37,8 @@ export type SyntaxLocationType =
     | "propertyPath"
     | "serviceRoot"
     | "systemQueryOption"
-    | "expandPath";
+    | "expandPath"
+    | "firstMemberExpr";
 
 export class SyntaxParser {
     private _debounceTimer: NodeJS.Timeout | undefined;
