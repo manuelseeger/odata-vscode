@@ -5,6 +5,7 @@
 {
 	"version": "0.2.0",
 	"configurations": [
+		
 		{
 			"name": "Run Extension",
 			"type": "extensionHost",
@@ -16,6 +17,17 @@
 				"${workspaceFolder}/dist/**/*.js"
 			],
 			"preLaunchTask": "${defaultBuildTask}"
+		},
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Run Parser Test",
+			"program": "${workspaceFolder}/src/parser/parser.test.js",
+			"sourceMaps": true,
+			"skipFiles": ["<node_internals>/**"],
+			"outFiles": ["${workspaceFolder}/**/*.js"],
+			
+			"preLaunchTask": "npm: peggy-1line"
 		}
 	]
 }
