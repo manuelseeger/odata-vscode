@@ -1014,7 +1014,24 @@ qchar_no_AMP_EQ
   / "'"
 
 expandPath
-  = ((complexProperty / complexColProperty / optionallyQualifiedComplexTypeName / complexAnnotationInQuery) "/")* (STAR (ref / OPEN levels CLOSE)? / streamProperty / (navigationProperty / entityAnnotationInQuery) ("/" optionallyQualifiedEntityTypeName)? (ref (OPEN expandRefOption (SEMI expandRefOption)* CLOSE)? / count (OPEN expandCountOption (SEMI expandCountOption)* CLOSE)? / OPEN expandOption (SEMI expandOption)* CLOSE)?)
+  = p:(((complexProperty 
+    / complexColProperty 
+    / optionallyQualifiedComplexTypeName 
+    / complexAnnotationInQuery) "/")* 
+    (STAR (ref / OPEN levels CLOSE)? 
+    / streamProperty 
+    / (navigationProperty / entityAnnotationInQuery) 
+    ("/" optionallyQualifiedEntityTypeName)? 
+    (ref (OPEN expandRefOption (SEMI expandRefOption)* CLOSE)? 
+    / count (OPEN expandCountOption (SEMI expandCountOption)* CLOSE)? 
+    / OPEN expandOption (SEMI expandOption)* CLOSE)?))
+    {
+      return {
+        value: p,
+        span: location(),
+        type: "expandPath"
+      }
+    }
 
 STAR
   = "*"

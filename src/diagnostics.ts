@@ -11,21 +11,8 @@ import {
 import { MetadataModelService } from "./services/MetadataModelService";
 import { Profile } from "./profiles";
 import { DataModel } from "./odata2ts/data-model/DataModel";
-import {
-    ActionImportType,
-    EntitySetType,
-    EntityType,
-    FunctionImportType,
-    SingletonType,
-} from "./odata2ts/data-model/DataTypeModel";
-import { entityTypeFromResource, ResourceType } from "./metadata";
 
-function rangeFromPeggyRange(span: LocationRange): vscode.Range {
-    return new vscode.Range(
-        new vscode.Position(span.start.line - 1, span.start.column - 1),
-        new vscode.Position(span.end.line - 1, span.end.column - 1),
-    );
-}
+import { entityTypeFromResource, ResourceType } from "./metadata";
 
 export class ODataDiagnosticProvider {
     constructor(
@@ -42,7 +29,7 @@ export class ODataDiagnosticProvider {
      */
     public handleSyntaxError: ParseSyntaxErrorHandler = (uri: vscode.Uri, error: SyntaxError) => {
         const diagnostics: vscode.Diagnostic[] = [];
-        const range = rangeFromPeggyRange(error.location);
+        const range = spanToRange(error.location);
         const diagnostic = new vscode.Diagnostic(
             range,
             error.message,
@@ -99,7 +86,6 @@ export class ODataDiagnosticProvider {
             return;
         }
 
-        // Recursive function to traverse the tree
         const visit = (node: any, currentQueryOption: SyntaxLocation | null) => {
             if (node && typeof node === "object") {
                 // Check if the current node is a syntaxnode
@@ -119,6 +105,17 @@ export class ODataDiagnosticProvider {
                             break;
                         case "propertyPath":
                             this.diagnosePropertyPath(
+                                diagnostics,
+                                syntaxNode,
+                                currentQueryOption,
+                                metadata,
+                                result,
+                                resource,
+                                profile,
+                            );
+                            break;
+                        case "expandPath":
+                            this.diagnoseExpandPath(
                                 diagnostics,
                                 syntaxNode,
                                 currentQueryOption,
@@ -155,7 +152,43 @@ export class ODataDiagnosticProvider {
         visit(queryOptions, null);
     }
 
-    diagnosePropertyPath(
+    private diagnoseExpandPath(
+        diagnostics: vscode.Diagnostic[],
+        syntaxNode: SyntaxLocation,
+        currentQueryOption: SyntaxLocation | null,
+        metadata: DataModel,
+        result: ParseResult,
+        resource: ResourceType,
+        profile: Profile,
+    ) {
+        const entity = entityTypeFromResource(resource, metadata);
+        if (!entity) {
+            return;
+        }
+        let name;
+        if (Array.isArray(syntaxNode.value)) {
+            name = syntaxNode.value.find((n: any) => typeof n === "string");
+        } else if (typeof syntaxNode.value === "string") {
+            name = syntaxNode.value;
+        } else {
+            // Edge case; we can't meaningfully determine the intended expanse operation
+            return;
+        }
+        const prop = entity.props.filter((p) => p.isCollection).find((p) => p.name === name);
+        if (prop) {
+            return;
+        } else {
+            const range = spanToRange(syntaxNode.span);
+            const diagnostic = new vscode.Diagnostic(
+                range,
+                `'Resource ${resource.name} doesn't have a navigational property ${syntaxNode.value} in profile ${profile.name}.`,
+                vscode.DiagnosticSeverity.Warning,
+            );
+            diagnostics.push(diagnostic);
+        }
+    }
+
+    private diagnosePropertyPath(
         diagnostics: vscode.Diagnostic[],
         node: SyntaxLocation,
         parent: SyntaxLocation | null,
@@ -172,7 +205,7 @@ export class ODataDiagnosticProvider {
         if (prop) {
             return;
         } else {
-            const range = rangeFromPeggyRange(node.span);
+            const range = spanToRange(node.span);
             const diagnostic = new vscode.Diagnostic(
                 range,
                 `Property '${node.value}' not found in the resource ${resource.name} of profile ${profile.name}.`,
@@ -199,7 +232,7 @@ export class ODataDiagnosticProvider {
         if (prop) {
             return;
         } else {
-            const range = rangeFromPeggyRange(node.span);
+            const range = spanToRange(node.span);
             const diagnostic = new vscode.Diagnostic(
                 range,
                 `Select item '${node.value}' not found in the resource ${resource.name} of profile ${profile.name}.`,
@@ -231,7 +264,7 @@ export class ODataDiagnosticProvider {
 
         const matchingMember = members.find((member) => member.name === resourcePathName);
         if (!matchingMember) {
-            const range = rangeFromPeggyRange(resourcePath.span);
+            const range = spanToRange(resourcePath.span);
             const diagnostic = new vscode.Diagnostic(
                 range,
                 `Resource path '${resourcePathName}' not found in the entity container of profile ${profile.name}.`,
@@ -241,4 +274,11 @@ export class ODataDiagnosticProvider {
         }
         return matchingMember;
     }
+}
+
+function spanToRange(span: LocationRange): vscode.Range {
+    return new vscode.Range(
+        new vscode.Position(span.start.line - 1, span.start.column - 1),
+        new vscode.Position(span.end.line - 1, span.end.column - 1),
+    );
 }

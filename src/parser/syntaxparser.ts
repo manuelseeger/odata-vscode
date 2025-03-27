@@ -11,7 +11,7 @@ export interface ODataRoot {
 }
 
 export interface ParsedTree {
-    serviceRoot: ServiceRoot;
+    serviceRoot: SyntaxLocation;
     odataRelativeUri?: ODataRelativeUri;
 }
 
@@ -25,14 +25,9 @@ export interface SyntaxLocation {
     span: LocationRange;
     type: SyntaxLocationType;
 }
-export interface ServiceRoot extends SyntaxLocation {}
-export interface ResourcePath extends SyntaxLocation {}
-
-export interface SelectItem extends SyntaxLocation {}
-export interface PropertyPath extends SyntaxLocation {}
 
 export interface ODataRelativeUri {
-    resourcePath: ResourcePath;
+    resourcePath: SyntaxLocation;
     queryOptions?: any;
 }
 
@@ -41,7 +36,8 @@ export type SyntaxLocationType =
     | "selectItem"
     | "propertyPath"
     | "serviceRoot"
-    | "systemQueryOption";
+    | "systemQueryOption"
+    | "expandPath";
 
 export class SyntaxParser {
     private _debounceTimer: NodeJS.Timeout | undefined;
@@ -143,24 +139,23 @@ export class SyntaxParser {
                 }
                 Object.keys(node).forEach((key) => {
                     const value = processNode(node[key]);
-                    if (value !== null && value !== undefined) {
+                    // remove nulls and empty arrays:
+                    if (
+                        value !== null &&
+                        value !== undefined &&
+                        (!Array.isArray(value) || value.length > 0)
+                    ) {
                         cleaned[key] = value;
                     }
                 });
-                return cleaned;
+                // If the cleaned object is empty, return undefined to remove it
+                return Object.keys(cleaned).length > 0 ? cleaned : undefined;
             }
             return node;
         };
         const cleanedTree = processNode(tree) as ParsedTree;
         return { tree: cleanedTree, locations: locations };
     }
-}
-
-function rangeFromPeggyRange(span: LocationRange): vscode.Range {
-    return new vscode.Range(
-        new vscode.Position(span.start.line - 1, span.start.column - 1),
-        new vscode.Position(span.end.line - 1, span.end.column - 1),
-    );
 }
 
 export * from "./parser.js";

@@ -24,6 +24,7 @@ import {
     EntitySetType,
     EntityType,
     FunctionImportType,
+    PropertyModel,
     SingletonType,
 } from "./odata2ts/data-model/DataTypeModel";
 
@@ -49,6 +50,12 @@ export function entityTypeFromResource(
     }
 
     return undefined;
+}
+
+export function getPropertyDoc(property: PropertyModel): vscode.MarkdownString {
+    return new vscode.MarkdownString(
+        `**Name**: ${property.odataName}\n\n**Type**: ${property.odataType}`,
+    );
 }
 
 function getServiceName(schemas: Array<SchemaV3 | SchemaV4>) {

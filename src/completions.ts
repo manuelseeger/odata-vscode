@@ -1,12 +1,16 @@
 import * as vscode from "vscode";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { Profile } from "./profiles";
-import { EntityContainerModel, ODataVersion } from "./odata2ts/data-model/DataTypeModel";
+import {
+    EntityContainerModel,
+    ODataVersion,
+    PropertyModel,
+} from "./odata2ts/data-model/DataTypeModel";
 import { LocationRange, parse } from "./parser/parser.js";
 import { ParseResult, SyntaxLocation, SyntaxParser } from "./parser/syntaxparser";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 import { ActionImportType } from "./odata2ts/data-model/DataTypeModel";
-import { entityTypeFromResource, ResourceType } from "./metadata";
+import { entityTypeFromResource, getPropertyDoc, ResourceType } from "./metadata";
 
 const odataMethods = {
     V2: [
@@ -225,6 +229,9 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
                 case "selectItem":
                     this.completeSelectItem(completions, model, result);
                     break;
+                case "propertyPath":
+                    this.completePropertyPath(completions, model, result);
+                    break;
                 case "systemQueryOption":
                     if (Array.isArray(location.value) && location.value.includes("$expand")) {
                         this.completeExpandItem(completions, model, result);
@@ -233,6 +240,29 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         }
         return new vscode.CompletionList(completions);
     }
+
+    private completePropertyPath(
+        completions: vscode.CompletionItem[],
+        model: DataModel,
+        result: ParseResult,
+    ) {
+        const resourcePath = result.tree.odataRelativeUri?.resourcePath.value;
+        const resource = this.getResourceType(resourcePath!, model);
+        const entity = entityTypeFromResource(resource!, model);
+        if (!entity) {
+            return;
+        }
+
+        for (const property of entity.props) {
+            const item = new vscode.CompletionItem(
+                property.name,
+                vscode.CompletionItemKind.Property,
+            );
+            item.documentation = getPropertyDoc(property);
+            completions.push(item);
+        }
+    }
+    private completeSelectItem = this.completePropertyPath;
 
     private completeExpandItem(
         completions: vscode.CompletionItem[],
@@ -251,33 +281,7 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
                 property.name,
                 vscode.CompletionItemKind.Property,
             );
-            item.documentation = property.type;
-            completions.push(item);
-        }
-    }
-
-    private completeSelectItem(
-        completions: vscode.CompletionItem[],
-        model: DataModel,
-        result: ParseResult,
-    ) {
-        const resourcePath = result.tree.odataRelativeUri?.resourcePath.value;
-
-        const item = this.getResourceType(resourcePath!, model);
-        if (!item || !("entityType" in item)) {
-            return;
-        }
-
-        const entity = model.getEntityTypes().find((e) => e.name === item.entityType.name);
-        if (!entity) {
-            return;
-        }
-        for (const property of entity.props) {
-            const item = new vscode.CompletionItem(
-                property.name,
-                vscode.CompletionItemKind.Property,
-            );
-            item.documentation = property.type;
+            item.documentation = getPropertyDoc(property);
             completions.push(item);
         }
     }
