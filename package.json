@@ -2,7 +2,7 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Query Language Support",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/manuelseeger/odata-vscode.git"
@@ -84,6 +84,11 @@
         "command": "odata.addProfile",
         "title": "OData: Add Endpoint Profile",
         "icon": "$(add)"
+      },
+      {
+        "command": "odata.runQuery",
+        "title": "OData: Run Query",
+        "icon": "$(zap)"
       },
       {
         "command": "odata.deleteProfile",

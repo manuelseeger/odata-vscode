@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { isMetadataXml } from "./metadata";
+
 import { getExtensionContext } from "./util";
 
 import { Profile, AuthKind } from "./profiles";
@@ -7,36 +7,11 @@ import { Profile, AuthKind } from "./profiles";
 import { fetch } from "undici";
 import { ODataFormat } from "./configuration";
 import { getRequestInit } from "./client";
+import { ODataMode } from "./extension";
+import { combineODataUrl } from "./formatting";
 
 let queryDocument: vscode.TextDocument | undefined = undefined;
 let resultDocument: vscode.TextDocument | undefined = undefined;
-
-export async function selectMetadata() {
-    const fileUri = await vscode.window.showOpenDialog({
-        canSelectMany: false,
-        openLabel: "Select metadata file",
-        filters: {
-            "XML Files": ["xml", "edmx"],
-            "All Files": ["*"],
-        },
-    });
-    if (fileUri && fileUri[0]) {
-        const filePath = fileUri[0];
-
-        // Read and store the file content
-        const fileContent = await vscode.workspace.fs.readFile(filePath);
-
-        const xml = fileContent.toString();
-
-        // Check if the file content is valid metadata
-        if (!isMetadataXml(xml)) {
-            vscode.window.showErrorMessage("The selected file is not a valid OData metadata file.");
-            return;
-        }
-        const context = getExtensionContext();
-        context.globalState.update("selectedMetadata", xml);
-    }
-}
 
 export async function getEndpointMetadata(): Promise<string> {
     const context = getExtensionContext();
@@ -130,8 +105,12 @@ export async function requestProfileMetadata(profile: Profile): Promise<string> 
     return metadata;
 }
 
-export async function runQuery(query: string) {
+export async function runAndOpenQuery(query: string) {
     openQuery(query);
+    await runQuery(query);
+}
+
+export async function runQuery(query: string) {
     const context = getExtensionContext();
     const profile = context.globalState.get<Profile>("selectedProfile");
     if (!profile) {
@@ -183,4 +162,25 @@ export async function runQuery(query: string) {
     });
 
     await vscode.commands.executeCommand("editor.action.formatDocument");
+}
+
+export async function runEditorQuery() {
+    let editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        return;
+    }
+    let document = editor.document;
+
+    if (document.languageId !== ODataMode.language) {
+        vscode.window.showInformationMessage("This command affects only OData files.");
+    } else {
+        try {
+            let text = editor.document.getText();
+            let combinedUrl = combineODataUrl(text);
+            const url = new URL(combinedUrl);
+            runQuery(url.href);
+        } catch (exception) {
+            vscode.window.showWarningMessage("Document does not represent a valid URL.");
+        }
+    }
 }

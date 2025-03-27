@@ -6,9 +6,10 @@ import { Profile, ProfileTreeProvider } from "./profiles";
 import {
     getEndpointMetadata,
     selectProfile,
-    runQuery,
     openQuery,
     requestProfileMetadata,
+    runAndOpenQuery,
+    runEditorQuery,
 } from "./commands";
 import { ProfileItem } from "./profiles";
 import {
@@ -40,7 +41,8 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("odata.runQuery", runQuery),
+        vscode.commands.registerCommand("odata.runAndOpenQuery", runAndOpenQuery),
+        vscode.commands.registerCommand("odata.runQuery", runEditorQuery),
         vscode.commands.registerCommand("odata.openQuery", openQuery),
         vscode.commands.registerCommand("odata.getMetadata", getEndpointMetadata),
         vscode.commands.registerCommand("odata.selectProfile", selectProfile),
