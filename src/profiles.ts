@@ -286,13 +286,13 @@ function getFiltersForType(type: string): { [name: string]: string[] } {
 function parseProfile(data: any): Profile {
     const auth: IProfileAuthentication = {
         kind: data.auth.kind as AuthKind,
-        username: data.auth.username || undefined,
-        password: data.auth.password || undefined,
-        token: data.auth.token || undefined,
+        username: data.auth.username || "",
+        password: data.auth.password || "",
+        token: data.auth.token || "undefined",
         cert: data.auth.cert ? vscode.Uri.parse(data.auth.cert) : undefined,
         key: data.auth.key ? vscode.Uri.parse(data.auth.key) : undefined,
         pfx: data.auth.pfx ? vscode.Uri.parse(data.auth.pfx) : undefined,
-        passphrase: data.auth.passphrase || undefined,
+        passphrase: data.auth.passphrase || "",
     };
 
     return {

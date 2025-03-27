@@ -1,15 +1,11 @@
 import * as vscode from "vscode";
-import { MetadataModelService } from "./services/MetadataModelService";
-import { Profile } from "./profiles";
-import {
-    EntityContainerModel,
-    ODataVersion,
-    PropertyModel,
-} from "./odata2ts/data-model/DataTypeModel";
-import { LocationRange, parse } from "./parser/parser.js";
-import { ParseResult, SyntaxLocation, SyntaxParser } from "./parser/syntaxparser";
 import { DataModel } from "./odata2ts/data-model/DataModel";
-import { ActionImportType } from "./odata2ts/data-model/DataTypeModel";
+import { EntityContainerModel, ODataVersion } from "./odata2ts/data-model/DataTypeModel";
+import { LocationRange } from "./parser/parser.js";
+import { ParseResult, SyntaxParser } from "./parser/syntaxparser";
+import { Profile } from "./profiles";
+import { MetadataModelService } from "./services/MetadataModelService";
+
 import { entityTypeFromResource, getPropertyDoc, ResourceType } from "./metadata";
 
 const odataMethods = {
@@ -219,7 +215,7 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         const completions: vscode.CompletionItem[] = [];
 
         for (const location of result.locations) {
-            if (!this.isInLocation(position, location.span)) {
+            if (!this.isInSpan(position, location.span)) {
                 continue;
             }
             switch (location.type) {
@@ -322,11 +318,11 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         }
     }
 
-    private isInLocation(position: vscode.Position, location: LocationRange): boolean {
-        if (location.start.line - 1 === position.line && location.end.line - 1 === position.line) {
+    private isInSpan(position: vscode.Position, span: LocationRange): boolean {
+        if (span.start.line - 1 === position.line && span.end.line - 1 === position.line) {
             return (
-                location.start.column - 1 <= position.character &&
-                location.end.column - 1 >= position.character
+                span.start.column - 1 <= position.character &&
+                span.end.column - 1 >= position.character
             );
         }
         return false;

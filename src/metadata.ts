@@ -17,7 +17,6 @@ import { ODataVersions } from "@odata2ts/odata-core";
 import { DOMParser, XMLSerializer, Element, Document } from "@xmldom/xmldom";
 
 import { config } from "./configuration";
-import { Profile } from "./profiles";
 
 import {
     ActionImportType,
@@ -116,8 +115,12 @@ export function isMetadataXml(text: string): boolean {
 }
 
 export function isMetadata(xmlDoc: Document): boolean {
+    const namespaces = [
+        "http://docs.oasis-open.org/odata/ns/edmx",
+        "http://schemas.microsoft.com/ado/2007/06/edmx",
+    ];
     const root = xmlDoc.documentElement;
-    if (!root || root.namespaceURI !== "http://schemas.microsoft.com/ado/2007/06/edmx") {
+    if (!root || !namespaces.includes(root.namespaceURI || "")) {
         return false;
     }
     return true;
@@ -155,7 +158,9 @@ function cleanNamespacesFromXmlTree(node: Element, namespacesToRemove: string[])
         const child = node.childNodes.item(i) as Element;
         if (child.nodeType === 1) {
             // Element node
-            if (namespacesToRemove.includes(child.namespaceURI || "")) {
+            if (config.metadata.removeAnnotations && child.tagName === "Annotation") {
+                node.removeChild(child); // Remove Annotation elements
+            } else if (namespacesToRemove.includes(child.namespaceURI || "")) {
                 node.removeChild(child); // Remove element in unwanted namespace
             } else {
                 cleanNamespacesFromXmlTree(child, namespacesToRemove); // Recurse

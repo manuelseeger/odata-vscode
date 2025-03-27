@@ -136,6 +136,10 @@
           ],
           "default": "json"
         },
+        "odata.metadata.removeAnnotations": {
+          "type": "boolean",
+          "description": "Remove annotations from OData metadata"
+        },
         "odata.metadata.filterNs": {
           "type": "array",
           "description": "Filter namespaces in the OData metadata file",
@@ -163,6 +167,7 @@
     "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
     "jest": "jest",
     "pre-testparser": "peggy --trace --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
+    "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy",
     "testparser": "node test/parser.test.js"
   },
   "devDependencies": {

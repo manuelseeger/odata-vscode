@@ -9,7 +9,8 @@ export interface IODataMetadataConfigurationMapEntry {
 
 export interface IODataMetadataConfiguration {
     filterNs: string[];
-    map: IODataMetadataConfigurationMapEntry[];
+
+    removeAnnotations: boolean;
 }
 
 interface IODataHttpClientConfiguration {
@@ -19,7 +20,6 @@ interface IODataHttpClientConfiguration {
 export interface IODataConfiguration {
     metadata: IODataMetadataConfiguration;
     defaultFormat: ODataFormat;
-
 }
 
 const extensionSettings = vscode.workspace.getConfiguration("odata");
@@ -28,6 +28,5 @@ const config: IODataConfiguration = {
     metadata: extensionSettings.get("metadata") as IODataMetadataConfiguration,
     defaultFormat: extensionSettings.get("defaultFormat") as ODataFormat,
 };
-
 
 export { config };

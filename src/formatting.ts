@@ -37,6 +37,7 @@ export class ODataDocumentFormatter implements vscode.DocumentFormattingEditProv
                     switch (syntaxNode.type) {
                         case "serviceRoot":
                             depth = 0;
+                            newline = "";
                             goOn = true;
                             break;
                         case "resourcePath":
