@@ -1,11 +1,11 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
 import { Tiktoken } from "tiktoken/lite";
 import cl100kBase from "tiktoken/encoders/cl100k_base.json";
 
-import { isMetadataXml, digestMetadata, getFilteredMetadataXml } from './metadata';
-import { getExtensionContext, hasProperty } from './util';
-import { Profile } from './profiles';
+import { isMetadataXml, digestMetadata, getFilteredMetadataXml } from "./metadata";
+import { getExtensionContext, hasProperty } from "./util";
+import { Profile } from "./profiles";
 
 const BASE_PROMPT = `You help generate OData queries from EDMX medadata. Keep usage of functions,lambdas or other advanced features to a minimum. Return query code as an \`\`\`odata code block and give a short explanation.
 
@@ -26,25 +26,24 @@ export const chatHandler: vscode.ChatRequestHandler = async (
     request: vscode.ChatRequest,
     context: vscode.ChatContext,
     stream: vscode.ChatResponseStream,
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
 ) => {
-
     const encoding = new Tiktoken(
         cl100kBase.bpe_ranks,
         cl100kBase.special_tokens,
-        cl100kBase.pat_str
+        cl100kBase.pat_str,
     );
     const extensionContext = getExtensionContext();
 
     const profile = extensionContext.globalState.get<Profile>("selectedProfile");
     if (!profile) {
-        vscode.window.showWarningMessage('No profile selected.');
+        vscode.window.showWarningMessage("No profile selected.");
         return;
     }
 
     const text = profile.metadata;
     if (!text || !isMetadataXml(text)) {
-        vscode.window.showWarningMessage('No metadata document found, check and update profile');
+        vscode.window.showWarningMessage("No metadata document found, check and update profile");
         return;
     }
 
@@ -54,7 +53,7 @@ export const chatHandler: vscode.ChatRequestHandler = async (
     const replacements: Record<string, string> = {
         metadata: cleanedXml,
         base: profile.baseUrl,
-        version: dataModel.getODataVersion()
+        version: dataModel.getODataVersion(),
     };
 
     const prompt = BASE_PROMPT.replaceAll(/{{(\w+)}}/g, (_, key) => {
@@ -62,22 +61,20 @@ export const chatHandler: vscode.ChatRequestHandler = async (
     });
 
     const tokens = encoding.encode(prompt);
-    console.log(`Prompt tokens: ${tokens.length}`);
+
     if (tokens.length > 64000) {
-        vscode.window.showWarningMessage('Metadata file too large, please provide a smaller file.');
+        vscode.window.showWarningMessage("Metadata file too large, please provide a smaller file.");
         return;
     }
     encoding.free();
 
     const messages = [vscode.LanguageModelChatMessage.User(prompt)];
 
-    const previousMessages = context.history.filter(
-        h => h instanceof vscode.ChatResponseTurn
-    );
+    const previousMessages = context.history.filter((h) => h instanceof vscode.ChatResponseTurn);
     // add the previous messages to the messages array
-    previousMessages.forEach(m => {
-        let fullMessage = '';
-        m.response.forEach(r => {
+    previousMessages.forEach((m) => {
+        let fullMessage = "";
+        m.response.forEach((r) => {
             const mdPart = r as vscode.ChatResponseMarkdownPart;
             fullMessage += mdPart.value.value;
         });
@@ -90,29 +87,21 @@ export const chatHandler: vscode.ChatRequestHandler = async (
     for await (const fragment of chatResponse.text) {
         stream.markdown(fragment);
         buffer.push(fragment);
-        const codeBlocks = extractCodeBlocks(buffer.join(''));
+        const codeBlocks = extractCodeBlocks(buffer.join(""));
         if (codeBlocks.length === 1) {
             const query = codeBlocks[0].trim();
 
             stream.button({
-                title: 'Run',
-                command: 'odata.runQuery',
+                title: "Run",
+                command: "odata.runAndOpenQuery",
                 arguments: [query],
-                tooltip: 'Run the generated query and show results'
+                tooltip: "Open and run the generated query and show results",
             });
             // clear buffer
             buffer.length = 0;
         }
     }
 };
-
-function makeInlineButtonString(title: string, command: string, args: Record<string, string>): string {
-    const argsString = Object.entries(args)
-        .map(([key, value]) => `${key}=${value}`)
-        .join('&');
-    const commandString = argsString ? `${command}?${encodeURIComponent(argsString)}` : command;
-    return `[${title}](command:${commandString})`;
-}
 
 function extractCodeBlocks(response: string): string[] {
     const codeBlockRegex = /```(?:\w+)?\n([\s\S]*?)\n```/g;

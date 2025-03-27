@@ -6,6 +6,7 @@ import { LocationRange, parse } from "./parser/parser.js";
 import { ParseResult, SyntaxLocation, SyntaxParser } from "./parser/syntaxparser";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 import { ActionImportType } from "./odata2ts/data-model/DataTypeModel";
+import { entityTypeFromResource, ResourceType } from "./metadata";
 
 const odataMethods = {
     V2: [
@@ -224,9 +225,35 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
                 case "selectItem":
                     this.completeSelectItem(completions, model, result);
                     break;
+                case "systemQueryOption":
+                    if (Array.isArray(location.value) && location.value.includes("$expand")) {
+                        this.completeExpandItem(completions, model, result);
+                    }
             }
         }
         return new vscode.CompletionList(completions);
+    }
+
+    private completeExpandItem(
+        completions: vscode.CompletionItem[],
+        model: DataModel,
+        result: ParseResult,
+    ) {
+        const resourcePath = result.tree.odataRelativeUri?.resourcePath.value;
+        const resource = this.getResourceType(resourcePath!, model);
+        const entity = entityTypeFromResource(resource!, model);
+        if (!entity) {
+            return;
+        }
+        const expandProps = entity.props.filter((p) => p.isCollection);
+        for (const property of expandProps) {
+            const item = new vscode.CompletionItem(
+                property.name,
+                vscode.CompletionItemKind.Property,
+            );
+            item.documentation = property.type;
+            completions.push(item);
+        }
     }
 
     private completeSelectItem(
@@ -235,14 +262,8 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         result: ParseResult,
     ) {
         const resourcePath = result.tree.odataRelativeUri?.resourcePath.value;
-        const container: EntityContainerModel = model.getEntityContainer();
-        const containerItems = [
-            ...Object.values(container.entitySets),
-            ...Object.values(container.singletons),
-            ...Object.values(container.functions),
-            //...Object.values(container.actions), actions don't allow $select -> diagnostics?
-        ];
-        const item = containerItems.find((i) => i.name === resourcePath);
+
+        const item = this.getResourceType(resourcePath!, model);
         if (!item || !("entityType" in item)) {
             return;
         }
@@ -259,6 +280,18 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
             item.documentation = property.type;
             completions.push(item);
         }
+    }
+
+    private getResourceType(resourcePath: string, model: DataModel): ResourceType | undefined {
+        const container: EntityContainerModel = model.getEntityContainer();
+        const containerItems = [
+            ...Object.values(container.entitySets),
+            ...Object.values(container.singletons),
+            ...Object.values(container.functions),
+            ...Object.values(container.actions),
+        ];
+        const item = containerItems.find((i) => i.name === resourcePath);
+        return item;
     }
 
     private completeResourcePath(

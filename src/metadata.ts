@@ -1,7 +1,7 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 import { parseStringPromise } from "xml2js";
-import { getMinimalConfig } from './odata2ts/defaultConfig';
+import { getMinimalConfig } from "./odata2ts/defaultConfig";
 import { ODataEdmxModelBase } from "./odata2ts/data-model/edmx/ODataEdmxModelBase";
 import { SchemaV3 } from "./odata2ts/data-model/edmx/ODataEdmxModelV3";
 import { SchemaV4 } from "./odata2ts/data-model/edmx/ODataEdmxModelV4";
@@ -17,15 +17,47 @@ import { ODataVersions } from "@odata2ts/odata-core";
 import { DOMParser, XMLSerializer, Element, Document } from "@xmldom/xmldom";
 
 import { config } from "./configuration";
-import { Profile } from './profiles';
+import { Profile } from "./profiles";
+
+import {
+    ActionImportType,
+    EntitySetType,
+    EntityType,
+    FunctionImportType,
+    SingletonType,
+} from "./odata2ts/data-model/DataTypeModel";
+
+export type ResourceType = EntitySetType | SingletonType | FunctionImportType | ActionImportType;
+
+export function entityTypeFromResource(
+    resource: ResourceType,
+    metadata: DataModel,
+): EntityType | undefined {
+    if ("entityType" in resource) {
+        const entity = metadata.getEntityTypes().find((e) => e.name === resource.entityType.name);
+        return entity;
+    } else if ("entitySet" in resource) {
+        const entitySet = Object.values(metadata.getEntityContainer().entitySets).find(
+            (e) => e.name === resource.entitySet,
+        );
+        if (entitySet) {
+            const entity = metadata
+                .getEntityTypes()
+                .find((e) => e.name === entitySet.entityType.name);
+            return entity;
+        }
+    }
+
+    return undefined;
+}
 
 function getServiceName(schemas: Array<SchemaV3 | SchemaV4>) {
     // auto-detection of first namespace with defined EntityTypes
-    const detectedSchema = schemas.find((schema) => schema.$.Namespace && schema.EntityType?.length) || schemas[0];
+    const detectedSchema =
+        schemas.find((schema) => schema.$.Namespace && schema.EntityType?.length) || schemas[0];
     const serviceName = detectedSchema.$.Namespace;
     return serviceName;
 }
-
 
 export async function digestMetadata(metadataXml: string): Promise<DataModel> {
     const optionsDefault = getMinimalConfig();
@@ -33,7 +65,7 @@ export async function digestMetadata(metadataXml: string): Promise<DataModel> {
     const options: RunOptions = {
         ...optionsDefault,
         source: "",
-        output: ""
+        output: "",
     };
 
     const metadataJson = (await parseStringPromise(metadataXml)) as ODataEdmxModelBase<any>;
@@ -47,7 +79,10 @@ export async function digestMetadata(metadataXml: string): Promise<DataModel> {
 
     const serviceName = getServiceName(schemas);
 
-    const namespaces = schemas.map<NamespaceWithAlias>((schema) => [schema.$.Namespace, schema.$.Alias]);
+    const namespaces = schemas.map<NamespaceWithAlias>((schema) => [
+        schema.$.Namespace,
+        schema.$.Alias,
+    ]);
 
     // encapsulate the whole naming logic
     const namingHelper = new NamingHelper(options, serviceName, namespaces);
@@ -68,8 +103,7 @@ export function isMetadataXml(text: string): boolean {
     try {
         const xmlDoc = parser.parseFromString(text, "text/xml");
         return isMetadata(xmlDoc);
-    }
-    catch (error) {
+    } catch (error) {
         return false;
     }
 }
@@ -82,9 +116,7 @@ export function isMetadata(xmlDoc: Document): boolean {
     return true;
 }
 
-
 export function getFilteredMetadataXml(text: string): string {
-
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(text, "text/xml");
 
@@ -102,7 +134,6 @@ export function getFilteredMetadataXml(text: string): string {
     return cleanedXml;
 }
 
-
 function cleanNamespacesFromXmlTree(node: Element, namespacesToRemove: string[]) {
     // Remove attributes in unwanted namespaces
     for (let i = node.attributes.length - 1; i >= 0; i--) {
@@ -115,7 +146,8 @@ function cleanNamespacesFromXmlTree(node: Element, namespacesToRemove: string[])
     // Recursively clean child elements
     for (let i = node.childNodes.length - 1; i >= 0; i--) {
         const child = node.childNodes.item(i) as Element;
-        if (child.nodeType === 1) { // Element node
+        if (child.nodeType === 1) {
+            // Element node
             if (namespacesToRemove.includes(child.namespaceURI || "")) {
                 node.removeChild(child); // Remove element in unwanted namespace
             } else {
