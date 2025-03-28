@@ -242,8 +242,7 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         model: DataModel,
         result: ParseResult,
     ) {
-        const resourcePath = result.tree.odataRelativeUri?.resourcePath.value;
-        const resource = this.getResourceType(resourcePath!, model);
+        const resource = this.getResourceType(result, model);
         const entity = entityTypeFromResource(resource!, model);
         if (!entity) {
             return;
@@ -265,8 +264,7 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         model: DataModel,
         result: ParseResult,
     ) {
-        const resourcePath = result.tree.odataRelativeUri?.resourcePath.value;
-        const resource = this.getResourceType(resourcePath!, model);
+        const resource = this.getResourceType(result, model);
         const entity = entityTypeFromResource(resource!, model);
         if (!entity) {
             return;
@@ -282,7 +280,8 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         }
     }
 
-    private getResourceType(resourcePath: string, model: DataModel): ResourceType | undefined {
+    private getResourceType(result: ParseResult, model: DataModel): ResourceType | undefined {
+        const resourcePath = result.tree.odataRelativeUri?.resourcePath.value;
         const container: EntityContainerModel = model.getEntityContainer();
         const containerItems = [
             ...Object.values(container.entitySets),

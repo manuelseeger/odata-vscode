@@ -5,3 +5,4 @@ playground/
 .env
 .artifacts/
 .secrets
+.vscode-test/

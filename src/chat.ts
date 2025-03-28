@@ -7,7 +7,7 @@ import { isMetadataXml, digestMetadata, getFilteredMetadataXml } from "./metadat
 import { getExtensionContext, hasProperty } from "./util";
 import { Profile } from "./profiles";
 
-const BASE_PROMPT = `You help generate OData queries from EDMX medadata. Keep usage of functions,lambdas or other advanced features to a minimum. Return query code as an \`\`\`odata code block and give a short explanation.
+const BASE_PROMPT = `You help generate OData queries from EDMX medadata. Keep usage of functions,lambdas or other advanced features to a minimum. Return query code as an \`\`\`odata \`\`\` code block and give a short explanation.
 
 OData Version: {{version}}
 
@@ -104,7 +104,7 @@ export const chatHandler: vscode.ChatRequestHandler = async (
 };
 
 function extractCodeBlocks(response: string): string[] {
-    const codeBlockRegex = /```(?:\w+)?\n([\s\S]*?)\n```/g;
+    const codeBlockRegex = /```odata(?:\w+)?\n([\s\S]*?)\n```/g;
     let match;
     const codeBlocks: string[] = [];
 
