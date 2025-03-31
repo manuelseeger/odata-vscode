@@ -269,7 +269,7 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         if (!entity) {
             return;
         }
-        const expandProps = entity.props.filter((p) => p.isCollection);
+        const expandProps = entity.props.filter((p) => p.dataType === "ModelType");
         for (const property of expandProps) {
             const item = new vscode.CompletionItem(
                 property.name,

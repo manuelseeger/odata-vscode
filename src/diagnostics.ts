@@ -14,6 +14,24 @@ import { DataModel } from "./odata2ts/data-model/DataModel";
 
 import { entityTypeFromResource, ResourceType } from "./metadata";
 
+/**
+ * Provides diagnostic services for OData queries in a Visual Studio Code extension.
+ *
+ * This class is responsible for analyzing OData queries, identifying syntax errors,
+ * and validating query components against a metadata model. It generates diagnostics
+ * such as errors and warnings, which are displayed in the editor to assist developers
+ * in writing valid OData queries.
+ *
+ * Key responsibilities include:
+ * - Handling syntax errors during query parsing.
+ * - Validating parsed OData queries against a metadata model.
+ * - Supporting metadata-aware diagnostics for OData profiles.
+ *
+ * Dependencies:
+ * - `vscode.DiagnosticCollection`: Used to store and manage diagnostics for documents.
+ * - `MetadataModelService`: Provides access to the metadata model for validation.
+ * - `vscode.ExtensionContext`: Provides context for the extension, including global state.
+ */
 export class ODataDiagnosticProvider {
     constructor(
         private diagnostics: vscode.DiagnosticCollection,
@@ -74,6 +92,21 @@ export class ODataDiagnosticProvider {
         this.diagnostics.set(uri, diagnostics);
     };
 
+    /**
+     * Diagnose query options in an OData query and add relevant diagnostics.
+     *
+     * This method traverses the query options in the parsed OData query tree and validates them
+     * against the metadata model. It identifies issues such as missing or invalid properties,
+     * incorrect navigation paths, and unsupported query options. Diagnostics are added to the
+     * provided diagnostics array for each issue found.
+     *
+     * @param diagnostics Array to store diagnostics for the document.
+     * @param metadata Metadata model used for validation.
+     * @param result Parsed OData query result.
+     * @param resource Resource type derived from the OData query.
+     * @param profile OData profile used for validation.
+     * @returns void
+     */
     private diagnoseQueryOptions(
         diagnostics: vscode.Diagnostic[],
         metadata: DataModel,
@@ -86,7 +119,12 @@ export class ODataDiagnosticProvider {
             return;
         }
 
-        const visit = (node: any, currentQueryOption: SyntaxLocation | null) => {
+        const visit = (node: any, currentQueryOption: SyntaxLocation | null, visited: Set<any>) => {
+            if (visited.has(node)) {
+                return;
+            }
+            visited.add(node);
+
             if (node && typeof node === "object") {
                 // Check if the current node is a syntaxnode
                 if (node.type && node.span && node.value) {
@@ -101,6 +139,18 @@ export class ODataDiagnosticProvider {
                                 result,
                                 resource,
                                 profile,
+                            );
+                            break;
+                        case "firstMemberExpr":
+                            this.diagnoseFirstMemberExpr(
+                                diagnostics,
+                                syntaxNode,
+                                currentQueryOption,
+                                metadata,
+                                result,
+                                resource,
+                                profile,
+                                visited,
                             );
                             break;
                         case "propertyPath":
@@ -136,12 +186,12 @@ export class ODataDiagnosticProvider {
                 // Recursively traverse child nodes
                 if (Array.isArray(node)) {
                     for (const child of node) {
-                        visit(child, currentQueryOption);
+                        visit(child, currentQueryOption, visited);
                     }
                 } else {
                     for (const key in node) {
                         if (node.hasOwnProperty(key)) {
-                            visit(node[key], currentQueryOption);
+                            visit(node[key], currentQueryOption, visited);
                         }
                     }
                 }
@@ -149,7 +199,96 @@ export class ODataDiagnosticProvider {
         };
 
         // Start traversal from the root queryOptions node
-        visit(queryOptions, null);
+        const visited = new Set<any>();
+        visit(queryOptions, null, visited);
+    }
+
+    private diagnoseFirstMemberExpr(
+        diagnostics: vscode.Diagnostic[],
+        syntaxNode: SyntaxLocation,
+        currentQueryOption: SyntaxLocation | null,
+        metadata: DataModel,
+        result: ParseResult,
+        resource: ResourceType,
+        profile: Profile,
+        visited: Set<any>,
+    ) {
+        const entity = entityTypeFromResource(resource, metadata);
+        if (!entity) {
+            return;
+        }
+
+        const range = spanToRange(syntaxNode.span);
+        if (Array.isArray(syntaxNode.value)) {
+            const flattened = syntaxNode.value.flat(Infinity);
+            if (
+                flattened.length === 3 &&
+                typeof flattened[0] === "string" &&
+                flattened[1] === "/"
+            ) {
+                const [parentName, , child] = flattened;
+                let childName: string;
+
+                if (typeof child === "object" && child !== null && "value" in child) {
+                    // found a child syntaxNode. Mark it as visited so that later visits don't
+                    // add another diagnostic for it.
+                    visited.add(child);
+                    childName = child.value as string;
+                } else {
+                    childName = child as string;
+                }
+
+                const parentProp = entity.props.find(
+                    (p) => p.name === parentName && p.dataType === "ModelType",
+                );
+                if (!parentProp) {
+                    const diagnostic = new vscode.Diagnostic(
+                        range,
+                        `Parent '${parentName}' not found as a navigational property in the resource ${resource.name} of profile ${profile.name}.`,
+                        vscode.DiagnosticSeverity.Warning,
+                    );
+                    diagnostics.push(diagnostic);
+                    return;
+                }
+
+                const parentEntity = metadata.getEntityType(parentProp.fqType);
+                if (!parentEntity) {
+                    const diagnostic = new vscode.Diagnostic(
+                        range,
+                        `Entity type for parent '${parentName}' could not be resolved in profile ${profile.name}.`,
+                        vscode.DiagnosticSeverity.Warning,
+                    );
+                    diagnostics.push(diagnostic);
+                    return;
+                }
+
+                const childProp = parentEntity.props.find((p) => p.name === childName);
+                if (!childProp) {
+                    const subRange = range.with(
+                        new vscode.Position(
+                            range.start.line,
+                            range.start.character + parentName.length + 1,
+                        ),
+                    );
+                    const diagnostic = new vscode.Diagnostic(
+                        subRange,
+                        `Child '${childName}' not found under parent '${parentName}' in the resource ${resource.name} of profile ${profile.name}.`,
+                        vscode.DiagnosticSeverity.Warning,
+                    );
+                    diagnostics.push(diagnostic);
+                }
+            }
+        } else {
+            this.diagnosePropertyPath(
+                diagnostics,
+                syntaxNode,
+                currentQueryOption,
+                metadata,
+                result,
+                resource,
+                profile,
+            );
+        }
     }
 
     private diagnoseExpandPath(
@@ -174,7 +313,9 @@ export class ODataDiagnosticProvider {
             // Edge case; we can't meaningfully determine the intended expanse operation
             return;
         }
-        const prop = entity.props.filter((p) => p.isCollection).find((p) => p.name === name);
+        const prop = entity.props
+            .filter((p) => p.dataType === "ModelType")
+            .find((p) => p.name === name);
         if (prop) {
             return;
         } else {
@@ -190,8 +331,8 @@ export class ODataDiagnosticProvider {
 
     private diagnosePropertyPath(
         diagnostics: vscode.Diagnostic[],
-        node: SyntaxLocation,
-        parent: SyntaxLocation | null,
+        syntaxNode: SyntaxLocation,
+        currentQueryOption: SyntaxLocation | null,
         metadata: DataModel,
         result: ParseResult,
         resource: ResourceType,
@@ -201,14 +342,14 @@ export class ODataDiagnosticProvider {
         if (!entity) {
             return;
         }
-        const prop = entity.props.find((p) => p.name === node.value);
+        const prop = entity.props.find((p) => p.name === syntaxNode.value);
         if (prop) {
             return;
         } else {
-            const range = spanToRange(node.span);
+            const range = spanToRange(syntaxNode.span);
             const diagnostic = new vscode.Diagnostic(
                 range,
-                `Property '${node.value}' not found in the resource ${resource.name} of profile ${profile.name}.`,
+                `Property '${syntaxNode.value}' not found in the resource ${resource.name} of profile ${profile.name}.`,
                 vscode.DiagnosticSeverity.Warning,
             );
             diagnostics.push(diagnostic);
@@ -217,8 +358,8 @@ export class ODataDiagnosticProvider {
 
     private diagnoseSelectItem(
         diagnostics: vscode.Diagnostic[],
-        node: SyntaxLocation,
-        parent: SyntaxLocation | null,
+        syntaxNode: SyntaxLocation,
+        currentQueryOption: SyntaxLocation | null,
         metadata: DataModel,
         result: ParseResult,
         resource: ResourceType,
@@ -228,17 +369,60 @@ export class ODataDiagnosticProvider {
         if (!entity) {
             return;
         }
-        const prop = entity.props.find((p) => p.name === node.value);
-        if (prop) {
-            return;
-        } else {
-            const range = spanToRange(node.span);
-            const diagnostic = new vscode.Diagnostic(
-                range,
-                `Select item '${node.value}' not found in the resource ${resource.name} of profile ${profile.name}.`,
-                vscode.DiagnosticSeverity.Warning,
+        const range = spanToRange(syntaxNode.span);
+        const nodeName = syntaxNode.value;
+        if (typeof nodeName === "string" && nodeName.includes("/")) {
+            const [parentName, childName] = nodeName.split("/");
+            const parentProp = entity.props.find(
+                (p) => p.name === parentName && p.dataType === "ModelType",
             );
-            diagnostics.push(diagnostic);
+            if (!parentProp) {
+                const diagnostic = new vscode.Diagnostic(
+                    range,
+                    `Parent '${parentName}' not found as a navigational property in the resource ${resource.name} of profile ${profile.name}.`,
+                    vscode.DiagnosticSeverity.Warning,
+                );
+                diagnostics.push(diagnostic);
+                return;
+            }
+
+            const parentEntity = metadata.getEntityType(parentProp.fqType);
+            if (!parentEntity) {
+                const diagnostic = new vscode.Diagnostic(
+                    range,
+                    `Entity type for parent '${parentName}' could not be resolved in profile ${profile.name}.`,
+                    vscode.DiagnosticSeverity.Warning,
+                );
+                diagnostics.push(diagnostic);
+                return;
+            }
+
+            const childProp = parentEntity.props.find((p) => p.name === childName);
+            if (!childProp) {
+                const subRange = range.with(
+                    new vscode.Position(
+                        range.start.line,
+                        range.start.character + parentName.length + 1,
+                    ),
+                );
+
+                const diagnostic = new vscode.Diagnostic(
+                    subRange,
+                    `Child '${childName}' not found under parent '${parentName}' in the resource ${resource.name} of profile ${profile.name}.`,
+                    vscode.DiagnosticSeverity.Warning,
+                );
+                diagnostics.push(diagnostic);
+            }
+        } else {
+            const prop = entity.props.find((p) => p.name === nodeName);
+            if (!prop) {
+                const diagnostic = new vscode.Diagnostic(
+                    range,
+                    `Select item '${nodeName}' not found in the resource ${resource.name} of profile ${profile.name}.`,
+                    vscode.DiagnosticSeverity.Warning,
+                );
+                diagnostics.push(diagnostic);
+            }
         }
     }
 
