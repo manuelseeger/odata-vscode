@@ -1,12 +1,17 @@
 import * as vscode from "vscode";
 import { DataModel } from "./odata2ts/data-model/DataModel";
-import { EntityContainerModel, ODataVersion } from "./odata2ts/data-model/DataTypeModel";
+import {
+    EntityContainerModel,
+    EntityType,
+    ODataVersion,
+} from "./odata2ts/data-model/DataTypeModel";
 import { LocationRange } from "./parser/parser.js";
-import { ParseResult, SyntaxParser } from "./parser/syntaxparser";
+import { ParseResult, SyntaxLocation, SyntaxParser } from "./parser/syntaxparser";
 import { Profile } from "./profiles";
 import { MetadataModelService } from "./services/MetadataModelService";
 
 import { entityTypeFromResource, getPropertyDoc, ResourceType } from "./metadata";
+import { combineODataUrl } from "./formatting";
 
 const odataMethods = {
     V2: [
@@ -191,63 +196,86 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         private context: vscode.ExtensionContext,
     ) {}
 
-    triggerCharacters = [".", "=", ",", "(", "/", "'"];
+    public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     async provideCompletionItems(
         document: vscode.TextDocument,
         position: vscode.Position,
         token: vscode.CancellationToken,
     ): Promise<vscode.CompletionList<vscode.CompletionItem> | null | undefined> {
+        const completions: vscode.CompletionItem[] = [];
         const profile = this.context.globalState.get<Profile>("selectedProfile");
 
         const model = await this.metadataService.getModel(profile!);
-
         if (!model) {
             return null;
         }
 
-        const text = document.getText();
+        const resourceType = this.getResourceEntityTypeFromDocument(document, model);
+        if (!resourceType) {
+            this.completeResourcePath(completions, model);
+            return new vscode.CompletionList(completions);
+        }
 
-        const result = this.syntaxParser.process(document);
-        if (!result) {
+        // Traverse backward to find the nearest system query option
+        const queryOption = this.findNearestSystemQueryOption(document, position);
+        if (!queryOption) {
             return null;
         }
 
-        const completions: vscode.CompletionItem[] = [];
-
-        for (const location of result.locations) {
-            if (!this.isInSpan(position, location.span)) {
-                continue;
-            }
-            switch (location.type) {
-                case "resourcePath":
-                    this.completeResourcePath(completions, model, result);
-                    break;
-                case "selectItem":
-                    this.completeSelectItem(completions, model, result);
-                    break;
-                case "propertyPath":
-                    this.completePropertyPath(completions, model, result);
-                    break;
-                case "systemQueryOption":
-                    if (Array.isArray(location.value) && location.value.includes("$expand")) {
-                        this.completeExpandItem(completions, model, result);
-                    }
-            }
+        switch (queryOption) {
+            case "$select":
+            case "$filter":
+                this.completePropertyPath(completions, position, document, model, resourceType);
+                break;
+            case "$expand":
+                this.completeExpandItem(completions, model, resourceType);
+                break;
+            default:
+                this.completePropertyPath(completions, position, document, model, resourceType);
         }
+
         return new vscode.CompletionList(completions);
     }
 
     private completePropertyPath(
         completions: vscode.CompletionItem[],
+        position: vscode.Position,
+        document: vscode.TextDocument,
         model: DataModel,
-        result: ParseResult,
+        resourceType: ResourceType,
     ) {
-        const resource = this.getResourceType(result, model);
-        const entity = entityTypeFromResource(resource!, model);
+        let entity: EntityType | undefined;
+
+        const lastSegment = this.getLastSegment(document, position);
+
+        if (lastSegment) {
+            const navProperty = lastSegment;
+            const parentEntity = entityTypeFromResource(resourceType, model);
+            const navEntityProp = parentEntity!.props.find(
+                (prop) => prop.name === navProperty && prop.dataType === "ModelType",
+            );
+
+            if (navEntityProp) {
+                entity = model.getEntityType(navEntityProp.fqType);
+            }
+        } else {
+            entity = entityTypeFromResource(resourceType, model);
+        }
+
+        if (entity) {
+            this.completePropertiesForEntity(completions, entity.fqName, model);
+        }
+    }
+
+    private completePropertiesForEntity(
+        completions: vscode.CompletionItem[],
+        entityTypeName: string,
+        model: DataModel,
+    ) {
+        const entity = model.getEntityType(entityTypeName);
         if (!entity) {
             return;
         }
-
         for (const property of entity.props) {
             const item = new vscode.CompletionItem(
                 property.name,
@@ -257,14 +285,12 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
             completions.push(item);
         }
     }
-    private completeSelectItem = this.completePropertyPath;
 
     private completeExpandItem(
         completions: vscode.CompletionItem[],
         model: DataModel,
-        result: ParseResult,
+        resource: ResourceType,
     ) {
-        const resource = this.getResourceType(result, model);
         const entity = entityTypeFromResource(resource!, model);
         if (!entity) {
             return;
@@ -280,24 +306,7 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         }
     }
 
-    private getResourceType(result: ParseResult, model: DataModel): ResourceType | undefined {
-        const resourcePath = result.tree.odataRelativeUri?.resourcePath.value;
-        const container: EntityContainerModel = model.getEntityContainer();
-        const containerItems = [
-            ...Object.values(container.entitySets),
-            ...Object.values(container.singletons),
-            ...Object.values(container.functions),
-            ...Object.values(container.actions),
-        ];
-        const item = containerItems.find((i) => i.name === resourcePath);
-        return item;
-    }
-
-    private completeResourcePath(
-        completions: vscode.CompletionItem[],
-        model: DataModel,
-        parseResult: ParseResult,
-    ) {
+    private completeResourcePath(completions: vscode.CompletionItem[], model: DataModel) {
         const container: EntityContainerModel = model.getEntityContainer();
         // add all container items to completions
         if (container) {
@@ -317,13 +326,82 @@ export class ODataMetadataCompletionItemProvider implements vscode.CompletionIte
         }
     }
 
-    private isInSpan(position: vscode.Position, span: LocationRange): boolean {
-        if (span.start.line - 1 === position.line && span.end.line - 1 === position.line) {
-            return (
-                span.start.column - 1 <= position.character &&
-                span.end.column - 1 >= position.character
-            );
+    private findNearestSystemQueryOption(
+        document: vscode.TextDocument,
+        position: vscode.Position,
+    ): string | null {
+        let line = position.line;
+        let character = position.character;
+
+        while (line >= 0) {
+            const lineText = document.lineAt(line).text;
+
+            // Check text up to the current character for the current line
+            const textToCheck =
+                line === position.line ? lineText.substring(0, character) : lineText;
+
+            // Match system query options using a regex
+            const match = textToCheck.match(/\$[a-zA-Z]+/g);
+            if (match) {
+                return match[match.length - 1]; // Return the last match found
+            }
+
+            // Move to the previous line
+            line--;
+            character = line >= 0 ? document.lineAt(line).text.length : 0;
         }
-        return false;
+
+        return null; // No system query option found
     }
+
+    private getLastSegment(
+        document: vscode.TextDocument,
+        position: vscode.Position,
+    ): string | undefined {
+        const precedingText = document.getText(
+            new vscode.Range(new vscode.Position(position.line, 0), position),
+        );
+
+        // Match the last segment preceding a slash and optionally a word
+        const match = precedingText.match(/\b\w+(?=\s*\/\s*\w*\s*$)/);
+        return match ? match[0] : undefined;
+    }
+
+    private getResourceEntityTypeFromDocument(
+        document: vscode.TextDocument,
+        model: DataModel,
+    ): ResourceType | undefined {
+        const regex = /(?<=\/)(\w+)(?=\s*[\/?]|$)/g;
+        let resourcePath: string | undefined;
+
+        const lineText = combineODataUrl(document.getText());
+
+        const matches = lineText.match(regex);
+        if (matches) {
+            resourcePath = matches[matches.length - 1];
+        }
+
+        if (!resourcePath) {
+            return undefined;
+        }
+
+        const container: EntityContainerModel = model.getEntityContainer();
+        const containerItems = [
+            ...Object.values(container.entitySets),
+            ...Object.values(container.singletons),
+            ...Object.values(container.functions),
+            ...Object.values(container.actions),
+        ];
+        const item = containerItems.find((i) => i.name === resourcePath);
+        return item;
+    }
+}
+
+function isInSpan(position: vscode.Position, span: LocationRange): boolean {
+    if (span.start.line - 1 === position.line && span.end.line - 1 === position.line) {
+        return (
+            span.start.column - 1 <= position.character && span.end.column - 1 >= position.character
+        );
+    }
+    return false;
 }
