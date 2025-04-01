@@ -1,15 +1,15 @@
 import * as vscode from "vscode";
 
-import { Tiktoken } from "tiktoken/lite";
 import cl100kBase from "tiktoken/encoders/cl100k_base.json";
+import { Tiktoken } from "tiktoken/lite";
 
-import { isMetadataXml, digestMetadata, getFilteredMetadataXml } from "./metadata";
-import { Disposable, getExtensionContext, hasProperty } from "./util";
-import { Profile } from "./profiles";
 import { APP_NAME, internalCommands } from "./configuration";
+import { Profile } from "./profiles";
 import { MetadataModelService } from "./services/MetadataModelService";
+import { Disposable } from "./util";
 
-const BASE_PROMPT = `You help generate OData queries from EDMX medadata. Keep usage of functions,lambdas or other advanced features to a minimum. Return query code as an \`\`\`odata \`\`\` code block and give a short explanation.
+export class ChatParticipantProvider extends Disposable {
+    private readonly BASE_PROMPT = `You help generate OData queries from EDMX medadata. Keep usage of functions,lambdas or other advanced features to a minimum. Return query code as an \`\`\`odata \`\`\` code block and give a short explanation.
 
 OData Version: {{version}}
 
@@ -23,7 +23,6 @@ Examples, but use the properties from the metadata in your answers:
 {{base}}/RequestedEntities?$select=Name, Age, ReferenceId
 {{base}}/RequestedEntities?$expand=RelatedEntity&$filter=Name eq 'John'&$select=Name, Age, RelatedEntity/ParentId`;
 
-export class ChatParticipantProvider extends Disposable {
     private participant: vscode.ChatParticipant;
     constructor(
         private context: vscode.ExtensionContext,
@@ -79,7 +78,7 @@ export class ChatParticipantProvider extends Disposable {
         };
 
         // Build the prompt from metadata, base URL and OData Version
-        const prompt = BASE_PROMPT.replaceAll(/{{(\w+)}}/g, (_, key) => {
+        const prompt = this.BASE_PROMPT.replaceAll(/{{(\w+)}}/g, (_, key) => {
             return replacements[key] || "";
         });
 

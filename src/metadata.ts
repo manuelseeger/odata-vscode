@@ -14,10 +14,6 @@ import { NamingHelper } from "./odata2ts/data-model/NamingHelper";
 
 import { ODataVersions } from "@odata2ts/odata-core";
 
-import { DOMParser, XMLSerializer, Element, Document } from "@xmldom/xmldom";
-
-import { getConfig } from "./configuration";
-
 import {
     ActionImportType,
     EntitySetType,
@@ -102,69 +98,4 @@ export async function digestMetadata(metadataXml: string): Promise<DataModel> {
     const validationErrors = dataModel.getNameValidation();
 
     return dataModel;
-}
-
-export function isMetadataXml(text: string): boolean {
-    const parser = new DOMParser();
-    try {
-        const xmlDoc = parser.parseFromString(text, "text/xml");
-        return isMetadata(xmlDoc);
-    } catch (error) {
-        return false;
-    }
-}
-
-export function isMetadata(xmlDoc: Document): boolean {
-    const namespaces = [
-        "http://docs.oasis-open.org/odata/ns/edmx",
-        "http://schemas.microsoft.com/ado/2007/06/edmx",
-    ];
-    const root = xmlDoc.documentElement;
-    if (!root || !namespaces.includes(root.namespaceURI || "")) {
-        return false;
-    }
-    return true;
-}
-
-export function getFilteredMetadataXml(text: string): string {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(text, "text/xml");
-
-    const root = xmlDoc.documentElement;
-
-    if (!root || !isMetadata(xmlDoc)) {
-        throw new Error("The provided XML is not valid OData metadata.");
-    }
-
-    cleanNamespacesFromXmlTree(root, getConfig().metadata.filterNs);
-
-    const serializer = new XMLSerializer();
-    const cleanedXml = serializer.serializeToString(xmlDoc);
-
-    return cleanedXml;
-}
-
-function cleanNamespacesFromXmlTree(node: Element, namespacesToRemove: string[]) {
-    // Remove attributes in unwanted namespaces
-    for (let i = node.attributes.length - 1; i >= 0; i--) {
-        const attr = node.attributes.item(i);
-        if (attr && namespacesToRemove.includes(attr.namespaceURI || "")) {
-            node.removeAttributeNode(attr);
-        }
-    }
-
-    // Recursively clean child elements
-    for (let i = node.childNodes.length - 1; i >= 0; i--) {
-        const child = node.childNodes.item(i) as Element;
-        if (child.nodeType === 1) {
-            // Element node
-            if (getConfig().metadata.removeAnnotations && child.tagName === "Annotation") {
-                node.removeChild(child); // Remove Annotation elements
-            } else if (namespacesToRemove.includes(child.namespaceURI || "")) {
-                node.removeChild(child); // Remove element in unwanted namespace
-            } else {
-                cleanNamespacesFromXmlTree(child, namespacesToRemove); // Recurse
-            }
-        }
-    }
 }

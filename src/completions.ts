@@ -6,7 +6,7 @@ import {
     ODataVersion,
 } from "./odata2ts/data-model/DataTypeModel";
 import { LocationRange } from "./parser/parser.js";
-import { ParseResult, SyntaxLocation, SyntaxParser } from "./parser/syntaxparser";
+import { SyntaxParser } from "./parser/syntaxparser";
 import { Profile } from "./profiles";
 import { MetadataModelService } from "./services/MetadataModelService";
 

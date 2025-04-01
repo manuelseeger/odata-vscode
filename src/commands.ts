@@ -1,20 +1,9 @@
 import * as vscode from "vscode";
-
-import { Disposable, getExtensionContext } from "./util";
-
-import { Profile, AuthKind } from "./profiles";
-
+import { Disposable } from "./util";
+import { Profile } from "./profiles";
 import { fetch } from "undici";
-import {
-    APP_NAME,
-    commands,
-    getConfig,
-    internalCommands,
-    ODataFormat,
-    ODataMode,
-} from "./configuration";
 import { getRequestInit } from "./client";
-
+import { APP_NAME, commands, getConfig, internalCommands, ODataMode } from "./configuration";
 import { combineODataUrl } from "./formatting";
 
 export class CommandProvider extends Disposable {
