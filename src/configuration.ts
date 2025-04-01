@@ -12,10 +12,8 @@ export const commands = {
 };
 
 export const internalCommands = {
-    runAndOpenQuery: `${APP_NAME}.runAndOpenQuery`,
+    openAndRunQuery: `${APP_NAME}.openAndRunQuery`,
     requestMetadata: `${APP_NAME}.requestMetadata`,
-    deleteProfile: `${APP_NAME}.deleteProfile`,
-    editProfile: `${APP_NAME}.editProfile`,
 };
 
 export interface IODataMetadataConfigurationMapEntry {

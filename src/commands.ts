@@ -29,14 +29,20 @@ export class CommandProvider extends Disposable {
             vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
 
             vscode.commands.registerCommand(
-                internalCommands.runAndOpenQuery,
-                this.runAndOpenQuery,
+                internalCommands.openAndRunQuery,
+                this.openAndRunQuery,
                 this,
             ),
         ];
     }
 
-    async runAndOpenQuery(query: string) {
+    /**
+     * Open a query in the editor and run it.
+     *
+     * This is used by the chat handler to open and run queries the chat participant generates.
+     * @param query The query to run.
+     */
+    async openAndRunQuery(query: string) {
         this.openQuery(query);
         await this.runQuery(query);
     }

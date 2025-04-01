@@ -1,8 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
-//import { requestProfileMetadata } from "./commands";
+
 import { Disposable } from "./util";
-import { APP_NAME } from "./configuration";
+import { APP_NAME, commands } from "./configuration";
 import { requestProfileMetadata } from "./commands";
 
 export enum AuthKind {
@@ -56,12 +56,7 @@ export class ProfileTreeProvider
         super();
         this.subscriptions = [
             vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
-            vscode.commands.registerCommand(
-                `${APP_NAME}.addProfile`,
-                this.openProfileWebview,
-                this,
-            ),
-
+            vscode.commands.registerCommand(commands.addProfile, this.openProfileWebview, this),
             vscode.commands.registerCommand(
                 profileCommands.editProfile,
                 (profileItem: ProfileItem) => {

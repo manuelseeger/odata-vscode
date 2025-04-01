@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { chatHandler } from "./chat";
+import { ChatParticipantProvider } from "./chat";
 import { setExtensionContext } from "./util";
 import { Profile, ProfileTreeProvider } from "./profiles";
 import { CommandProvider } from "./commands";
@@ -22,19 +22,8 @@ export function activate(context: vscode.ExtensionContext) {
     const syntaxParser = new SyntaxParser();
     const metadataService = new MetadataModelService();
 
-    const odataParticipant = vscode.chat.createChatParticipant(
-        `${APP_NAME}.odata-chat`,
-        chatHandler,
-    );
-
-    // add icon to participant
-    odataParticipant.iconPath = vscode.Uri.joinPath(
-        context.extensionUri,
-        "assets",
-        "icon-odata.png",
-    );
-
     context.subscriptions.push(
+        new ChatParticipantProvider(context, metadataService),
         new ProfileTreeProvider(context),
         new CommandProvider(context),
         new ODataDefaultCompletionItemProvider(context, metadataService),
