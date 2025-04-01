@@ -1,11 +1,18 @@
 import * as vscode from "vscode";
 import { SyntaxLocation, SyntaxParser } from "./parser/syntaxparser";
+import { Disposable } from "./util";
+import { ODataMode } from "./configuration";
 
-export class ODataDocumentFormatter implements vscode.DocumentFormattingEditProvider {
-    constructor(
-        private readonly syntaxParser: SyntaxParser,
-        private readonly context: vscode.ExtensionContext,
-    ) {}
+export class ODataDocumentFormatter
+    extends Disposable
+    implements vscode.DocumentFormattingEditProvider
+{
+    constructor(private readonly syntaxParser: SyntaxParser) {
+        super();
+        this.subscriptions = [
+            vscode.languages.registerDocumentFormattingEditProvider(ODataMode, this),
+        ];
+    }
 
     provideDocumentFormattingEdits(
         document: vscode.TextDocument,
@@ -22,37 +29,24 @@ export class ODataDocumentFormatter implements vscode.DocumentFormattingEditProv
             return edits;
         }
 
-        const visit = (node: any, depth: number = 0): any => {
+        const visit = (node: any): any => {
             if (Array.isArray(node)) {
-                node.map((item) => visit(item, depth));
-            } else if (typeof node === "string") {
-                // Handle string nodes if necessary
-                //return node;
-            } else if (typeof node === "object" || node !== null) {
+                node.forEach((item) => visit(item));
+            } else if (node && typeof node === "object") {
                 // Check if the node has a location property = is a named syntax location
                 if (node.span) {
                     const syntaxNode = node as SyntaxLocation;
-                    let goOn = false;
-                    let newline = "\n";
-                    switch (syntaxNode.type) {
-                        case "serviceRoot":
-                            depth = 0;
-                            newline = "";
-                            goOn = true;
-                            break;
-                        case "resourcePath":
-                            depth = 1;
-                            goOn = true;
-                            break;
-                        case "systemQueryOption":
-                            depth = 2;
-                            goOn = true;
-                            break;
-                        default:
-                            goOn = false;
-                            break;
+
+                    let depth = 0;
+                    if (node.type === "resourcePath") {
+                        depth = 1;
+                    } else if (node.type === "systemQueryOption") {
+                        depth = 2;
+                    } else {
+                        depth = 0;
                     }
-                    if (goOn) {
+
+                    if (depth > 0) {
                         const start = document.positionAt(syntaxNode.span.start.offset);
                         const end = document.positionAt(syntaxNode.span.end.offset);
 
@@ -68,9 +62,7 @@ export class ODataDocumentFormatter implements vscode.DocumentFormattingEditProv
                         const leadingWhitespaceRange = new vscode.Range(leadingStart, start);
 
                         // Replace all leading whitespace with proper indentation
-                        edits.push(
-                            vscode.TextEdit.replace(leadingWhitespaceRange, `${newline}${indent}`),
-                        );
+                        edits.push(vscode.TextEdit.replace(leadingWhitespaceRange, `\n${indent}`));
 
                         // Replace the node content with trimmed content
                         edits.push(
@@ -79,14 +71,9 @@ export class ODataDocumentFormatter implements vscode.DocumentFormattingEditProv
                                 `${text.substring(syntaxNode.span.start.offset, syntaxNode.span.end.offset).trim()}`,
                             ),
                         );
-
-                        // Increase depth only after making an edit
-                        depth++;
                     }
                 }
-                Object.keys(node).forEach((key) => {
-                    visit(node[key], depth);
-                });
+                Object.values(node).forEach((value) => visit(value));
             }
         };
         visit(result.tree);

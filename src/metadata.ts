@@ -16,7 +16,7 @@ import { ODataVersions } from "@odata2ts/odata-core";
 
 import { DOMParser, XMLSerializer, Element, Document } from "@xmldom/xmldom";
 
-import { config } from "./configuration";
+import { getConfig } from "./configuration";
 
 import {
     ActionImportType,
@@ -136,7 +136,7 @@ export function getFilteredMetadataXml(text: string): string {
         throw new Error("The provided XML is not valid OData metadata.");
     }
 
-    cleanNamespacesFromXmlTree(root, config.metadata.filterNs);
+    cleanNamespacesFromXmlTree(root, getConfig().metadata.filterNs);
 
     const serializer = new XMLSerializer();
     const cleanedXml = serializer.serializeToString(xmlDoc);
@@ -158,7 +158,7 @@ function cleanNamespacesFromXmlTree(node: Element, namespacesToRemove: string[])
         const child = node.childNodes.item(i) as Element;
         if (child.nodeType === 1) {
             // Element node
-            if (config.metadata.removeAnnotations && child.tagName === "Annotation") {
+            if (getConfig().metadata.removeAnnotations && child.tagName === "Annotation") {
                 node.removeChild(child); // Remove Annotation elements
             } else if (namespacesToRemove.includes(child.namespaceURI || "")) {
                 node.removeChild(child); // Remove element in unwanted namespace

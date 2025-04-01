@@ -56,12 +56,13 @@ export const chatHandler: vscode.ChatRequestHandler = async (
         version: dataModel.getODataVersion(),
     };
 
+    // Build the prompt from metadata, base URL and OData Version
     const prompt = BASE_PROMPT.replaceAll(/{{(\w+)}}/g, (_, key) => {
         return replacements[key] || "";
     });
 
+    // Github Copilot Chat has an input limit of 64000 tokens
     const tokens = encoding.encode(prompt);
-
     if (tokens.length > 64000) {
         vscode.window.showWarningMessage("Metadata file too large, please provide a smaller file.");
         return;
@@ -70,8 +71,8 @@ export const chatHandler: vscode.ChatRequestHandler = async (
 
     const messages = [vscode.LanguageModelChatMessage.User(prompt)];
 
+    // add the message history
     const previousMessages = context.history.filter((h) => h instanceof vscode.ChatResponseTurn);
-    // add the previous messages to the messages array
     previousMessages.forEach((m) => {
         let fullMessage = "";
         m.response.forEach((r) => {
@@ -81,6 +82,7 @@ export const chatHandler: vscode.ChatRequestHandler = async (
         messages.push(vscode.LanguageModelChatMessage.Assistant(fullMessage));
     });
     messages.push(vscode.LanguageModelChatMessage.User(request.prompt));
+
     const chatResponse = await request.model.sendRequest(messages, {}, token);
 
     const buffer = [];

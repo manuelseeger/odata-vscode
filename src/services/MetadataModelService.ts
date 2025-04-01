@@ -1,19 +1,12 @@
-import { Profile } from '../profiles';
-import { DataModel } from '../odata2ts/data-model/DataModel';
-import { getFilteredMetadataXml, digestMetadata } from '../metadata';
+import { Profile } from "../profiles";
+import { DataModel } from "../odata2ts/data-model/DataModel";
+import { getFilteredMetadataXml, digestMetadata } from "../metadata";
 
 export class MetadataModelService {
     private static instance: MetadataModelService;
     private cache: { [profileKey: string]: DataModel } = {};
 
-    private constructor() { }
-
-    public static getInstance(): MetadataModelService {
-        if (!MetadataModelService.instance) {
-            MetadataModelService.instance = new MetadataModelService();
-        }
-        return MetadataModelService.instance;
-    }
+    constructor() {}
 
     public async getModel(profile: Profile): Promise<DataModel> {
         if (this.cache[profile.baseUrl]) {
@@ -42,7 +35,6 @@ export class MetadataModelService {
         // cache digested model
         this.cache[profile.baseUrl] = model;
         return true;
-
     }
     private async digestMetadata(metadataXml: string): Promise<DataModel> {
         const cleanedXml = getFilteredMetadataXml(metadataXml);

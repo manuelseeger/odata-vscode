@@ -13,6 +13,7 @@ import { Profile } from "./profiles";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 
 import { entityTypeFromResource, ResourceType } from "./metadata";
+import { Disposable } from "./util";
 
 /**
  * Provides diagnostic services for OData queries in a Visual Studio Code extension.
@@ -32,12 +33,16 @@ import { entityTypeFromResource, ResourceType } from "./metadata";
  * - `MetadataModelService`: Provides access to the metadata model for validation.
  * - `vscode.ExtensionContext`: Provides context for the extension, including global state.
  */
-export class ODataDiagnosticProvider {
+export class ODataDiagnosticProvider extends Disposable {
+    private diagnostics: vscode.DiagnosticCollection;
     constructor(
-        private diagnostics: vscode.DiagnosticCollection,
         private metadataService: MetadataModelService,
         private context: vscode.ExtensionContext,
-    ) {}
+    ) {
+        super();
+        this.diagnostics = vscode.languages.createDiagnosticCollection("odata");
+        this.subscriptions = [this.diagnostics];
+    }
 
     /**
      * Add syntax errors from parsing a document's OData text to the diagnostics collection.

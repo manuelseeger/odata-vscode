@@ -3,14 +3,7 @@ import * as vscode from "vscode";
 import { chatHandler } from "./chat";
 import { setExtensionContext } from "./util";
 import { Profile, ProfileTreeProvider } from "./profiles";
-import {
-    getEndpointMetadata,
-    selectProfile,
-    openQuery,
-    requestProfileMetadata,
-    runAndOpenQuery,
-    runEditorQuery,
-} from "./commands";
+import { CommandProvider } from "./commands";
 import { ProfileItem } from "./profiles";
 import {
     ODataDefaultCompletionItemProvider,
@@ -21,17 +14,18 @@ import { MetadataModelService } from "./services/MetadataModelService";
 import { ODataDiagnosticProvider } from "./diagnostics";
 import { SyntaxParser } from "./parser/syntaxparser";
 import { ODataDocumentFormatter } from "./formatting";
-export const ODataMode: vscode.DocumentFilter = { language: "odata" };
-
-let diagnosticCollection: vscode.DiagnosticCollection;
+import { APP_NAME, ODataMode } from "./configuration";
 
 export function activate(context: vscode.ExtensionContext) {
     setExtensionContext(context);
 
-    const profileTreeProvider = new ProfileTreeProvider(context);
-    vscode.window.registerTreeDataProvider("odata.profiles-view", profileTreeProvider);
+    const syntaxParser = new SyntaxParser();
+    const metadataService = new MetadataModelService();
 
-    const odataParticipant = vscode.chat.createChatParticipant("odata.odata-chat", chatHandler);
+    const odataParticipant = vscode.chat.createChatParticipant(
+        `${APP_NAME}.odata-chat`,
+        chatHandler,
+    );
 
     // add icon to participant
     odataParticipant.iconPath = vscode.Uri.joinPath(
@@ -41,71 +35,16 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     context.subscriptions.push(
-        vscode.commands.registerCommand("odata.runAndOpenQuery", runAndOpenQuery),
-        vscode.commands.registerCommand("odata.runQuery", runEditorQuery),
-        vscode.commands.registerCommand("odata.openQuery", openQuery),
-        vscode.commands.registerCommand("odata.getMetadata", getEndpointMetadata),
-        vscode.commands.registerCommand("odata.selectProfile", selectProfile),
-        vscode.commands.registerCommand("odata.addProfile", () => {
-            profileTreeProvider.openProfileWebview();
-        }),
-        vscode.commands.registerCommand("odata.editProfile", (profileItem: ProfileItem) => {
-            profileTreeProvider.openProfileWebview(profileItem.profile);
-        }),
-        vscode.commands.registerCommand("odata.deleteProfile", (profileItem: ProfileItem) => {
-            profileTreeProvider.deleteProfile(profileItem.profile);
-        }),
-        vscode.commands.registerCommand(
-            "odata.requestMetadata",
-            async (profileItem: ProfileItem) => {
-                profileItem.profile.metadata = await requestProfileMetadata(profileItem.profile);
-                profileTreeProvider.refresh();
-            },
-        ),
+        new ProfileTreeProvider(context),
+        new CommandProvider(context),
+        new ODataDefaultCompletionItemProvider(context, metadataService),
+        new ODataSystemQueryCompletionItemProvider(),
+        new ODataMetadataCompletionItemProvider(metadataService, syntaxParser, context),
+        new ODataDocumentFormatter(syntaxParser),
     );
 
-    const profile = context.globalState.get<Profile>("selectedProfile");
-    const syntaxParser = new SyntaxParser();
-    const metadataService = MetadataModelService.getInstance();
-
-    const defaultCompletionProvider = new ODataDefaultCompletionItemProvider(metadataService);
-    context.subscriptions.push(
-        vscode.languages.registerCompletionItemProvider(
-            ODataMode,
-            defaultCompletionProvider,
-            ...defaultCompletionProvider.triggerCharacters,
-        ),
-    );
-
-    const systemQueryCompletionProvider = new ODataSystemQueryCompletionItemProvider();
-    context.subscriptions.push(
-        vscode.languages.registerCompletionItemProvider(
-            ODataMode,
-            systemQueryCompletionProvider,
-            ...systemQueryCompletionProvider.triggerCharacters,
-        ),
-    );
-
-    const metadataCompletionProvider = new ODataMetadataCompletionItemProvider(
-        metadataService,
-        syntaxParser,
-        context,
-    );
-    context.subscriptions.push(
-        vscode.languages.registerCompletionItemProvider(
-            ODataMode,
-            metadataCompletionProvider,
-            ...metadataCompletionProvider.triggerCharacters,
-        ),
-    );
-
-    diagnosticCollection = vscode.languages.createDiagnosticCollection("odata");
-
-    const diagnosticsProvider = new ODataDiagnosticProvider(
-        diagnosticCollection,
-        metadataService,
-        context,
-    );
+    const diagnosticsProvider = new ODataDiagnosticProvider(metadataService, context);
+    context.subscriptions.push(diagnosticsProvider);
 
     syntaxParser.onSyntaxError(diagnosticsProvider.handleSyntaxError.bind(diagnosticsProvider));
     syntaxParser.onParseSuccess(diagnosticsProvider.handleParseSucess.bind(diagnosticsProvider));
@@ -115,12 +54,6 @@ export function activate(context: vscode.ExtensionContext) {
             syntaxParser.handleChangeTextDocument(event.document);
         }),
     );
-
-    const odataFormatter = new ODataDocumentFormatter(syntaxParser, context);
-    context.subscriptions.push(
-        vscode.languages.registerDocumentFormattingEditProvider(ODataMode, odataFormatter),
-    );
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}

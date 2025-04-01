@@ -1,5 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
+//import { requestProfileMetadata } from "./commands";
+import { Disposable } from "./util";
+import { APP_NAME } from "./configuration";
 import { requestProfileMetadata } from "./commands";
 
 export enum AuthKind {
@@ -8,6 +11,11 @@ export enum AuthKind {
     Bearer = "bearer",
     ClientCert = "cliencert",
 }
+
+const profileCommands = {
+    deleteProfile: `${APP_NAME}.deleteProfile`,
+    editProfile: `${APP_NAME}.editProfile`,
+};
 
 interface IProfileAuthentication {
     kind: AuthKind;
@@ -31,17 +39,52 @@ export interface Profile {
 export class ProfileItem extends vscode.TreeItem {
     constructor(public profile: Profile) {
         super(profile.name, vscode.TreeItemCollapsibleState.None);
-        this.contextValue = "odata.profile"; // Enables context menu
+        this.contextValue = `${APP_NAME}.profile`; // Enables context menu
     }
 }
 
-export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem> {
+export class ProfileTreeProvider
+    extends Disposable
+    implements vscode.TreeDataProvider<ProfileItem>
+{
     private _onDidChangeTreeData: vscode.EventEmitter<ProfileItem | undefined | void> =
         new vscode.EventEmitter<ProfileItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<ProfileItem | undefined | void> =
         this._onDidChangeTreeData.event;
 
-    constructor(private context: vscode.ExtensionContext) {}
+    constructor(private context: vscode.ExtensionContext) {
+        super();
+        this.subscriptions = [
+            vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
+            vscode.commands.registerCommand(
+                `${APP_NAME}.addProfile`,
+                this.openProfileWebview,
+                this,
+            ),
+
+            vscode.commands.registerCommand(
+                profileCommands.editProfile,
+                (profileItem: ProfileItem) => {
+                    this.openProfileWebview(profileItem.profile);
+                },
+            ),
+            vscode.commands.registerCommand(
+                profileCommands.deleteProfile,
+                (profileItem: ProfileItem) => {
+                    this.deleteProfile(profileItem.profile);
+                },
+            ),
+            vscode.commands.registerCommand(
+                `${APP_NAME}.requestMetadata`,
+                async (profileItem: ProfileItem) => {
+                    profileItem.profile.metadata = await requestProfileMetadata(
+                        profileItem.profile,
+                    );
+                    this.refresh();
+                },
+            ),
+        ];
+    }
 
     getTreeItem(element: ProfileItem): vscode.TreeItem {
         const selectedProfile = this.context.globalState.get<Profile>("selectedProfile");
@@ -53,13 +96,13 @@ export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem>
     }
 
     getChildren(): ProfileItem[] {
-        const profiles = this.context.globalState.get<Profile[]>("odata.profiles", []);
+        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
         return profiles.map((profile) => new ProfileItem(profile));
     }
     addProfile(profile: Profile) {
-        const profiles = this.context.globalState.get<Profile[]>("odata.profiles", []);
+        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
         profiles.push(profile);
-        this.context.globalState.update("odata.profiles", profiles);
+        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
         this.refresh();
     }
     refresh() {
@@ -67,9 +110,9 @@ export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem>
     }
 
     deleteProfile(profile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>("odata.profiles", []);
+        let profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
         profiles = profiles.filter((p) => p.name !== profile.name);
-        this.context.globalState.update("odata.profiles", profiles);
+        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
         this.refresh();
     }
 
@@ -86,7 +129,10 @@ export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem>
         panel.webview.onDidReceiveMessage(
             async (message) => {
                 if (message.command === "saveProfile") {
-                    let profiles = this.context.globalState.get<Profile[]>("odata.profiles", []);
+                    let profiles = this.context.globalState.get<Profile[]>(
+                        `${APP_NAME}.profiles`,
+                        [],
+                    );
 
                     // update or add
                     const newProfile: Profile = parseProfile(message.data);
@@ -98,7 +144,7 @@ export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem>
                         profiles.push(newProfile);
                     }
 
-                    this.context.globalState.update("odata.profiles", profiles);
+                    this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
 
                     if (profiles.length === 1) {
                         this.context.globalState.update("selectedProfile", profiles[0]);

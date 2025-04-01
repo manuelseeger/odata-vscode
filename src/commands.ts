@@ -1,89 +1,192 @@
 import * as vscode from "vscode";
 
-import { getExtensionContext } from "./util";
+import { Disposable, getExtensionContext } from "./util";
 
 import { Profile, AuthKind } from "./profiles";
 
 import { fetch } from "undici";
-import { ODataFormat } from "./configuration";
+import {
+    APP_NAME,
+    commands,
+    getConfig,
+    internalCommands,
+    ODataFormat,
+    ODataMode,
+} from "./configuration";
 import { getRequestInit } from "./client";
-import { ODataMode } from "./extension";
+
 import { combineODataUrl } from "./formatting";
 
-let queryDocument: vscode.TextDocument | undefined = undefined;
-let resultDocument: vscode.TextDocument | undefined = undefined;
+export class CommandProvider extends Disposable {
+    private queryDocument: vscode.TextDocument | undefined = undefined;
+    private resultDocument: vscode.TextDocument | undefined = undefined;
 
-export async function getEndpointMetadata(): Promise<string> {
-    const context = getExtensionContext();
+    constructor(private context: vscode.ExtensionContext) {
+        super();
+        this.subscriptions = [
+            vscode.commands.registerCommand(commands.runQuery, this.runEditorQuery, this),
+            vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
+            vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
 
-    let profile = context.globalState.get<Profile>("selectedProfile");
-    if (!profile) {
-        await selectProfile();
-        profile = context.globalState.get<Profile>("selectedProfile");
-    }
-    if (!profile) {
-        return "";
-    }
-
-    const metadata = await requestProfileMetadata(profile);
-    profile.metadata = metadata;
-    const profiles = context.globalState.get<Profile[]>("odata.profiles", []);
-    const index = profiles.findIndex((p) => p.baseUrl === profile.baseUrl);
-    if (index >= 0) {
-        profiles[index] = profile;
-    } else {
-        profiles.push(profile);
-    }
-    context.globalState.update("odata.profiles", profiles);
-    return metadata;
-}
-
-export async function selectProfile() {
-    const context = getExtensionContext();
-    const profiles = context.globalState.get<Profile[]>("odata.profiles", []);
-    if (profiles.length === 0) {
-        return;
-    }
-    const profileName = await vscode.window.showQuickPick(
-        profiles.map((p) => p.name),
-        {
-            placeHolder: "Select an endpoint",
-        },
-    );
-    if (!profileName) {
-        return;
-    }
-    const profile = profiles.find((p) => p.name === profileName);
-    context.globalState.update("selectedProfile", profile);
-}
-
-export async function openQuery(query: string) {
-    const context = getExtensionContext();
-    const profile = context.globalState.get<Profile>("selectedProfile");
-    if (!profile) {
-        return;
-    }
-    if (!queryDocument) {
-        let doc = await vscode.workspace.openTextDocument({ language: "odata", content: query });
-        queryDocument = doc;
+            vscode.commands.registerCommand(
+                internalCommands.runAndOpenQuery,
+                this.runAndOpenQuery,
+                this,
+            ),
+        ];
     }
 
-    const editor = await vscode.window.showTextDocument(queryDocument, { preview: false });
-    const entireRange = new vscode.Range(
-        queryDocument.positionAt(0),
-        queryDocument.positionAt(queryDocument.getText().length),
-    );
-    await editor.edit((editBuilder) => {
-        editBuilder.replace(entireRange, query);
-    });
+    async runAndOpenQuery(query: string) {
+        this.openQuery(query);
+        await this.runQuery(query);
+    }
 
-    await vscode.commands.executeCommand("editor.action.formatDocument");
+    async runEditorQuery() {
+        let editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            return;
+        }
+        let document = editor.document;
+
+        if (document.languageId !== ODataMode.language) {
+            vscode.window.showInformationMessage("This command affects only OData files.");
+        } else {
+            try {
+                let text = editor.document.getText();
+                let combinedUrl = combineODataUrl(text);
+                const url = new URL(combinedUrl);
+                this.runQuery(url.href);
+            } catch (exception) {
+                vscode.window.showWarningMessage("Document does not represent a valid URL.");
+            }
+        }
+    }
+
+    async selectProfile() {
+        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        if (profiles.length === 0) {
+            return;
+        }
+        const profileName = await vscode.window.showQuickPick(
+            profiles.map((p) => p.name),
+            {
+                placeHolder: "Select an endpoint",
+            },
+        );
+        if (!profileName) {
+            return;
+        }
+        const profile = profiles.find((p) => p.name === profileName);
+        this.context.globalState.update("selectedProfile", profile);
+    }
+
+    async getEndpointMetadata(): Promise<string> {
+        let profile = this.context.globalState.get<Profile>("selectedProfile");
+        if (!profile) {
+            await this.selectProfile();
+            profile = this.context.globalState.get<Profile>("selectedProfile");
+        }
+        if (!profile) {
+            return "";
+        }
+
+        const metadata = await requestProfileMetadata(profile);
+        profile.metadata = metadata;
+        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        const index = profiles.findIndex((p) => p.baseUrl === profile.baseUrl);
+        if (index >= 0) {
+            profiles[index] = profile;
+        } else {
+            profiles.push(profile);
+        }
+        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+        return metadata;
+    }
+
+    private async openQuery(query: string) {
+        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        if (!profile) {
+            return;
+        }
+        if (!this.queryDocument) {
+            let doc = await vscode.workspace.openTextDocument({
+                language: "odata",
+                content: query,
+            });
+            this.queryDocument = doc;
+        }
+
+        const editor = await vscode.window.showTextDocument(this.queryDocument, { preview: false });
+        const entireRange = new vscode.Range(
+            this.queryDocument.positionAt(0),
+            this.queryDocument.positionAt(this.queryDocument.getText().length),
+        );
+        await editor.edit((editBuilder) => {
+            editBuilder.replace(entireRange, query);
+        });
+
+        await vscode.commands.executeCommand("editor.action.formatDocument");
+    }
+
+    private async runQuery(query: string) {
+        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        if (!profile) {
+            return;
+        }
+
+        const defaultFormat = getConfig().defaultFormat;
+
+        // strip leading http verb
+        query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
+        query = query.trim();
+        if (!query.endsWith("$count") && !query.includes("$format")) {
+            query += `&$format=${defaultFormat}`;
+        }
+
+        const r = await getRequestInit(profile);
+        const res = await fetch(query, r);
+
+        let format = "txt";
+        const contentType = res.headers.get("Content-Type");
+        if (contentType) {
+            if (contentType.includes("json")) {
+                format = "json";
+            } else if (contentType.includes("xml")) {
+                format = "xml";
+            }
+        }
+
+        const newContent = await res.text();
+        if (!this.resultDocument) {
+            let doc = await vscode.workspace.openTextDocument({
+                language: format,
+                content: newContent,
+            });
+            this.resultDocument = doc;
+        }
+
+        this.resultDocument = await vscode.languages.setTextDocumentLanguage(
+            this.resultDocument,
+            format,
+        );
+
+        const editor = await vscode.window.showTextDocument(this.resultDocument, {
+            preview: false,
+        });
+        const entireRange = new vscode.Range(
+            this.resultDocument.positionAt(0),
+            this.resultDocument.positionAt(this.resultDocument.getText().length),
+        );
+        await editor.edit((editBuilder) => {
+            editBuilder.replace(entireRange, newContent);
+        });
+
+        await vscode.commands.executeCommand("editor.action.formatDocument");
+    }
 }
 
 export async function requestProfileMetadata(profile: Profile): Promise<string> {
     // request the /$metadata endpoint via http using the profile details
-    const context = getExtensionContext();
-
     const requestInit = await getRequestInit(profile);
     requestInit.headers.set("Accept", "application/xml");
     const metadataUrl = `${profile.baseUrl.replace(/\/+$/, "")}/$metadata`;
@@ -103,84 +206,4 @@ export async function requestProfileMetadata(profile: Profile): Promise<string> 
     }
     const metadata = await response.text();
     return metadata;
-}
-
-export async function runAndOpenQuery(query: string) {
-    openQuery(query);
-    await runQuery(query);
-}
-
-export async function runQuery(query: string) {
-    const context = getExtensionContext();
-    const profile = context.globalState.get<Profile>("selectedProfile");
-    if (!profile) {
-        return;
-    }
-
-    const defaultFormat = vscode.workspace
-        .getConfiguration("odata")
-        .get("defaultFormat") as ODataFormat;
-
-    // strip leading http verb
-    query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
-    query = query.trim();
-    if (!query.endsWith("$count") && !query.includes("$format")) {
-        query += `&$format=${defaultFormat}`;
-    }
-
-    const r = await getRequestInit(profile);
-    const res = await fetch(query, r);
-
-    let format = "txt";
-    const contentType = res.headers.get("Content-Type");
-    if (contentType) {
-        if (contentType.includes("json")) {
-            format = "json";
-        } else if (contentType.includes("xml")) {
-            format = "xml";
-        }
-    }
-
-    const newContent = await res.text();
-    if (!resultDocument) {
-        let doc = await vscode.workspace.openTextDocument({
-            language: format,
-            content: newContent,
-        });
-        resultDocument = doc;
-    }
-
-    resultDocument = await vscode.languages.setTextDocumentLanguage(resultDocument, format);
-
-    const editor = await vscode.window.showTextDocument(resultDocument, { preview: false });
-    const entireRange = new vscode.Range(
-        resultDocument.positionAt(0),
-        resultDocument.positionAt(resultDocument.getText().length),
-    );
-    await editor.edit((editBuilder) => {
-        editBuilder.replace(entireRange, newContent);
-    });
-
-    await vscode.commands.executeCommand("editor.action.formatDocument");
-}
-
-export async function runEditorQuery() {
-    let editor = vscode.window.activeTextEditor;
-    if (!editor) {
-        return;
-    }
-    let document = editor.document;
-
-    if (document.languageId !== ODataMode.language) {
-        vscode.window.showInformationMessage("This command affects only OData files.");
-    } else {
-        try {
-            let text = editor.document.getText();
-            let combinedUrl = combineODataUrl(text);
-            const url = new URL(combinedUrl);
-            runQuery(url.href);
-        } catch (exception) {
-            vscode.window.showWarningMessage("Document does not represent a valid URL.");
-        }
-    }
 }

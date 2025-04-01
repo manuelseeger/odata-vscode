@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { config } from "./configuration";
+import { getConfig } from "./configuration";
 import { AuthKind, Profile } from "./profiles";
 import { Agent } from "undici";
 
@@ -15,7 +15,7 @@ export async function getRequestInit(profile: Profile): Promise<RequestInit> {
         headers: new Headers(),
     };
 
-    if (config.defaultFormat === "json") {
+    if (getConfig().defaultFormat === "json") {
         r.headers.append("Accept", "application/json");
     } else {
         r.headers.append("Accept", "application/xml");
