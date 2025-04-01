@@ -86,8 +86,8 @@
         "icon": "$(add)"
       },
       {
-        "command": "odata.runQuery",
-        "title": "OData: Run Query",
+        "command": "odata.run",
+        "title": "OData: Run",
         "icon": "$(zap)"
       },
       {

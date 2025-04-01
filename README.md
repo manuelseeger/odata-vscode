@@ -9,14 +9,29 @@
 - Metadata-aware diagnostics
 - Run queries against your service endpoint from VSCode
 
-## Extension Settings
+## Commands
+
+
+| Name | Description |
+| ----- | ----- |
+| `odata.run`          | Send query in ActiveTextEditor to selected profile  |
+| `odata.selectProfile` | Select an endpoint profile |
+| `odata.addProfile` | Add a new endpoint profile |
+| `odata.getMetadata` | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
+
+
+## Extension Setup
 
 Minimal setup to enable Metadata-aware completion and Copilot integration:
-- Open view `OData Endpoint Profile`
+- Open view `OData Endpoint Profile` or run command `OData: Add Endpoint Profile`
 - Add a new profile
 - Request metadata for the profile
 
-In Copilot chat, chat with participant `@odata`
+In Copilot Chat, chat with participant `@odata`, example: 
+
+```
+@odata give me all Workitems assigned to John Doe in status New
+```
 
 ## Known Issues and Limitations
 

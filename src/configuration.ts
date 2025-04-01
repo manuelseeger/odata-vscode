@@ -8,7 +8,7 @@ export const commands = {
     getMetadata: `${APP_NAME}.getMetadata`,
     selectProfile: `${APP_NAME}.selectProfile`,
     addProfile: `${APP_NAME}.addProfile`,
-    runQuery: `${APP_NAME}.runQuery`,
+    run: `${APP_NAME}.run`,
 };
 
 export const internalCommands = {

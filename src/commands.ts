@@ -13,7 +13,7 @@ export class CommandProvider extends Disposable {
     constructor(private context: vscode.ExtensionContext) {
         super();
         this.subscriptions = [
-            vscode.commands.registerCommand(commands.runQuery, this.runEditorQuery, this),
+            vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
             vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
             vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
 
