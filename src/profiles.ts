@@ -104,10 +104,6 @@ export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem>
                         this.context.globalState.update("selectedProfile", profiles[0]);
                     }
                     this.refresh();
-                    vscode.window.showInformationMessage(
-                        `Profile "${message.data.name}" ${profile ? "updated" : "added"}!`,
-                    );
-                    panel.dispose();
                 } else if (message.command === "requestMetadata") {
                     const newProfile = parseProfile(message.data);
                     const metadata = await requestProfileMetadata(newProfile);
@@ -246,7 +242,7 @@ export class ProfileTreeProvider implements vscode.TreeDataProvider<ProfileItem>
                     }
                   </div>
                   <br/><br/>
-                  <button type="submit" class="vscode-button">${profile ? "Update Profile" : "Create Profile"}</button>
+                  
                   <button id="requestMetadataButton" type="button" class="vscode-button">Request Metadata</button>
                 </div>
                 <div style="flex: 1;">

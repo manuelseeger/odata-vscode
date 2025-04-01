@@ -151,6 +151,8 @@ export class SyntaxParser {
                 });
                 // If the cleaned object is empty, return undefined to remove it
                 return Object.keys(cleaned).length > 0 ? cleaned : undefined;
+            } else if (typeof node === "string") {
+                return node.trim();
             }
             return node;
         };

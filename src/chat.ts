@@ -97,7 +97,6 @@ export const chatHandler: vscode.ChatRequestHandler = async (
                 arguments: [query],
                 tooltip: "Open and run the generated query and show results",
             });
-            // clear buffer
             buffer.length = 0;
         }
     }

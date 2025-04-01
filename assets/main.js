@@ -41,6 +41,10 @@
             <input type="text" class="headerValue vscode-textfield" placeholder="Header Value"/>
             <div class="icon" onclick="this.parentElement.remove();"><i class="codicon codicon-trash"></i></div>
         `;
+        const inputs = row.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('change', autoSaveProfile);
+        });
         container.appendChild(row);
     });
 
@@ -48,11 +52,23 @@
         vscode.postMessage({ command: 'requestMetadata', data: getformData() });
     });
     
-    document.getElementById('profileForm').addEventListener('submit', (e) => {
-        e.preventDefault();
+    function autoSaveProfile() {
         const formData = getformData();
+        if (!formData.name || !formData.baseUrl) {
+            // Don't save if name or baseUrl is empty
+            return;
+        }
         vscode.postMessage({ command: 'saveProfile', data: formData });
-    });
+    }
+
+    // Attach auto-save to form blur events instead of input events.
+    const profileForm = document.getElementById('profileForm');
+    if (profileForm) {
+        const inputs = profileForm.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            input.addEventListener('change', autoSaveProfile);
+        });
+    }
 
 
     const authKindSelect = document.getElementById('authKind');
