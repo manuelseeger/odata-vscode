@@ -94,7 +94,7 @@ Examples, but use the properties from the metadata in your answers:
 
         const messages = [vscode.LanguageModelChatMessage.User(prompt)];
 
-        // add the message history
+        // add the message history, so that we can ask followup questions
         const previousMessages = context.history.filter(
             (h) => h instanceof vscode.ChatResponseTurn,
         );

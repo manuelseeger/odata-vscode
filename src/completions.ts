@@ -9,13 +9,12 @@ import { LocationRange } from "./parser/parser.js";
 import { SyntaxParser } from "./parser/syntaxparser";
 import { Profile } from "./profiles";
 import { MetadataModelService } from "./services/MetadataModelService";
-
 import { entityTypeFromResource, getPropertyDoc, ResourceType } from "./metadata";
 import { combineODataUrl } from "./formatting";
 import { Disposable } from "./util";
 import { ODataMode } from "./configuration";
 
-export class ODataDefaultCompletionItemProvider
+export class DefaultCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {
@@ -98,7 +97,7 @@ export class ODataDefaultCompletionItemProvider
     }
 }
 
-export class ODataSystemQueryCompletionItemProvider
+export class SystemQueryCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {
@@ -143,7 +142,7 @@ export class ODataSystemQueryCompletionItemProvider
     }
 }
 
-export class ODataMetadataCompletionItemProvider
+export class MetadataCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {

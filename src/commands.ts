@@ -104,11 +104,10 @@ export class CommandProvider extends Disposable {
             return;
         }
         if (!this.queryDocument) {
-            let doc = await vscode.workspace.openTextDocument({
+            this.queryDocument = await vscode.workspace.openTextDocument({
                 language: "odata",
                 content: query,
             });
-            this.queryDocument = doc;
         }
 
         const editor = await vscode.window.showTextDocument(this.queryDocument, { preview: false });
@@ -153,11 +152,10 @@ export class CommandProvider extends Disposable {
 
         const newContent = await res.text();
         if (!this.resultDocument) {
-            let doc = await vscode.workspace.openTextDocument({
+            this.resultDocument = await vscode.workspace.openTextDocument({
                 language: format,
                 content: newContent,
             });
-            this.resultDocument = doc;
         }
 
         this.resultDocument = await vscode.languages.setTextDocumentLanguage(

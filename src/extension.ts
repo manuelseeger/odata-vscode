@@ -1,14 +1,11 @@
 import * as vscode from "vscode";
-
 import { ChatParticipantProvider } from "./chat";
-
 import { ProfileTreeProvider } from "./profiles";
 import { CommandProvider } from "./commands";
-
 import {
-    ODataDefaultCompletionItemProvider,
-    ODataMetadataCompletionItemProvider,
-    ODataSystemQueryCompletionItemProvider,
+    DefaultCompletionItemProvider,
+    MetadataCompletionItemProvider,
+    SystemQueryCompletionItemProvider,
 } from "./completions";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { ODataDiagnosticProvider } from "./diagnostics";
@@ -23,9 +20,9 @@ export function activate(context: vscode.ExtensionContext) {
         new ChatParticipantProvider(context, metadataService),
         new ProfileTreeProvider(context),
         new CommandProvider(context),
-        new ODataDefaultCompletionItemProvider(context, metadataService),
-        new ODataSystemQueryCompletionItemProvider(),
-        new ODataMetadataCompletionItemProvider(metadataService, syntaxParser, context),
+        new DefaultCompletionItemProvider(context, metadataService),
+        new SystemQueryCompletionItemProvider(),
+        new MetadataCompletionItemProvider(metadataService, syntaxParser, context),
         new ODataDocumentFormatter(syntaxParser),
     );
 
