@@ -1,6 +1,6 @@
 # OData support for VSCode
 
-> OData query language support for VSCode. Write and run queries with syntax highlighting, auto-completion, Copilot integration.
+> OData query language support for VSCode. Write and run queries with syntax highlighting, metadata-aware auto-completion, and Copilot integration.
 
 ## Features
 
@@ -50,3 +50,12 @@ Github Copilot has a character limit fo requests. If your service's metadata is 
 - If your metadata includes annotations, enable `odata.metadata.removeAnnotations` in settings to filter all annotations from metadata
 - If your metadata includes non-EDMX namespaces, maintain them in `odata.metadata.filterNs` to filter them out
 - Manually shorten your metadata file in profiles
+
+## Acknowledgment
+
+This extension is modeled after https://github.com/StanislawSwierc/vscode-odata.
+
+The OData syntax definition created by [Geoff Cox (@GeoffCox)](https://github.com/GeoffCox) is reused from vscode-odata. 
+
+
+The EDMX parser is a modified version of https://github.com/odata2ts/odata2ts by [@texttechne](https://github.com/texttechne).
