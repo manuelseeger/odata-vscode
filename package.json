@@ -2,7 +2,7 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Query Language Support",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/manuelseeger/odata-vscode.git"
