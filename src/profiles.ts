@@ -124,26 +124,9 @@ export class ProfileTreeProvider
         panel.webview.onDidReceiveMessage(
             async (message) => {
                 if (message.command === "saveProfile") {
-                    let profiles = this.context.globalState.get<Profile[]>(
-                        `${APP_NAME}.profiles`,
-                        [],
-                    );
-
                     // update or add
                     const newProfile: Profile = parseProfile(message.data);
-
-                    const index = profiles.findIndex((p) => p.name === newProfile.name);
-                    if (index >= 0) {
-                        profiles[index] = newProfile;
-                    } else {
-                        profiles.push(newProfile);
-                    }
-
-                    this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
-
-                    if (profiles.length === 1) {
-                        this.context.globalState.update("selectedProfile", profiles[0]);
-                    }
+                    this.saveProfile(newProfile);
                     this.refresh();
                 } else if (message.command === "requestMetadata") {
                     const newProfile = parseProfile(message.data);
@@ -151,6 +134,9 @@ export class ProfileTreeProvider
                     if (metadata) {
                         panel.webview.postMessage({ command: "metadataReceived", data: metadata });
                     }
+                    // TODO save profile
+                    this.saveProfile(newProfile);
+                    this.refresh();
                 } else if (message.command === "openFileDialog") {
                     const type = message.inputName;
                     const fileUri = await vscode.window.showOpenDialog({
@@ -166,11 +152,28 @@ export class ProfileTreeProvider
                             filePath: fileUri[0].path,
                         });
                     }
+                    // TODO save profile ?
                 }
             },
             undefined,
             this.context.subscriptions,
         );
+    }
+
+    private saveProfile(newProfile: Profile) {
+        let profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        const index = profiles.findIndex((p) => p.name === newProfile.name);
+        if (index >= 0) {
+            profiles[index] = newProfile;
+        } else {
+            profiles.push(newProfile);
+        }
+
+        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+
+        if (profiles.length === 1) {
+            this.context.globalState.update("selectedProfile", profiles[0]);
+        }
     }
 
     private _getWebViewContent(webview: vscode.Webview, profile?: Profile): string {
