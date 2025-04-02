@@ -52,6 +52,9 @@ export class ProfileTreeProvider
     readonly onDidChangeTreeData: vscode.Event<ProfileItem | undefined | void> =
         this._onDidChangeTreeData.event;
 
+    // Add a class-level property to store the webview panel
+    private currentWebviewPanel: vscode.WebviewPanel | undefined;
+
     constructor(private context: vscode.ExtensionContext) {
         super();
         this.subscriptions = [
@@ -112,19 +115,27 @@ export class ProfileTreeProvider
     }
 
     public openProfileWebview(profile?: Profile) {
-        const panel = vscode.window.createWebviewPanel(
-            "profileManager",
-            profile ? `Edit Profile: ${profile.name}` : "Create HTTP Profile",
-            vscode.ViewColumn.One,
-            { enableScripts: true },
+        if (!this.currentWebviewPanel) {
+            this.currentWebviewPanel = vscode.window.createWebviewPanel(
+                "profileManager",
+                profile ? `Edit Profile: ${profile.name}` : "Create HTTP Profile",
+                vscode.ViewColumn.One,
+                { enableScripts: true },
+            );
+        }
+
+        this.currentWebviewPanel.title = profile
+            ? `Edit Profile: ${profile.name}`
+            : "Create HTTP Profile";
+        this.currentWebviewPanel.webview.html = this._getWebViewContent(
+            this.currentWebviewPanel.webview,
+            profile,
         );
+        this.currentWebviewPanel.reveal(vscode.ViewColumn.One);
 
-        panel.webview.html = this._getWebViewContent(panel.webview, profile);
-
-        panel.webview.onDidReceiveMessage(
+        this.currentWebviewPanel.webview.onDidReceiveMessage(
             async (message) => {
                 if (message.command === "saveProfile") {
-                    // update or add
                     const newProfile: Profile = parseProfile(message.data);
                     this.saveProfile(newProfile);
                     this.refresh();
@@ -132,12 +143,13 @@ export class ProfileTreeProvider
                     const newProfile = parseProfile(message.data);
                     const metadata = await requestProfileMetadata(newProfile);
                     if (metadata) {
-                        panel.webview.postMessage({ command: "metadataReceived", data: metadata });
+                        this.currentWebviewPanel!.webview.postMessage({
+                            command: "metadataReceived",
+                            data: metadata,
+                        });
                         newProfile.metadata = metadata;
                         this.saveProfile(newProfile);
                     }
-                    // TODO save profile
-
                     this.refresh();
                 } else if (message.command === "openFileDialog") {
                     const type = message.inputName;
@@ -148,18 +160,22 @@ export class ProfileTreeProvider
                         filters: getFiltersForType(type),
                     });
                     if (fileUri && fileUri.length > 0) {
-                        panel.webview.postMessage({
+                        this.currentWebviewPanel!.webview.postMessage({
                             command: "fileSelected",
                             inputName: type,
                             filePath: fileUri[0].path,
                         });
                     }
-                    // TODO save profile ?
                 }
             },
             undefined,
             this.context.subscriptions,
         );
+
+        // Handle panel disposal
+        this.currentWebviewPanel.onDidDispose(() => {
+            this.currentWebviewPanel = undefined;
+        });
     }
 
     private saveProfile(newProfile: Profile) {
