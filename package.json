@@ -2,7 +2,7 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Query Language Support",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/manuelseeger/odata-vscode.git"
@@ -179,7 +179,7 @@
     "@typescript-eslint/parser": "^8.25.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^3.3.1",
+    "@vscode/vsce": "^3.3.2",
     "abnf": "^4.3.1",
     "copy-webpack-plugin": "^13.0.0",
     "eslint": "^9.21.0",
