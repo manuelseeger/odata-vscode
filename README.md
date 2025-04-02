@@ -16,16 +16,7 @@
 - Endpoint profiles with authentication and custom headers
 - Run queries directly in VSCode and get code-formatted results
 
-## Commands
-
-| Name | Description |
-| ----- | ----- |
-| `odata.run`          | Send query in ActiveTextEditor to selected profile  |
-| `odata.addProfile` | Add a new endpoint profile. _Start here_ |
-| `odata.selectProfile` | Select an endpoint profile |
-| `odata.getMetadata` | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
-
-## Extension Setup
+## Setup
 
 Minimal setup to enable Metadata-aware completion and Copilot integration:
 - Open view `OData Endpoint Profile` or run command `OData: Add Endpoint Profile`
@@ -37,6 +28,25 @@ In Copilot Chat, chat with participant `@odata`, example:
 ```
 @odata give me all Workitems assigned to John Doe in status New
 ```
+
+## Commands
+
+| Name | Description |
+| ----- | ----- |
+| `odata.run`          | Send query in ActiveTextEditor to selected profile  |
+| `odata.addProfile` | Add a new endpoint profile. _Start here_ |
+| `odata.selectProfile` | Select an endpoint profile |
+| `odata.getMetadata` | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
+
+## Settings
+
+| Setting                        | Description                                                                                  | Default Value |
+|--------------------------------|----------------------------------------------------------------------------------------------|---------------|
+| `odata.defaultFormat`          | Set the default response format | `json`       |
+| `odata.metadata.removeAnnotations` | Removes annotations from metadata to reduce size. | `false`       |
+| `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.  | `[]`          |
+
+
 
 ## Known Issues and Limitations
 
