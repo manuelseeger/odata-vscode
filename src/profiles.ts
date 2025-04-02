@@ -133,9 +133,11 @@ export class ProfileTreeProvider
                     const metadata = await requestProfileMetadata(newProfile);
                     if (metadata) {
                         panel.webview.postMessage({ command: "metadataReceived", data: metadata });
+                        newProfile.metadata = metadata;
+                        this.saveProfile(newProfile);
                     }
                     // TODO save profile
-                    this.saveProfile(newProfile);
+
                     this.refresh();
                 } else if (message.command === "openFileDialog") {
                     const type = message.inputName;
