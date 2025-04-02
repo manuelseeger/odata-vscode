@@ -4,21 +4,26 @@
 
 ## Features
 
-- Copilot integration: Talk to your OData service
-- Metadata-aware code completion
-- Metadata-aware diagnostics
-- Run queries against your service endpoint from VSCode
+### Copilot integration: Talk to your OData service
+
+![Copilot Integration](assets/copilot.gif)
+
+### Metadata-aware code completion and diagnostics
+![Copilot Integration](assets/diagnostics.gif)
+
+### More Features
+- Syntax highlighting and formatting for OData queries
+- Endpoint profiles with authentication and custom headers
+- Run queries directly in VSCode and get code-formatted results
 
 ## Commands
-
 
 | Name | Description |
 | ----- | ----- |
 | `odata.run`          | Send query in ActiveTextEditor to selected profile  |
+| `odata.addProfile` | Add a new endpoint profile. _Start here_ |
 | `odata.selectProfile` | Select an endpoint profile |
-| `odata.addProfile` | Add a new endpoint profile |
 | `odata.getMetadata` | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
-
 
 ## Extension Setup
 
@@ -43,6 +48,10 @@ Supported HTTP authentication with OData endpoints:
 Metadata-aware diagnostics and auto-completion only works for top-level entities and some expand entities. Complex nested queries like `?$expand=Entity($select=Prop1,Prop2)` are not supported. 
 
 ## Troubleshooting
+
+### Endpoint authentication method is not supported
+
+You can still use all features but the query runner. Create an endpoint profile with your service URL and manually copy the metadata into the profile. Syntax highlighting, metadata-aware completion, and Copilot integration will work. 
 
 ### Metadata file too large
 
