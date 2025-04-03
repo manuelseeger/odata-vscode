@@ -11,10 +11,12 @@
     "vscode": "^1.98.0"
   },
   "categories": [
-    "Other"
+    "Programming Languages", "Formatters", "Other"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
+  "icon": "assets/odata.128x128.png",
+  "license": "MIT",
   "contributes": {
     "languages": [
       {

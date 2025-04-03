@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 
-import { Disposable } from "./util";
+import { Disposable } from "./provider";
 import { APP_NAME, commands } from "./configuration";
 import { requestProfileMetadata } from "./commands";
 

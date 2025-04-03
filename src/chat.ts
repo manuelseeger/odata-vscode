@@ -6,7 +6,7 @@ import { Tiktoken } from "tiktoken/lite";
 import { APP_NAME, internalCommands } from "./configuration";
 import { Profile } from "./profiles";
 import { MetadataModelService } from "./services/MetadataModelService";
-import { Disposable } from "./util";
+import { Disposable } from "./provider";
 
 export class ChatParticipantProvider extends Disposable {
     private readonly BASE_PROMPT = `You help generate OData queries from EDMX medadata. Keep usage of functions,lambdas or other advanced features to a minimum. Return query code as an \`\`\`odata \`\`\` code block and give a short explanation.
@@ -38,7 +38,7 @@ Examples, but use the properties from the metadata in your answers:
         this.participant.iconPath = vscode.Uri.joinPath(
             context.extensionUri,
             "assets",
-            "icon-odata.png",
+            "odata.128x128.png",
         );
         this.subscriptions = [this.participant];
     }
