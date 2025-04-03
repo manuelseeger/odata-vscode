@@ -11,7 +11,9 @@
     "vscode": "^1.98.0"
   },
   "categories": [
-    "Programming Languages", "Formatters", "Other"
+    "Programming Languages",
+    "Formatters",
+    "Other"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
@@ -149,6 +151,11 @@
           "items": {
             "type": "string"
           }
+        },
+        "odata.strictParser": {
+          "type": "boolean",
+          "description": "Enable strict parsing for OData queries.",
+          "default": true
         }
       }
     }
@@ -164,6 +171,7 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint src",
     "test": "vscode-test",
+    "test:unit": "mocha -u tdd --require ts-node/register src/test/unit/**/*.test.ts",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
     "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
@@ -189,6 +197,7 @@
     "pegjs-backtrace": "^0.2.1",
     "prettier": "^3.5.3",
     "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1"

@@ -67,9 +67,11 @@ odataRelativeUri
   / "$entity"i "?" entityOptions
   / "$entity"i "/" optionallyQualifiedEntityTypeName "?" entityCastOptions
   / "$metadata"i ("?" metadataOptions)? context?
+  / "$count"i // workaround to match count, since serviceRoot greedily swallows resourcePath
   / resourcePath ) 
   MWS 
   q:( "?" MWS queryOptions)? 
+  
   {
     return {
       resourcePath: r,
@@ -179,7 +181,7 @@ port
   = DIGIT*
 
 segment_nz
-  = pchar+
+  = pchar+ 
 
 batchOptions
   = batchOption ("&" batchOption)*
@@ -223,7 +225,6 @@ OWS
 
 MWS
   = (SP / HTAB / CR / LF / CRLF)*
-  { return; }
 
 CR 
   = "\r"
@@ -558,7 +559,7 @@ geoLiteral
 CLOSE
   // allow line breaks between close parens
   = MWS ")"
-  / "%29" MWS
+  / "%29"
 
 lineStringData
   = OPEN positionLiteral (COMMA positionLiteral)+ CLOSE
@@ -657,11 +658,11 @@ contextPropertyPath
   / complexProperty (("/" qualifiedComplexTypeName)? "/" contextPropertyPath)?
 
 collectionNavPath
-  = keyPredicate singleNavigation?
+  = count
+  / keyPredicate singleNavigation?
   / filterInPath collectionNavigation?
   / each boundOperation?
   / boundOperation
-  / count
   / ref
   / querySegment
 
@@ -718,7 +719,7 @@ primitiveFunctionImport
 
 OPEN
   // allow line breaks between open parens
-  = MWS "("
+  = "("
   / "%28" MWS
 
 systemQueryOption
@@ -1175,7 +1176,8 @@ arrayOrObject
   / object
 
 commonExpr
-  = (primitiveLiteral / arrayOrObject / rootExpr / firstMemberExpr / functionExpr / negateExpr / methodCallExpr / parenExpr / castExpr / isofExpr / notExpr)
+  = ( methodCallExpr / primitiveLiteral / arrayOrObject / rootExpr / firstMemberExpr / functionExpr 
+      / negateExpr / parenExpr / castExpr / isofExpr / notExpr)
     ((addExpr / subExpr / mulExpr / divExpr / divbyExpr / modExpr))?
     ((eqExpr / neExpr / ltExpr / leExpr / gtExpr / geExpr / hasExpr / inExpr))?
     ((andExpr / orExpr))?
@@ -1408,8 +1410,9 @@ rootExpr
   = "$root/"i (entitySetName keyPredicate / singletonEntity) singleNavigationExpr?
 
 firstMemberExpr
-  = v:( inscopeVariableExpr ("/" memberExpr)? // greedy lookahead for memberExpr
-  / memberExpr)
+  = v:( memberExpr 
+  / inscopeVariableExpr ("/" memberExpr)? // greedy lookahead for memberExpr
+  )
   {
     return {
       value: v,
@@ -1426,7 +1429,8 @@ negateExpr
   = "-" BWS commonExpr
 
 methodCallExpr
-  = indexOfMethodCallExpr
+  = boolMethodCallExpr
+  / indexOfMethodCallExpr
   / toLowerMethodCallExpr
   / toUpperMethodCallExpr
   / trimMethodCallExpr
@@ -1454,7 +1458,6 @@ methodCallExpr
   / maxDateTimeMethodCallExpr
   / nowMethodCallExpr
   / caseMethodCallExpr
-  / boolMethodCallExpr
 
 parenExpr
   = OPEN BWS commonExpr BWS CLOSE
@@ -1601,8 +1604,8 @@ singleNavigationExpr
   = "/" memberExpr
 
 memberExpr
-  = directMemberExpr
-  / (optionallyQualifiedEntityTypeName / optionallyQualifiedComplexTypeName) "/" directMemberExpr
+  = (optionallyQualifiedEntityTypeName / optionallyQualifiedComplexTypeName) "/" directMemberExpr
+    / directMemberExpr 
 
 inscopeVariableExpr
   = implicitVariableExpr

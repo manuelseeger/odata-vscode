@@ -45,7 +45,7 @@ In Copilot Chat, chat with participant `@odata`, example:
 | `odata.defaultFormat`          | Set the default response format | `json`       |
 | `odata.metadata.removeAnnotations` | Removes annotations from metadata to reduce size. | `false`       |
 | `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.  | `[]`          |
-
+| `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`). | `true`        |
 
 
 ## Known Issues and Limitations
@@ -53,9 +53,11 @@ In Copilot Chat, chat with participant `@odata`, example:
 Supported HTTP authentication with OData endpoints: 
 - Basic
 - Client Certificate
-- Bearer token
+- Bearer token (copy / paste)
 
-Metadata-aware diagnostics and auto-completion only works for top-level entities and some expand entities. Complex nested queries like `?$expand=Entity($select=Prop1,Prop2)` are not supported. 
+Metadata-aware diagnostics and auto-completion only works for top-level entities and some expand entities. Complex nested queries like `?$expand=Entity($select=Prop1,Prop2)` are not supported for metadata-awareness. 
+
+Specials paths like `/$metadata`, `/$count` don't show errors, but the parsed query will be off and metadata-awareness won't work. 
 
 ## Troubleshooting
 

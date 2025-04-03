@@ -29,6 +29,7 @@ export interface IODataMetadataConfiguration {
 export interface IODataConfiguration {
     metadata: IODataMetadataConfiguration;
     defaultFormat: ODataFormat;
+    strictParser: boolean; // Added strictParser setting
 }
 
 export function getConfig() {
@@ -37,6 +38,7 @@ export function getConfig() {
     const config: IODataConfiguration = {
         metadata: extensionSettings.get("metadata") as IODataMetadataConfiguration,
         defaultFormat: extensionSettings.get("defaultFormat") as ODataFormat,
+        strictParser: extensionSettings.get("strictParser", true),
     };
     return config;
 }

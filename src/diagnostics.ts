@@ -14,6 +14,7 @@ import { DataModel } from "./odata2ts/data-model/DataModel";
 
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
+import { getConfig } from "./configuration";
 
 /**
  * Provides diagnostic services for OData queries in a Visual Studio Code extension.
@@ -54,7 +55,9 @@ export class ODataDiagnosticProvider extends Disposable {
         const diagnostic = new vscode.Diagnostic(
             range,
             error.message,
-            vscode.DiagnosticSeverity.Error,
+            getConfig().strictParser
+                ? vscode.DiagnosticSeverity.Error
+                : vscode.DiagnosticSeverity.Warning,
         );
         diagnostics.push(diagnostic);
         this.diagnostics.set(uri, diagnostics);
