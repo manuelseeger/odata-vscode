@@ -168,17 +168,14 @@
     "package": "webpack --mode production --devtool hidden-source-map",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint && npm run test:unit",
     "lint": "eslint src",
     "test": "vscode-test",
     "test:unit": "mocha -u tdd --require ts-node/register src/test/unit/**/*.test.ts",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
     "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
-    "jest": "jest",
-    "pre-testparser": "peggy --trace --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
-    "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy",
-    "testparser": "node test/parser.test.js"
+    "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy"
   },
   "devDependencies": {
     "@types/node": "20.x",
