@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { Disposable } from "./util";
+import { Disposable } from "./provider";
 import { Profile } from "./profiles";
 import { fetch } from "undici";
 import { getRequestInit } from "./client";
@@ -36,6 +36,11 @@ export class CommandProvider extends Disposable {
         await this.runQuery(query);
     }
 
+    /**
+     * Run the query in the editor.
+     *
+     * Run the query from the active editor. The query is expected to be a valid OData URL.
+     */
     async runEditorQuery() {
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
@@ -57,6 +62,9 @@ export class CommandProvider extends Disposable {
         }
     }
 
+    /**
+     * Prompt the user to select a profile from the list of profiles.
+     */
     async selectProfile() {
         const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
         if (profiles.length === 0) {
@@ -75,6 +83,12 @@ export class CommandProvider extends Disposable {
         this.context.globalState.update("selectedProfile", profile);
     }
 
+    /**
+     * Get the metadata for the selected profile and update the profile.
+     *
+     * If no profile is selected, prompt the user to select one.
+     * If no profile is found, return an empty string.
+     */
     async getEndpointMetadata(): Promise<string> {
         let profile = this.context.globalState.get<Profile>("selectedProfile");
         if (!profile) {
@@ -98,6 +112,13 @@ export class CommandProvider extends Disposable {
         return metadata;
     }
 
+    /**
+     * Open the query in the editor.
+     *
+     * This is used by the chat handler to open queries the chat participant generates.
+     *
+     * @param query The query to show in the editor.
+     */
     private async openQuery(query: string) {
         const profile = this.context.globalState.get<Profile>("selectedProfile");
         if (!profile) {
@@ -122,6 +143,11 @@ export class CommandProvider extends Disposable {
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
 
+    /**
+     * Run the query against the selected profile.
+     *
+     * @param query The query to run.
+     */
     private async runQuery(query: string) {
         const profile = this.context.globalState.get<Profile>("selectedProfile");
         if (!profile) {

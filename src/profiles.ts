@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import * as path from "path";
 
-import { Disposable } from "./util";
+import { Disposable } from "./provider";
 import { APP_NAME, commands } from "./configuration";
 import { requestProfileMetadata } from "./commands";
 
@@ -136,8 +136,6 @@ export class ProfileTreeProvider
                         newProfile.metadata = metadata;
                         this.saveProfile(newProfile);
                     }
-                    // TODO save profile
-
                     this.refresh();
                 } else if (message.command === "openFileDialog") {
                     const type = message.inputName;

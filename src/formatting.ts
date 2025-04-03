@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import { SyntaxLocation, SyntaxParser } from "./parser/syntaxparser";
-import { Disposable } from "./util";
+import { Disposable } from "./provider";
 import { ODataMode } from "./configuration";
 
 export class ODataDocumentFormatter
