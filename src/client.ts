@@ -1,17 +1,20 @@
 import * as vscode from "vscode";
 import { getConfig } from "./configuration";
 import { AuthKind, Profile } from "./profiles";
-import { Agent } from "undici";
+import { Agent, RequestInit } from "undici";
 
+/*
 declare global {
     interface RequestInit {
         dispatcher?: Agent | undefined;
         headers: Headers;
     }
 }
+*/
+type MyRequestInit = RequestInit & { headers: Headers };
 
-export async function getRequestInit(profile: Profile): Promise<RequestInit> {
-    const r: RequestInit & { headers: Headers } = {
+export async function getRequestInit(profile: Profile): Promise<MyRequestInit> {
+    const r: MyRequestInit = {
         headers: new Headers(),
     };
 

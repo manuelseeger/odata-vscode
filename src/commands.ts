@@ -5,12 +5,16 @@ import { fetch } from "undici";
 import { getRequestInit } from "./client";
 import { APP_NAME, commands, getConfig, internalCommands, ODataMode } from "./configuration";
 import { combineODataUrl } from "./formatting";
+import { QueryRunner } from "./services/QueryRunner";
 
 export class CommandProvider extends Disposable {
     private queryDocument: vscode.TextDocument | undefined = undefined;
     private resultDocument: vscode.TextDocument | undefined = undefined;
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(
+        private context: vscode.ExtensionContext,
+        private runner: QueryRunner,
+    ) {
         super();
         this.subscriptions = [
             vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
@@ -163,10 +167,16 @@ export class CommandProvider extends Disposable {
             query += `&$format=${defaultFormat}`;
         }
 
-        const r = await getRequestInit(profile);
-        const res = await fetch(query, r);
+        const res = await this.runner.run(query, profile);
 
-        let format = "txt";
+        //const r = await getRequestInit(profile);
+        //const res = await fetch(query, r);
+        if (!res.ok) {
+            vscode.window.showErrorMessage(`Running query failed: ${res.status} ${res.statusText}`);
+            return;
+        }
+
+        let format = "plaintext";
         const contentType = res.headers.get("Content-Type");
         if (contentType) {
             if (contentType.includes("json")) {

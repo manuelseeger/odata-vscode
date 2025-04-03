@@ -11,15 +11,18 @@ import { MetadataModelService } from "./services/MetadataModelService";
 import { ODataDiagnosticProvider } from "./diagnostics";
 import { SyntaxParser } from "./parser/syntaxparser";
 import { ODataDocumentFormatter } from "./formatting";
+import { QueryRunner } from "./services/QueryRunner";
+import { VSCodeFileReader } from "./provider";
 
 export function activate(context: vscode.ExtensionContext) {
     const syntaxParser = new SyntaxParser();
     const metadataService = new MetadataModelService();
+    const queryRunner = new QueryRunner(new VSCodeFileReader());
 
     context.subscriptions.push(
         new ChatParticipantProvider(context, metadataService),
         new ProfileTreeProvider(context),
-        new CommandProvider(context),
+        new CommandProvider(context, queryRunner),
         new DefaultCompletionItemProvider(context, metadataService),
         new SystemQueryCompletionItemProvider(),
         new MetadataCompletionItemProvider(metadataService, syntaxParser, context),
