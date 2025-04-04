@@ -2,6 +2,7 @@ import { IFileReader } from "./services/QueryRunner";
 import * as vscode from "vscode";
 
 export abstract class Disposable {
+    public abstract _id: string;
     subscriptions: Array<{ dispose: () => void }>;
     constructor() {
         this.subscriptions = [];

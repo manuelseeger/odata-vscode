@@ -14,7 +14,7 @@ import { DataModel } from "./odata2ts/data-model/DataModel";
 
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
-import { getConfig } from "./configuration";
+import { getConfig, globalStates } from "./configuration";
 
 /**
  * Provides diagnostic services for OData queries in a Visual Studio Code extension.
@@ -33,6 +33,7 @@ import { getConfig } from "./configuration";
  * - `vscode.ExtensionContext`: Provides context for the extension, including global state.
  */
 export class ODataDiagnosticProvider extends Disposable {
+    public _id: string = "ODataDiagnosticProvider";
     private diagnostics: vscode.DiagnosticCollection;
     constructor(
         private metadataService: MetadataModelService,
@@ -84,7 +85,7 @@ export class ODataDiagnosticProvider extends Disposable {
         const document = await vscode.workspace.openTextDocument(uri);
         const text = document.getText();
 
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         const metadata = await this.metadataService.getModel(profile!);
         if (!metadata) {
             return;
@@ -285,15 +286,17 @@ export class ODataDiagnosticProvider extends Disposable {
                 }
             }
         } else {
-            this.diagnosePropertyPath(
-                diagnostics,
-                syntaxNode,
-                currentQueryOption,
-                metadata,
-                result,
-                resource,
-                profile,
-            );
+            if (typeof syntaxNode.value === "string") {
+                this.diagnosePropertyPath(
+                    diagnostics,
+                    syntaxNode,
+                    currentQueryOption,
+                    metadata,
+                    result,
+                    resource,
+                    profile,
+                );
+            }
         }
     }
 

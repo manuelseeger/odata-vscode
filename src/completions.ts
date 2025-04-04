@@ -12,12 +12,13 @@ import { MetadataModelService } from "./services/MetadataModelService";
 import { entityTypeFromResource, getPropertyDoc, ResourceType } from "./metadata";
 import { combineODataUrl } from "./formatting";
 import { Disposable } from "./provider";
-import { ODataMode } from "./configuration";
+import { globalStates, ODataMode } from "./configuration";
 
 export class DefaultCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {
+    public _id: string = "DefaultCompletionItemProvider";
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
         private context: vscode.ExtensionContext,
@@ -69,7 +70,7 @@ export class DefaultCompletionItemProvider
             item.documentation = methodObj.doc;
             return item;
         });
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
 
         if (!profile || !(await this.metadataService.hasModel(profile))) {
             return new vscode.CompletionList(methodCompletions);
@@ -101,6 +102,7 @@ export class SystemQueryCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {
+    public _id: string = "SystemQueryCompletionItemProvider";
     public triggerCharacters = ["$"];
     constructor() {
         super();
@@ -146,6 +148,7 @@ export class MetadataCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {
+    public _id: string = "MetadataCompletionItemProvider";
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
         private metadataService: MetadataModelService,
@@ -168,7 +171,7 @@ export class MetadataCompletionItemProvider
         token: vscode.CancellationToken,
     ): Promise<vscode.CompletionList<vscode.CompletionItem> | null | undefined> {
         const completions: vscode.CompletionItem[] = [];
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
 
         const model = await this.metadataService.getModel(profile!);
         if (!model) {

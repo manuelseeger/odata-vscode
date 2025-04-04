@@ -12,7 +12,7 @@ async function setEOL(eol: string) {
     await config.update("eol", eol, vscode.ConfigurationTarget.Global);
 }
 
-suite("Extension Test Suite", () => {
+suite("Document Formatter", () => {
     setup(async () => {
         await setTabSize(4);
         await setEOL("\n");

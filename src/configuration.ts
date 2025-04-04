@@ -16,6 +16,11 @@ export const internalCommands = {
     requestMetadata: `${APP_NAME}.requestMetadata`,
 };
 
+export const globalStates = {
+    selectedProfile: `${APP_NAME}.selectedProfile`,
+    profiles: `${APP_NAME}.profiles`,
+};
+
 export interface IODataMetadataConfigurationMapEntry {
     url: string;
     path: string;
