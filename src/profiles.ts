@@ -2,8 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 
 import { Disposable } from "./provider";
-import { APP_NAME, commands } from "./configuration";
-import { requestProfileMetadata } from "./commands";
+import { APP_NAME, commands, globalStates, internalCommands } from "./configuration";
 
 export enum AuthKind {
     None = "none",
@@ -47,6 +46,7 @@ export class ProfileTreeProvider
     extends Disposable
     implements vscode.TreeDataProvider<ProfileItem>
 {
+    public _id: string = "ProfileTreeProvider";
     private _onDidChangeTreeData: vscode.EventEmitter<ProfileItem | undefined | void> =
         new vscode.EventEmitter<ProfileItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<ProfileItem | undefined | void> =
@@ -72,20 +72,11 @@ export class ProfileTreeProvider
                     this.deleteProfile(profileItem.profile);
                 },
             ),
-            vscode.commands.registerCommand(
-                `${APP_NAME}.requestMetadata`,
-                async (profileItem: ProfileItem) => {
-                    profileItem.profile.metadata = await requestProfileMetadata(
-                        profileItem.profile,
-                    );
-                    this.refresh();
-                },
-            ),
         ];
     }
 
     getTreeItem(element: ProfileItem): vscode.TreeItem {
-        const selectedProfile = this.context.globalState.get<Profile>("selectedProfile");
+        const selectedProfile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (selectedProfile && selectedProfile.name === element.profile.name) {
             element.iconPath = new vscode.ThemeIcon("check");
         }
@@ -94,13 +85,13 @@ export class ProfileTreeProvider
     }
 
     getChildren(): ProfileItem[] {
-        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         return profiles.map((profile) => new ProfileItem(profile));
     }
     addProfile(profile: Profile) {
-        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         profiles.push(profile);
-        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+        this.context.globalState.update(globalStates.profiles, profiles);
         this.refresh();
     }
     refresh() {
@@ -108,9 +99,9 @@ export class ProfileTreeProvider
     }
 
     deleteProfile(profile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         profiles = profiles.filter((p) => p.name !== profile.name);
-        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+        this.context.globalState.update(globalStates.profiles, profiles);
         this.refresh();
     }
 
@@ -141,7 +132,10 @@ export class ProfileTreeProvider
                     this.refresh();
                 } else if (message.command === "requestMetadata") {
                     const newProfile = parseProfile(message.data);
-                    const metadata = await requestProfileMetadata(newProfile);
+                    const metadata = await vscode.commands.executeCommand<string>(
+                        internalCommands.requestMetadata,
+                        newProfile,
+                    );
                     if (metadata) {
                         this.currentWebviewPanel!.webview.postMessage({
                             command: "metadataReceived",
@@ -179,7 +173,7 @@ export class ProfileTreeProvider
     }
 
     private saveProfile(newProfile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         const index = profiles.findIndex((p) => p.name === newProfile.name);
         if (index >= 0) {
             profiles[index] = newProfile;
@@ -187,10 +181,10 @@ export class ProfileTreeProvider
             profiles.push(newProfile);
         }
 
-        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+        this.context.globalState.update(globalStates.profiles, profiles);
 
         if (profiles.length === 1) {
-            this.context.globalState.update("selectedProfile", profiles[0]);
+            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
         }
     }
 

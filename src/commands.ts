@@ -1,13 +1,12 @@
 import * as vscode from "vscode";
 import { Disposable } from "./provider";
 import { Profile } from "./profiles";
-import { fetch } from "undici";
-import { getRequestInit } from "./client";
-import { APP_NAME, commands, getConfig, internalCommands, ODataMode } from "./configuration";
+import { commands, getConfig, globalStates, internalCommands, ODataMode } from "./configuration";
 import { combineODataUrl } from "./formatting";
 import { QueryRunner } from "./services/QueryRunner";
 
 export class CommandProvider extends Disposable {
+    public _id: string = "CommandProvider";
     private queryDocument: vscode.TextDocument | undefined = undefined;
     private resultDocument: vscode.TextDocument | undefined = undefined;
 
@@ -24,6 +23,12 @@ export class CommandProvider extends Disposable {
             vscode.commands.registerCommand(
                 internalCommands.openAndRunQuery,
                 this.openAndRunQuery,
+                this,
+            ),
+
+            vscode.commands.registerCommand(
+                internalCommands.requestMetadata,
+                this.requestProfileMetadata,
                 this,
             ),
         ];
@@ -70,7 +75,7 @@ export class CommandProvider extends Disposable {
      * Prompt the user to select a profile from the list of profiles.
      */
     async selectProfile() {
-        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         if (profiles.length === 0) {
             return;
         }
@@ -84,7 +89,7 @@ export class CommandProvider extends Disposable {
             return;
         }
         const profile = profiles.find((p) => p.name === profileName);
-        this.context.globalState.update("selectedProfile", profile);
+        this.context.globalState.update(globalStates.selectedProfile, profile);
     }
 
     /**
@@ -94,25 +99,26 @@ export class CommandProvider extends Disposable {
      * If no profile is found, return an empty string.
      */
     async getEndpointMetadata(): Promise<string> {
-        let profile = this.context.globalState.get<Profile>("selectedProfile");
+        let profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (!profile) {
             await this.selectProfile();
-            profile = this.context.globalState.get<Profile>("selectedProfile");
+            profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         }
         if (!profile) {
             return "";
         }
 
-        const metadata = await requestProfileMetadata(profile);
+        const metadata = await this.requestProfileMetadata(profile);
         profile.metadata = metadata;
-        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         const index = profiles.findIndex((p) => p.baseUrl === profile.baseUrl);
         if (index >= 0) {
             profiles[index] = profile;
         } else {
             profiles.push(profile);
         }
-        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+        this.context.globalState.update(globalStates.profiles, profiles);
+        this.context.globalState.update(globalStates.selectedProfile, profile);
         return metadata;
     }
 
@@ -124,7 +130,7 @@ export class CommandProvider extends Disposable {
      * @param query The query to show in the editor.
      */
     private async openQuery(query: string) {
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (!profile) {
             return;
         }
@@ -153,7 +159,7 @@ export class CommandProvider extends Disposable {
      * @param query The query to run.
      */
     private async runQuery(query: string) {
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (!profile) {
             return;
         }
@@ -169,8 +175,6 @@ export class CommandProvider extends Disposable {
 
         const res = await this.runner.run(query, profile);
 
-        //const r = await getRequestInit(profile);
-        //const res = await fetch(query, r);
         if (!res.ok) {
             vscode.window.showErrorMessage(`Running query failed: ${res.status} ${res.statusText}`);
             return;
@@ -212,27 +216,28 @@ export class CommandProvider extends Disposable {
 
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
-}
 
-export async function requestProfileMetadata(profile: Profile): Promise<string> {
-    // request the /$metadata endpoint via http using the profile details
-    const requestInit = await getRequestInit(profile);
-    requestInit.headers.set("Accept", "application/xml");
-    const metadataUrl = `${profile.baseUrl.replace(/\/+$/, "")}/$metadata`;
-    let response: Response;
-    try {
-        response = await fetch(metadataUrl, requestInit);
-    } catch (err) {
-        vscode.window.showErrorMessage(`Failed to fetch metadata: ${err}`);
-        return "";
-    }
+    async requestProfileMetadata(profile: Profile): Promise<string> {
+        // request the /$metadata endpoint via http using the profile details
+        const requestInit = {
+            headers: { Accept: "application/xml" },
+        } as RequestInit;
+        const metadataUrl = `${profile.baseUrl.replace(/\/+$/, "")}/$metadata`;
+        let response: Response;
+        try {
+            response = await this.runner.fetch(metadataUrl, profile, requestInit);
+        } catch (err) {
+            vscode.window.showErrorMessage(`Failed to fetch metadata: ${err}`);
+            return "";
+        }
 
-    if (!response.ok) {
-        vscode.window.showErrorMessage(
-            `Failed to fetch metadata: ${response.status} ${response.statusText}`,
-        );
-        return "";
+        if (!response.ok) {
+            vscode.window.showErrorMessage(
+                `Failed to fetch metadata: ${response.status} ${response.statusText}`,
+            );
+            return "";
+        }
+        const metadata = await response.text();
+        return metadata;
     }
-    const metadata = await response.text();
-    return metadata;
 }
