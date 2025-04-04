@@ -16,6 +16,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
       - run: npm install
+      - run: xvfb-run npm test
+        if: runner.os == 'Linux'
+      - run: npm test
+        if: runner.os != 'Linux'      
       - run: npm run vsce-latest
       - uses: actions/upload-artifact@v4
         with:

@@ -11,13 +11,14 @@ import { Profile } from "./profiles";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { entityTypeFromResource, getPropertyDoc, ResourceType } from "./metadata";
 import { combineODataUrl } from "./formatting";
-import { Disposable } from "./util";
-import { ODataMode } from "./configuration";
+import { Disposable } from "./provider";
+import { globalStates, ODataMode } from "./configuration";
 
 export class DefaultCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {
+    public _id: string = "DefaultCompletionItemProvider";
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
         private context: vscode.ExtensionContext,
@@ -69,7 +70,7 @@ export class DefaultCompletionItemProvider
             item.documentation = methodObj.doc;
             return item;
         });
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
 
         if (!profile || !(await this.metadataService.hasModel(profile))) {
             return new vscode.CompletionList(methodCompletions);
@@ -101,6 +102,7 @@ export class SystemQueryCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {
+    public _id: string = "SystemQueryCompletionItemProvider";
     public triggerCharacters = ["$"];
     constructor() {
         super();
@@ -146,6 +148,7 @@ export class MetadataCompletionItemProvider
     extends Disposable
     implements vscode.CompletionItemProvider
 {
+    public _id: string = "MetadataCompletionItemProvider";
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
         private metadataService: MetadataModelService,
@@ -168,7 +171,7 @@ export class MetadataCompletionItemProvider
         token: vscode.CancellationToken,
     ): Promise<vscode.CompletionList<vscode.CompletionItem> | null | undefined> {
         const completions: vscode.CompletionItem[] = [];
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
 
         const model = await this.metadataService.getModel(profile!);
         if (!model) {
@@ -380,19 +383,83 @@ function isInSpan(position: vscode.Position, span: LocationRange): boolean {
 
 const odataMethods = {
     V2: [
-        { name: "substringof", doc: "Determines if a substring exists within a string." },
-        { name: "startswith", doc: "Checks if a string starts with a specified substring." },
-        { name: "endswith", doc: "Checks if a string ends with a specified substring." },
-        { name: "indexof", doc: "Finds the zero-based index of a substring within a string." },
-        { name: "replace", doc: "Replaces occurrences of a substring with another substring." },
-        { name: "tolower", doc: "Converts a string to lower-case." },
-        { name: "toupper", doc: "Converts a string to upper-case." },
-        { name: "trim", doc: "Removes trailing and leading whitespace from a string." },
+        {
+            name: "substringof",
+            doc: "Determines if a substring exists within a string.",
+            params: [
+                {
+                    name: "substring",
+                    type: "Edm.String",
+                    description: "The substring to search for.",
+                },
+                { name: "string", type: "Edm.String", description: "The string to search within." },
+            ],
+        },
+        {
+            name: "startswith",
+            doc: "Checks if a string starts with a specified substring.",
+            params: [
+                { name: "string", type: "Edm.String", description: "The string to check." },
+                { name: "prefix", type: "Edm.String", description: "The prefix to look for." },
+            ],
+        },
+        {
+            name: "endswith",
+            doc: "Checks if a string ends with a specified substring.",
+            params: [
+                { name: "string", type: "Edm.String", description: "The string to check." },
+                { name: "suffix", type: "Edm.String", description: "The suffix to look for." },
+            ],
+        },
+        {
+            name: "indexof",
+            doc: "Finds the zero-based index of a substring within a string.",
+            params: [
+                { name: "string", type: "Edm.String", description: "The string to search within." },
+                { name: "substring", type: "Edm.String", description: "The substring to find." },
+            ],
+        },
+        {
+            name: "replace",
+            doc: "Replaces occurrences of a substring with another substring.",
+            params: [
+                { name: "string", type: "Edm.String", description: "The original string." },
+                { name: "find", type: "Edm.String", description: "The substring to replace." },
+                { name: "replace", type: "Edm.String", description: "The replacement substring." },
+            ],
+        },
+        {
+            name: "tolower",
+            doc: "Converts a string to lower-case.",
+            params: [{ name: "string", type: "Edm.String", description: "The string to convert." }],
+        },
+        {
+            name: "toupper",
+            doc: "Converts a string to upper-case.",
+            params: [{ name: "string", type: "Edm.String", description: "The string to convert." }],
+        },
+        {
+            name: "trim",
+            doc: "Removes trailing and leading whitespace from a string.",
+            params: [{ name: "string", type: "Edm.String", description: "The string to trim." }],
+        },
         {
             name: "substring",
             doc: "Extracts a substring from a string starting at a specified index.",
+            params: [
+                { name: "string", type: "Edm.String", description: "The original string." },
+                { name: "start", type: "Edm.Int32", description: "The zero-based starting index." },
+                { name: "length", type: "Edm.Int32", description: "The length of the substring." },
+            ],
         },
-        { name: "concat", doc: "Concatenates two or more strings together." },
+        {
+            name: "concat",
+            doc: "Concatenates two or more strings together.",
+            params: [
+                { name: "string1", type: "Edm.String", description: "The first string." },
+                { name: "string2", type: "Edm.String", description: "The second string." },
+            ],
+        },
         { name: "round", doc: "Rounds a number to the nearest integer." },
         { name: "floor", doc: "Rounds a number down to the nearest integer." },
         { name: "ceiling", doc: "Rounds a number up to the nearest integer." },
@@ -406,11 +473,43 @@ const odataMethods = {
         { name: "cast", doc: "Casts a value to a specified type." },
     ],
     V4: [
-        { name: "contains", doc: "Determines if a string contains a specified substring." },
-        { name: "length", doc: "Gets the length of a string." },
-        { name: "abs", doc: "Returns the absolute value of a number." },
-        { name: "mod", doc: "Calculates the remainder after division of two numbers." },
-        { name: "fractionalseconds", doc: "Extracts fractional seconds from a time value." },
+        {
+            name: "contains",
+            doc: "Determines if a string contains a specified substring.",
+            params: [
+                { name: "string", type: "Edm.String", description: "The string to search within." },
+                {
+                    name: "substring",
+                    type: "Edm.String",
+                    description: "The substring to search for.",
+                },
+            ],
+        },
+        {
+            name: "length",
+            doc: "Gets the length of a string.",
+            params: [{ name: "string", type: "Edm.String", description: "The string to measure." }],
+        },
+        {
+            name: "abs",
+            doc: "Returns the absolute value of a number.",
+            params: [
+                { name: "number", type: "Edm.Decimal", description: "The number to process." },
+            ],
+        },
+        {
+            name: "mod",
+            doc: "Calculates the remainder after division of two numbers.",
+            params: [
+                { name: "dividend", type: "Edm.Decimal", description: "The number to be divided." },
+                { name: "divisor", type: "Edm.Decimal", description: "The number to divide by." },
+            ],
+        },
+        {
+            name: "fractionalseconds",
+            doc: "Extracts fractional seconds from a time value.",
+            params: [{ name: "time", type: "Edm.DateTimeOffset", description: "The time value." }],
+        },
         { name: "date", doc: "Extracts the date portion from a datetime value." },
         { name: "time", doc: "Extracts the time portion from a datetime value." },
         {

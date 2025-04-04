@@ -16,6 +16,11 @@ export const internalCommands = {
     requestMetadata: `${APP_NAME}.requestMetadata`,
 };
 
+export const globalStates = {
+    selectedProfile: `${APP_NAME}.selectedProfile`,
+    profiles: `${APP_NAME}.profiles`,
+};
+
 export interface IODataMetadataConfigurationMapEntry {
     url: string;
     path: string;
@@ -29,6 +34,7 @@ export interface IODataMetadataConfiguration {
 export interface IODataConfiguration {
     metadata: IODataMetadataConfiguration;
     defaultFormat: ODataFormat;
+    strictParser: boolean; // Added strictParser setting
 }
 
 export function getConfig() {
@@ -37,6 +43,7 @@ export function getConfig() {
     const config: IODataConfiguration = {
         metadata: extensionSettings.get("metadata") as IODataMetadataConfiguration,
         defaultFormat: extensionSettings.get("defaultFormat") as ODataFormat,
+        strictParser: extensionSettings.get("strictParser", true),
     };
     return config;
 }

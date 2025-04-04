@@ -13,27 +13,27 @@ import { Profile } from "./profiles";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 
 import { entityTypeFromResource, ResourceType } from "./metadata";
-import { Disposable } from "./util";
+import { Disposable } from "./provider";
+import { getConfig, globalStates } from "./configuration";
 
 /**
  * Provides diagnostic services for OData queries in a Visual Studio Code extension.
  *
  * This class is responsible for analyzing OData queries, identifying syntax errors,
  * and validating query components against a metadata model. It generates diagnostics
- * such as errors and warnings, which are displayed in the editor to assist developers
- * in writing valid OData queries.
+ * such as errors and warnings, which are displayed in the editor.
  *
  * Key responsibilities include:
  * - Handling syntax errors during query parsing.
  * - Validating parsed OData queries against a metadata model.
- * - Supporting metadata-aware diagnostics for OData profiles.
+ * - Supporting metadata-aware diagnostics.
  *
  * Dependencies:
- * - `vscode.DiagnosticCollection`: Used to store and manage diagnostics for documents.
  * - `MetadataModelService`: Provides access to the metadata model for validation.
  * - `vscode.ExtensionContext`: Provides context for the extension, including global state.
  */
 export class ODataDiagnosticProvider extends Disposable {
+    public _id: string = "ODataDiagnosticProvider";
     private diagnostics: vscode.DiagnosticCollection;
     constructor(
         private metadataService: MetadataModelService,
@@ -56,7 +56,9 @@ export class ODataDiagnosticProvider extends Disposable {
         const diagnostic = new vscode.Diagnostic(
             range,
             error.message,
-            vscode.DiagnosticSeverity.Error,
+            getConfig().strictParser
+                ? vscode.DiagnosticSeverity.Error
+                : vscode.DiagnosticSeverity.Warning,
         );
         diagnostics.push(diagnostic);
         this.diagnostics.set(uri, diagnostics);
@@ -83,7 +85,7 @@ export class ODataDiagnosticProvider extends Disposable {
         const document = await vscode.workspace.openTextDocument(uri);
         const text = document.getText();
 
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         const metadata = await this.metadataService.getModel(profile!);
         if (!metadata) {
             return;
@@ -284,15 +286,17 @@ export class ODataDiagnosticProvider extends Disposable {
                 }
             }
         } else {
-            this.diagnosePropertyPath(
-                diagnostics,
-                syntaxNode,
-                currentQueryOption,
-                metadata,
-                result,
-                resource,
-                profile,
-            );
+            if (typeof syntaxNode.value === "string") {
+                this.diagnosePropertyPath(
+                    diagnostics,
+                    syntaxNode,
+                    currentQueryOption,
+                    metadata,
+                    result,
+                    resource,
+                    profile,
+                );
+            }
         }
     }
 
@@ -465,6 +469,14 @@ export class ODataDiagnosticProvider extends Disposable {
     }
 }
 
+/**
+ * Convert from a peggy LocationRange to a vscode.Range.
+ *
+ * LocationRange is 1-based, while vscode.Range is 0-based.
+ *
+ * @param span The LocationRange to convert.
+ * @returns The corresponding vscode.Range.
+ */
 function spanToRange(span: LocationRange): vscode.Range {
     return new vscode.Range(
         new vscode.Position(span.start.line - 1, span.start.column - 1),

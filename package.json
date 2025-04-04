@@ -2,7 +2,8 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Query Language Support",
-  "version": "0.1.0",
+  "version": "0.1.1",
+  "publisher": "manuelseeger",
   "repository": {
     "type": "git",
     "url": "https://github.com/manuelseeger/odata-vscode.git"
@@ -11,10 +12,14 @@
     "vscode": "^1.98.0"
   },
   "categories": [
+    "Programming Languages",
+    "Formatters",
     "Other"
   ],
   "activationEvents": [],
   "main": "./dist/extension.js",
+  "icon": "assets/odata.128x128.png",
+  "license": "MIT",
   "contributes": {
     "languages": [
       {
@@ -147,6 +152,11 @@
           "items": {
             "type": "string"
           }
+        },
+        "odata.strictParser": {
+          "type": "boolean",
+          "description": "Enable strict parsing for OData queries.",
+          "default": true
         }
       }
     }
@@ -159,16 +169,14 @@
     "package": "webpack --mode production --devtool hidden-source-map",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
-    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint && npm run test:unit",
     "lint": "eslint src",
     "test": "vscode-test",
+    "test:unit": "mocha -u tdd --require ts-node/register src/test/unit/**/*.test.ts",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
     "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
-    "jest": "jest",
-    "pre-testparser": "peggy --trace --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
-    "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy",
-    "testparser": "node test/parser.test.js"
+    "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy"
   },
   "devDependencies": {
     "@types/node": "20.x",
@@ -179,7 +187,7 @@
     "@typescript-eslint/parser": "^8.25.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^3.3.1",
+    "@vscode/vsce": "^3.3.2",
     "abnf": "^4.3.1",
     "copy-webpack-plugin": "^13.0.0",
     "eslint": "^9.21.0",
@@ -187,6 +195,7 @@
     "pegjs-backtrace": "^0.2.1",
     "prettier": "^3.5.3",
     "ts-loader": "^9.5.2",
+    "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "webpack": "^5.98.0",
     "webpack-cli": "^6.0.1"

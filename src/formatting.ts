@@ -1,12 +1,13 @@
 import * as vscode from "vscode";
 import { SyntaxLocation, SyntaxParser } from "./parser/syntaxparser";
-import { Disposable } from "./util";
+import { Disposable } from "./provider";
 import { ODataMode } from "./configuration";
 
 export class ODataDocumentFormatter
     extends Disposable
     implements vscode.DocumentFormattingEditProvider
 {
+    public _id: string = "ODataDocumentFormatter";
     constructor(private readonly syntaxParser: SyntaxParser) {
         super();
         this.subscriptions = [

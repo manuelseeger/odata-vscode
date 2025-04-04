@@ -1,0 +1,499 @@
+{
+  "functions": [
+    {
+      "name": "contains",
+      "doc": "Determines if a string contains a specified substring.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The string to search within."
+        },
+        {
+          "name": "substring",
+          "type": "Edm.String",
+          "description": "The substring to search for."
+        }
+      ]
+    },
+    {
+      "name": "length",
+      "doc": "Gets the length of a string.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The string to measure."
+        }
+      ]
+    },
+    {
+      "name": "indexof",
+      "doc": "Finds the position of a substring within a string.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The string to search within."
+        },
+        {
+          "name": "substring",
+          "type": "Edm.String",
+          "description": "The substring to search for."
+        }
+      ]
+    },
+    {
+      "name": "abs",
+      "doc": "Returns the absolute value of a number.",
+      "params": [
+        {
+          "name": "number",
+          "type": "Edm.Decimal",
+          "description": "The number to process."
+        }
+      ]
+    },
+    {
+      "name": "mod",
+      "doc": "Calculates the remainder after division of two numbers.",
+      "params": [
+        {
+          "name": "dividend",
+          "type": "Edm.Decimal",
+          "description": "The number to be divided."
+        },
+        {
+          "name": "divisor",
+          "type": "Edm.Decimal",
+          "description": "The number to divide by."
+        }
+      ]
+    },
+    {
+      "name": "fractionalseconds",
+      "doc": "Extracts fractional seconds from a time value.",
+      "params": [
+        {
+          "name": "time",
+          "type": "Edm.DateTimeOffset",
+          "description": "The time value."
+        }
+      ]
+    },
+    {
+      "name": "date",
+      "doc": "Extracts the date portion from a datetime value.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "time",
+      "doc": "Extracts the time portion from a datetime value.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "totaloffsetminutes",
+      "doc": "Calculates the total minutes of the time zone offset.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "now",
+      "doc": "Returns the current datetime."
+    },
+    {
+      "name": "mindatetime",
+      "doc": "Returns the minimum possible datetime."
+    },
+    {
+      "name": "maxdatetime",
+      "doc": "Returns the maximum possible datetime."
+    },
+    {
+      "name": "any",
+      "doc": "Checks if any element of a collection meets a condition."
+    },
+    {
+      "name": "all",
+      "doc": "Determines if all elements of a collection meet a condition."
+    },
+    {
+      "name": "geo.distance",
+      "doc": "Calculates the distance between two geo points.",
+      "params": [
+        {
+          "name": "geo1",
+          "type": "Edm.GeographyPoint",
+          "description": "The first geo point."
+        },
+        {
+          "name": "geo2",
+          "type": "Edm.GeographyPoint",
+          "description": "The second geo point."
+        }
+      ]
+    },
+    {
+      "name": "geo.length",
+      "doc": "Calculates the total length of a geometry.",
+      "params": [
+        {
+          "name": "geometry",
+          "type": "Edm.Geometry",
+          "description": "The geometry to measure."
+        }
+      ]
+    },
+    {
+      "name": "geo.intersects",
+      "doc": "Determines if two geometries intersect.",
+      "params": [
+        {
+          "name": "geometry1",
+          "type": "Edm.Geometry",
+          "description": "The first geometry."
+        },
+        {
+          "name": "geometry2",
+          "type": "Edm.Geometry",
+          "description": "The second geometry."
+        }
+      ]
+    },
+    {
+      "name": "concat",
+      "doc": "Concatenates two strings.",
+      "params": [
+        {
+          "name": "string1",
+          "type": "Edm.String",
+          "description": "The first string."
+        },
+        {
+          "name": "string2",
+          "type": "Edm.String",
+          "description": "The second string."
+        }
+      ]
+    },
+    {
+      "name": "substring",
+      "doc": "Extracts a substring from a string starting at the given position.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The source string."
+        },
+        {
+          "name": "start",
+          "type": "Edm.Int32",
+          "description": "The starting position (zero-based)."
+        }
+      ]
+    },
+    {
+      "name": "substring",
+      "doc": "Extracts a substring from a string starting at the given position for the specified length.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The source string."
+        },
+        {
+          "name": "start",
+          "type": "Edm.Int32",
+          "description": "The starting position (zero-based)."
+        },
+        {
+          "name": "length",
+          "type": "Edm.Int32",
+          "description": "The number of characters to extract."
+        }
+      ]
+    },
+    {
+      "name": "startswith",
+      "doc": "Determines if a string starts with a specified substring.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The source string."
+        },
+        {
+          "name": "prefix",
+          "type": "Edm.String",
+          "description": "The prefix to check."
+        }
+      ]
+    },
+    {
+      "name": "endswith",
+      "doc": "Determines if a string ends with a specified substring.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The source string."
+        },
+        {
+          "name": "suffix",
+          "type": "Edm.String",
+          "description": "The suffix to check."
+        }
+      ]
+    },
+    {
+      "name": "tolower",
+      "doc": "Converts a string to lowercase.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The source string."
+        }
+      ]
+    },
+    {
+      "name": "toupper",
+      "doc": "Converts a string to uppercase.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The source string."
+        }
+      ]
+    },
+    {
+      "name": "trim",
+      "doc": "Removes leading and trailing whitespace from a string.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The string to trim."
+        }
+      ]
+    },
+    {
+      "name": "replace",
+      "doc": "Replaces all occurrences of a specified substring with another substring.",
+      "params": [
+        {
+          "name": "string",
+          "type": "Edm.String",
+          "description": "The source string."
+        },
+        {
+          "name": "old",
+          "type": "Edm.String",
+          "description": "The substring to replace."
+        },
+        {
+          "name": "new",
+          "type": "Edm.String",
+          "description": "The replacement substring."
+        }
+      ]
+    },
+    {
+      "name": "ceiling",
+      "doc": "Returns the smallest integral value that is not less than the specified number.",
+      "params": [
+        {
+          "name": "number",
+          "type": "Edm.Decimal",
+          "description": "The number to process."
+        }
+      ]
+    },
+    {
+      "name": "floor",
+      "doc": "Returns the largest integral value that is not greater than the specified number.",
+      "params": [
+        {
+          "name": "number",
+          "type": "Edm.Decimal",
+          "description": "The number to process."
+        }
+      ]
+    },
+    {
+      "name": "round",
+      "doc": "Rounds a number to the nearest integral value.",
+      "params": [
+        {
+          "name": "number",
+          "type": "Edm.Decimal",
+          "description": "The number to round."
+        }
+      ]
+    },
+    {
+      "name": "year",
+      "doc": "Extracts the year from a datetime value.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "month",
+      "doc": "Extracts the month from a datetime value.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "day",
+      "doc": "Extracts the day from a datetime value.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "hour",
+      "doc": "Extracts the hour from a datetime value.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "minute",
+      "doc": "Extracts the minute from a datetime value.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "second",
+      "doc": "Extracts the second from a datetime value.",
+      "params": [
+        {
+          "name": "datetime",
+          "type": "Edm.DateTimeOffset",
+          "description": "The datetime value."
+        }
+      ]
+    },
+    {
+      "name": "cast",
+      "doc": "Casts the current instance to the specified type.",
+      "params": [
+        {
+          "name": "type",
+          "type": "Edm.String",
+          "description": "The target type."
+        }
+      ]
+    },
+    {
+      "name": "cast",
+      "doc": "Casts an expression to the specified type.",
+      "params": [
+        {
+          "name": "expression",
+          "type": "Edm.Untyped",
+          "description": "The expression to cast."
+        },
+        {
+          "name": "type",
+          "type": "Edm.String",
+          "description": "The target type."
+        }
+      ]
+    },
+    {
+      "name": "isof",
+      "doc": "Checks if the current instance is of the specified type.",
+      "params": [
+        {
+          "name": "type",
+          "type": "Edm.String",
+          "description": "The type to test against."
+        }
+      ]
+    },
+    {
+      "name": "isof",
+      "doc": "Checks if an expression is of the specified type.",
+      "params": [
+        {
+          "name": "expression",
+          "type": "Edm.Untyped",
+          "description": "The expression to check."
+        },
+        {
+          "name": "type",
+          "type": "Edm.String",
+          "description": "The type to test against."
+        }
+      ]
+    }
+  ],
+  "systemQueryOptions": [
+    {
+      "name": "$apply",
+      "doc": "Applies aggregations or transformations to the resource collection."
+    },
+    {
+      "name": "$search",
+      "doc": "Filters resources based on a free-text search expression."
+    },
+    {
+      "name": "$count",
+      "doc": "Returns the count of matching resources."
+    },
+    {
+      "name": "$skiptoken",
+      "doc": "Specifies a continuation token for paginating results."
+    },
+    {
+      "name": "$compute",
+      "doc": "Adds computed properties based on specified expressions."
+    },
+    {
+      "name": "$schemaversion",
+      "doc": "Indicates the version of the schema for the service."
+    }
+  ]
+}

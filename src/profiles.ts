@@ -1,9 +1,8 @@
 import * as vscode from "vscode";
 import * as path from "path";
 
-import { Disposable } from "./util";
-import { APP_NAME, commands } from "./configuration";
-import { requestProfileMetadata } from "./commands";
+import { Disposable } from "./provider";
+import { APP_NAME, commands, globalStates, internalCommands } from "./configuration";
 
 export enum AuthKind {
     None = "none",
@@ -47,10 +46,14 @@ export class ProfileTreeProvider
     extends Disposable
     implements vscode.TreeDataProvider<ProfileItem>
 {
+    public _id: string = "ProfileTreeProvider";
     private _onDidChangeTreeData: vscode.EventEmitter<ProfileItem | undefined | void> =
         new vscode.EventEmitter<ProfileItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<ProfileItem | undefined | void> =
         this._onDidChangeTreeData.event;
+
+    // Add a class-level property to store the webview panel
+    private currentWebviewPanel: vscode.WebviewPanel | undefined;
 
     constructor(private context: vscode.ExtensionContext) {
         super();
@@ -69,20 +72,11 @@ export class ProfileTreeProvider
                     this.deleteProfile(profileItem.profile);
                 },
             ),
-            vscode.commands.registerCommand(
-                `${APP_NAME}.requestMetadata`,
-                async (profileItem: ProfileItem) => {
-                    profileItem.profile.metadata = await requestProfileMetadata(
-                        profileItem.profile,
-                    );
-                    this.refresh();
-                },
-            ),
         ];
     }
 
     getTreeItem(element: ProfileItem): vscode.TreeItem {
-        const selectedProfile = this.context.globalState.get<Profile>("selectedProfile");
+        const selectedProfile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (selectedProfile && selectedProfile.name === element.profile.name) {
             element.iconPath = new vscode.ThemeIcon("check");
         }
@@ -91,13 +85,13 @@ export class ProfileTreeProvider
     }
 
     getChildren(): ProfileItem[] {
-        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         return profiles.map((profile) => new ProfileItem(profile));
     }
     addProfile(profile: Profile) {
-        const profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         profiles.push(profile);
-        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+        this.context.globalState.update(globalStates.profiles, profiles);
         this.refresh();
     }
     refresh() {
@@ -105,39 +99,51 @@ export class ProfileTreeProvider
     }
 
     deleteProfile(profile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         profiles = profiles.filter((p) => p.name !== profile.name);
-        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+        this.context.globalState.update(globalStates.profiles, profiles);
         this.refresh();
     }
 
     public openProfileWebview(profile?: Profile) {
-        const panel = vscode.window.createWebviewPanel(
-            "profileManager",
-            profile ? `Edit Profile: ${profile.name}` : "Create HTTP Profile",
-            vscode.ViewColumn.One,
-            { enableScripts: true },
+        if (!this.currentWebviewPanel) {
+            this.currentWebviewPanel = vscode.window.createWebviewPanel(
+                "profileManager",
+                profile ? `Edit Profile: ${profile.name}` : "Create HTTP Profile",
+                vscode.ViewColumn.One,
+                { enableScripts: true },
+            );
+        }
+
+        this.currentWebviewPanel.title = profile
+            ? `Edit Profile: ${profile.name}`
+            : "Create HTTP Profile";
+        this.currentWebviewPanel.webview.html = this._getWebViewContent(
+            this.currentWebviewPanel.webview,
+            profile,
         );
+        this.currentWebviewPanel.reveal(vscode.ViewColumn.One);
 
-        panel.webview.html = this._getWebViewContent(panel.webview, profile);
-
-        panel.webview.onDidReceiveMessage(
+        this.currentWebviewPanel.webview.onDidReceiveMessage(
             async (message) => {
                 if (message.command === "saveProfile") {
-                    // update or add
                     const newProfile: Profile = parseProfile(message.data);
                     this.saveProfile(newProfile);
                     this.refresh();
                 } else if (message.command === "requestMetadata") {
                     const newProfile = parseProfile(message.data);
-                    const metadata = await requestProfileMetadata(newProfile);
+                    const metadata = await vscode.commands.executeCommand<string>(
+                        internalCommands.requestMetadata,
+                        newProfile,
+                    );
                     if (metadata) {
-                        panel.webview.postMessage({ command: "metadataReceived", data: metadata });
+                        this.currentWebviewPanel!.webview.postMessage({
+                            command: "metadataReceived",
+                            data: metadata,
+                        });
                         newProfile.metadata = metadata;
                         this.saveProfile(newProfile);
                     }
-                    // TODO save profile
-
                     this.refresh();
                 } else if (message.command === "openFileDialog") {
                     const type = message.inputName;
@@ -148,22 +154,26 @@ export class ProfileTreeProvider
                         filters: getFiltersForType(type),
                     });
                     if (fileUri && fileUri.length > 0) {
-                        panel.webview.postMessage({
+                        this.currentWebviewPanel!.webview.postMessage({
                             command: "fileSelected",
                             inputName: type,
                             filePath: fileUri[0].path,
                         });
                     }
-                    // TODO save profile ?
                 }
             },
             undefined,
             this.context.subscriptions,
         );
+
+        // Handle panel disposal
+        this.currentWebviewPanel.onDidDispose(() => {
+            this.currentWebviewPanel = undefined;
+        });
     }
 
     private saveProfile(newProfile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(`${APP_NAME}.profiles`, []);
+        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         const index = profiles.findIndex((p) => p.name === newProfile.name);
         if (index >= 0) {
             profiles[index] = newProfile;
@@ -171,10 +181,10 @@ export class ProfileTreeProvider
             profiles.push(newProfile);
         }
 
-        this.context.globalState.update(`${APP_NAME}.profiles`, profiles);
+        this.context.globalState.update(globalStates.profiles, profiles);
 
         if (profiles.length === 1) {
-            this.context.globalState.update("selectedProfile", profiles[0]);
+            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
         }
     }
 

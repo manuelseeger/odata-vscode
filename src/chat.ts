@@ -3,12 +3,13 @@ import * as vscode from "vscode";
 import cl100kBase from "tiktoken/encoders/cl100k_base.json";
 import { Tiktoken } from "tiktoken/lite";
 
-import { APP_NAME, internalCommands } from "./configuration";
+import { APP_NAME, globalStates, internalCommands } from "./configuration";
 import { Profile } from "./profiles";
 import { MetadataModelService } from "./services/MetadataModelService";
-import { Disposable } from "./util";
+import { Disposable } from "./provider";
 
 export class ChatParticipantProvider extends Disposable {
+    public _id: string = "ChatParticipantProvider";
     private readonly BASE_PROMPT = `You help generate OData queries from EDMX medadata. Keep usage of functions,lambdas or other advanced features to a minimum. Return query code as an \`\`\`odata \`\`\` code block and give a short explanation.
 
 OData Version: {{version}}
@@ -38,7 +39,7 @@ Examples, but use the properties from the metadata in your answers:
         this.participant.iconPath = vscode.Uri.joinPath(
             context.extensionUri,
             "assets",
-            "icon-odata.png",
+            "odata.128x128.png",
         );
         this.subscriptions = [this.participant];
     }
@@ -55,7 +56,7 @@ Examples, but use the properties from the metadata in your answers:
             cl100kBase.pat_str,
         );
 
-        const profile = this.context.globalState.get<Profile>("selectedProfile");
+        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (!profile) {
             vscode.window.showWarningMessage("No profile selected.");
             return;

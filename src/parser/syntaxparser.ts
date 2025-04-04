@@ -43,7 +43,6 @@ export type SyntaxLocationType =
 export class SyntaxParser {
     private _debounceTimer: NodeJS.Timeout | undefined;
     private _lastDocument: vscode.TextDocument | null = null;
-    private _instance: SyntaxParser | null = null;
     private _lastQuery: string | null = null;
     private _lastTree: ParsedTree | null = null;
     private _lastResult: ParseResult | null = null;
@@ -51,13 +50,6 @@ export class SyntaxParser {
     private _parseSuccessHandlers: Array<ParseSuccessHandler> = [];
 
     constructor() {}
-
-    public getInstance() {
-        if (!this._instance) {
-            this._instance = new SyntaxParser();
-        }
-        return this._instance;
-    }
 
     public handleChangeTextDocument(document: vscode.TextDocument) {
         if (document.languageId !== "odata") {
@@ -125,6 +117,15 @@ export class SyntaxParser {
         }
     }
 
+    /**
+     * Post-process the parsed tree to clean it up and extract locations.
+     *
+     * SyntaxLocation objects are locations in the syntax tree we want to
+     * work with later in diagnostics and completions.
+     *
+     * @param tree The parsed tree to process.
+     * @return The cleaned-up tree and locations.
+     */
     private _postProcess(tree: ParsedTree): ParseResult {
         const locations: SyntaxLocation[] = [];
 

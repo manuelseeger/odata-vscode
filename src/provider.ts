@@ -1,10 +1,8 @@
+import { IFileReader } from "./services/QueryRunner";
 import * as vscode from "vscode";
 
-export function hasProperty(obj: unknown, key: string): boolean {
-    return typeof obj === "object" && obj !== null && key in obj;
-}
-
 export abstract class Disposable {
+    public abstract _id: string;
     subscriptions: Array<{ dispose: () => void }>;
     constructor() {
         this.subscriptions = [];
@@ -14,5 +12,11 @@ export abstract class Disposable {
             this.subscriptions.forEach((obj) => obj.dispose());
             this.subscriptions = [];
         }
+    }
+}
+
+export class VSCodeFileReader implements IFileReader {
+    async readFile(path: string): Promise<Uint8Array> {
+        return vscode.workspace.fs.readFile(vscode.Uri.file(path));
     }
 }
