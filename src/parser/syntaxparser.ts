@@ -85,9 +85,14 @@ export class SyntaxParser {
         this._parseSuccessHandlers.push(handler);
     }
 
-    public process(document: vscode.TextDocument): ParseResult | null {
+    public process(document: vscode.TextDocument, force: boolean = false): ParseResult | null {
         if (document.getText().length === 0) {
             return null;
+        }
+        if (force) {
+            this._lastQuery = null; // Reset cached query to force parsing
+            this._lastTree = null; // Reset cached tree to force parsing
+            this._lastResult = null; // Reset cached result to force parsing
         }
         this._process(document);
         return this._lastResult;

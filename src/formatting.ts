@@ -24,7 +24,7 @@ export class ODataDocumentFormatter
 
         const text = document.getText();
 
-        const result = this.syntaxParser.process(document);
+        const result = this.syntaxParser.process(document, true);
 
         if (!result) {
             return edits;
