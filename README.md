@@ -5,11 +5,10 @@
 ## Features
 
 ### Copilot integration: Talk to your OData service
-
-![Copilot Integration](assets/copilot-sicle.gif)
+![Copilot Integration](assets/orders-sicle.gif)
 
 ### Metadata-aware code completion and diagnostics
-![Copilot Integration](assets/diagnostics-sicle.gif)
+![Metadata awareness](assets/completions-sicle.gif)
 
 ### More Features
 - Syntax highlighting and formatting for OData queries
