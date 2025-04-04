@@ -41,6 +41,9 @@ export class CommandProvider extends Disposable {
      * @param query The query to run.
      */
     async openAndRunQuery(query: string) {
+        // strip leading http verb
+        query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
+        query = query.trim();
         this.openQuery(query);
         await this.runQuery(query);
     }
@@ -166,9 +169,6 @@ export class CommandProvider extends Disposable {
 
         const defaultFormat = getConfig().defaultFormat;
 
-        // strip leading http verb
-        query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
-        query = query.trim();
         if (!query.endsWith("$count") && !query.includes("$format")) {
             query += `&$format=${defaultFormat}`;
         }
