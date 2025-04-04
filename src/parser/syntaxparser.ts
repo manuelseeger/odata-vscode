@@ -1,5 +1,5 @@
-import { parse, SyntaxError, LocationRange, ParserTracer } from "./parser.js";
 import * as vscode from "vscode";
+import { LocationRange, parse, SyntaxError } from "./parser.js";
 
 export type ParseSyntaxErrorHandler = (uri: vscode.Uri, error: SyntaxError) => void;
 export type ParseSuccessHandler = (uri: vscode.Uri, result: ParseResult) => void;
