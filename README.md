@@ -25,9 +25,7 @@ Minimal setup to enable Metadata-aware completion and Copilot integration:
 
 In Copilot Chat, chat with participant `@odata`, example: 
 
-```
-@odata give me all Workitems assigned to John Doe in status New
-```
+> **@odata** give me all Workitems assigned to John Doe in status New
 
 ## Commands
 
@@ -67,10 +65,10 @@ You can still use all features but the query runner. Create an endpoint profile 
 
 ### Metadata file too large
 
-Github Copilot has a character limit fo requests. If your service's metadata is above that, Copilot will refuse the request. Options:
+Github Copilot has a character limit for requests. If your service metadata is above that, Copilot will refuse the request. Options:
 - If your metadata includes annotations, enable `odata.metadata.removeAnnotations` in settings to filter all annotations from metadata
 - If your metadata includes non-EDMX namespaces, maintain them in `odata.metadata.filterNs` to filter them out
-- Manually shorten your metadata file in profiles
+- Manually shorten your metadata file in profiles, for example remove entity definitions you are not working with
 
 ## Acknowledgment
 
