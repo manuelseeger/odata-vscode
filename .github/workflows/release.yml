@@ -3,10 +3,27 @@ name: "release"
 
 on:
   push:
+    branches:
+      - "main"
     tags:
       - "v*"
 
 jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+      - run: npm install
+      - run: xvfb-run npm test
+        if: runner.os == 'Linux'
+      - run: npm run vsce-latest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 'odata-vscode-latest.vsix'
+          path: 'odata-vscode-latest.vsix'
+
   release:
     name: Create latest release
     permissions:
