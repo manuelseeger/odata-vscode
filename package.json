@@ -20,14 +20,6 @@
   "main": "./dist/extension.js",
   "icon": "assets/odata.128x128.png",
   "license": "MIT",
-  "files": [
-    "dist",
-    "assets",
-    "syntaxes",
-    "README.md",
-    "CHANGELOG.md",
-    "LICENSE"
-  ],
   "contributes": {
     "languages": [
       {
