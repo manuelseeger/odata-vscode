@@ -5,11 +5,10 @@
 ## Features
 
 ### Copilot integration: Talk to your OData service
-
-![Copilot Integration](assets/copilot-sicle.gif)
+![Copilot Integration](assets/orders-sicle.gif)
 
 ### Metadata-aware code completion and diagnostics
-![Copilot Integration](assets/diagnostics-sicle.gif)
+![Metadata awareness](assets/completions-sicle.gif)
 
 ### More Features
 - Syntax highlighting and formatting for OData queries
@@ -22,6 +21,8 @@ Minimal setup to enable Metadata-aware completion and Copilot integration:
 - Open view `OData Endpoint Profile` or run command `OData: Add Endpoint Profile`
 - Add a new profile
 - Request metadata for the profile
+
+![Endpoint Profiles](assets/endpoint%20profiles.png)
 
 In Copilot Chat, chat with participant `@odata`, example: 
 

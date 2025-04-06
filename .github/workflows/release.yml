@@ -3,8 +3,6 @@ name: "release"
 
 on:
   push:
-    branches:
-      - "main"
     tags:
       - "v*"
 
@@ -14,6 +12,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Check tag is on main
+        run: |
+          TAG_COMMIT=$(git rev-list -n 1 $GITHUB_REF)
+          MAIN_COMMIT=$(git rev-parse origin/main)
+          if [ "$TAG_COMMIT" != "$MAIN_COMMIT" ]; then
+            echo "Tag is not on latest main commit. Exiting."
+            exit 1
+          fi      
       - uses: actions/setup-node@v4
       - run: npm install
       - run: xvfb-run npm test
@@ -23,27 +29,6 @@ jobs:
         with:
           name: 'odata-vscode-latest.vsix'
           path: 'odata-vscode-latest.vsix'
-
-  release:
-    name: Create latest release
-    needs: build
-    permissions:
-      contents: write
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download vsix artifact from build workflow
-        uses: actions/download-artifact@v4
-        with:
-          name: 'odata-vscode-latest.vsix'
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
-        with:
-          tag: latest
-          artifacts: odata-vscode-latest.vsix
-          makeLatest: true
-          allowUpdates: true
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
 
   versioned-release:
     name: Create versioned release
@@ -68,3 +53,5 @@ jobs:
           makeLatest: true
           token: ${{ secrets.GITHUB_TOKEN }}
           generateReleaseNotes: true
+      - name: Publish to VSCode Marketplace
+        run: npx vsce publish -i odata-vscode-${{ github.ref_name }}.vsix -p ${{ secrets.VSCE_TOKEN }}

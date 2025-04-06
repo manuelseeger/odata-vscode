@@ -1,8 +1,8 @@
 {
   "name": "odata",
   "displayName": "OData",
-  "description": "OData Query Language Support",
-  "version": "0.1.2",
+  "description": "OData Language and Query Runner",
+  "version": "0.1.5",
   "publisher": "manuelseeger",
   "repository": {
     "type": "git",
@@ -20,6 +20,7 @@
   "main": "./dist/extension.js",
   "icon": "assets/odata.128x128.png",
   "license": "MIT",
+  "qna": false,
   "contributes": {
     "languages": [
       {
@@ -167,11 +168,13 @@
     "compile": "webpack",
     "watch": "webpack --watch",
     "package": "webpack --mode production --devtool hidden-source-map",
+    "prepackage": "npm run clean",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint && npm run test:unit",
     "lint": "eslint src",
     "test": "vscode-test",
+    "clean": "rimraf out dist",
     "test:unit": "mocha -u tdd --require ts-node/register src/test/unit/**/*.test.ts",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
@@ -194,6 +197,7 @@
     "peggy": "^4.2.0",
     "pegjs-backtrace": "^0.2.1",
     "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",

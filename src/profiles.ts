@@ -194,17 +194,23 @@ export class ProfileTreeProvider
         );
 
         const styles = [
-            "assets/vscode.css",
-            "node_modules/@vscode/codicons/dist/codicon.css",
-            "node_modules/@vscode-elements/elements-lite/components/action-button/action-button.css",
-            "node_modules/@vscode-elements/elements-lite/components/label/label.css",
-            "node_modules/@vscode-elements/elements-lite/components/button/button.css",
-            "node_modules/@vscode-elements/elements-lite/components/textfield/textfield.css",
-            "node_modules/@vscode-elements/elements-lite/components/textarea/textarea.css",
-            "node_modules/@vscode-elements/elements-lite/components/select/select.css",
+            "@vscode/codicons/dist/codicon.css",
+            "@vscode-elements/elements-lite/components/action-button/action-button.css",
+            "@vscode-elements/elements-lite/components/label/label.css",
+            "@vscode-elements/elements-lite/components/button/button.css",
+            "@vscode-elements/elements-lite/components/textfield/textfield.css",
+            "@vscode-elements/elements-lite/components/textarea/textarea.css",
+            "@vscode-elements/elements-lite/components/select/select.css",
         ];
         const stylesUriList = styles.map((style) =>
-            webview.asWebviewUri(vscode.Uri.file(path.join(this.context.extensionPath, style))),
+            webview.asWebviewUri(
+                vscode.Uri.file(path.join(this.context.extensionPath, "dist", "modules", style)),
+            ),
+        );
+        stylesUriList.push(
+            webview.asWebviewUri(
+                vscode.Uri.joinPath(this.context.extensionUri, "assets", "style.css"),
+            ),
         );
         const linkTags = stylesUriList
             .map((uri) => `<link href="${uri}" rel="stylesheet" />`)

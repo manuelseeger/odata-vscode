@@ -53,6 +53,14 @@ const extensionConfig = {
     new CopyPlugin({
       patterns: [
         { from: "./node_modules/tiktoken/tiktoken_bg.wasm" },
+        {
+          from: path.resolve(__dirname, 'node_modules/@vscode/codicons/dist'),
+          to: path.resolve(__dirname, 'dist/modules/@vscode/codicons/dist'),
+      },
+      {
+          from: path.resolve(__dirname, 'node_modules/@vscode-elements/elements-lite/components'),
+          to: path.resolve(__dirname, 'dist/modules/@vscode-elements/elements-lite/components'),
+      },
       ],
     })
   ],

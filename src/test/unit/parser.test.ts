@@ -27,6 +27,7 @@ suite("OData Parser Supported URLs", () => {
         "https://api.kingdomtraders.com/clients/Customers?$filter=startswith(Name, 'A')",
         "https://services.mageguild.net/orders/v1/Orders?$filter=year(OrderDate) eq 2024",
         "https://odata.phoenixvault.org/api/phoenix/v2/Products?$filter=Price gt 50 and startswith(Name, 'S')&$orderby=Price desc&$top=5&$expand=Category",
+        "https://services.odata.org/northwind/northwind.svc/Orders?$filter=Employee/FirstName eq 'Steven' and Employee/LastName eq 'Buchanan'&$orderby=OrderDate desc&$top=5&$select=ShipName,ShipAddress,ShipCity,ShipRegion,ShipPostalCode,ShipCountry",
     ];
     validUrls.forEach((url) => {
         test(`should parse valid OData URL: ${url}`, () => {
