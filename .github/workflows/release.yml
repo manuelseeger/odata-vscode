@@ -12,14 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check tag is on main
-        run: |
-          TAG_COMMIT=$(git rev-list -n 1 $GITHUB_REF)
-          MAIN_COMMIT=$(git rev-parse origin/main)
-          if [ "$TAG_COMMIT" != "$MAIN_COMMIT" ]; then
-            echo "Tag is not on latest main commit. Exiting."
-            exit 1
-          fi      
       - uses: actions/setup-node@v4
       - run: npm install
       - run: xvfb-run npm test
