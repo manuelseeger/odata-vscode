@@ -22,6 +22,8 @@ Minimal setup to enable Metadata-aware completion and Copilot integration:
 - Add a new profile
 - Request metadata for the profile
 
+![Endpoint Profiles](assets/endpoint%20profiles.png)
+
 In Copilot Chat, chat with participant `@odata`, example: 
 
 > **@odata** give me all Workitems assigned to John Doe in status New
