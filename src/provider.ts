@@ -1,4 +1,4 @@
-import { IFileReader } from "./services/QueryRunner";
+import { IFileReader } from "./contracts";
 import * as vscode from "vscode";
 
 export abstract class Disposable {

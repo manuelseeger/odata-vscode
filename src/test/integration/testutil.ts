@@ -4,7 +4,6 @@ import * as vscode from "vscode";
 import * as assert from "assert";
 
 export async function setupTestEnvironment() {
-    // arrange
     const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
     const extension = vscode.extensions.getExtension("manuelseeger.odata");
     assert.ok(extension, "Extension not found");

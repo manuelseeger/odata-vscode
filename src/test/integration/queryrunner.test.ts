@@ -1,6 +1,6 @@
 import * as assert from "assert";
 
-import { setupTestEnvironment } from "./util";
+import { setupTestEnvironment } from "./testutil";
 
 import * as vscode from "vscode";
 

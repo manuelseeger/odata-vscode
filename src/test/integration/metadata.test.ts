@@ -1,7 +1,7 @@
 import * as assert from "assert";
 
 import * as vscode from "vscode";
-import { setupTestEnvironment } from "./util";
+import { setupTestEnvironment } from "./testutil";
 
 suite("Metadata", () => {
     test("Should open metadata document", async () => {

@@ -1,10 +1,7 @@
 import { getConfig } from "../configuration";
 import { AuthKind, Profile } from "../profiles";
 import { Agent, fetch } from "undici";
-
-export interface IFileReader {
-    readFile(path: string): Promise<Uint8Array>;
-}
+import { IFileReader } from "../contracts";
 
 export class QueryRunner {
     private fileReader: IFileReader;

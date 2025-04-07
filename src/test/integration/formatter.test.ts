@@ -1,6 +1,6 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { setupTestEnvironment } from "./util";
+import { setupTestEnvironment } from "./testutil";
 
 async function setTabSize(size: number) {
     const config = vscode.workspace.getConfiguration("editor");

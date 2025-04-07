@@ -7,6 +7,7 @@ import { APP_NAME, globalStates, internalCommands } from "./configuration";
 import { Profile } from "./profiles";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { Disposable } from "./provider";
+import { extractCodeBlocks, getBaseUrl } from "./util";
 
 export class ChatParticipantProvider extends Disposable {
     public _id: string = "ChatParticipantProvider";
@@ -74,7 +75,7 @@ Examples, but use the properties from the metadata in your answers:
 
         const replacements: Record<string, string> = {
             metadata: cleanedXml,
-            base: profile.baseUrl,
+            base: getBaseUrl(profile.baseUrl),
             version: dataModel.getODataVersion(),
         };
 
@@ -115,7 +116,7 @@ Examples, but use the properties from the metadata in your answers:
         for await (const fragment of chatResponse.text) {
             stream.markdown(fragment);
             buffer.push(fragment);
-            const codeBlocks = this.extractCodeBlocks(buffer.join(""));
+            const codeBlocks = extractCodeBlocks(buffer.join(""));
             if (codeBlocks.length === 1) {
                 const query = codeBlocks[0].trim();
 
@@ -129,16 +130,4 @@ Examples, but use the properties from the metadata in your answers:
             }
         }
     };
-
-    private extractCodeBlocks(response: string): string[] {
-        const codeBlockRegex = /```odata(?:\w+)?\n([\s\S]*?)\n```/g;
-        let match;
-        const codeBlocks: string[] = [];
-
-        while ((match = codeBlockRegex.exec(response)) !== null) {
-            codeBlocks.push(match[1]); // Extracts the code inside the triple backticks
-        }
-
-        return codeBlocks;
-    }
 }
