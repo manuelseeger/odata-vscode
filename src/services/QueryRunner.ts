@@ -1,7 +1,6 @@
-import { getConfig } from "../configuration";
-import { AuthKind, Profile } from "../profiles";
 import { Agent, fetch } from "undici";
-import { IFileReader } from "../contracts";
+import { getConfig } from "../configuration";
+import { AuthKind, IFileReader, Profile } from "../contracts";
 
 export class QueryRunner {
     private fileReader: IFileReader;

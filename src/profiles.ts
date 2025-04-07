@@ -3,37 +3,12 @@ import * as path from "path";
 
 import { Disposable } from "./provider";
 import { APP_NAME, commands, globalStates, internalCommands } from "./configuration";
-
-export enum AuthKind {
-    None = "none",
-    Basic = "basic",
-    Bearer = "bearer",
-    ClientCert = "cliencert",
-}
+import { Profile, IProfileAuthentication, AuthKind } from "./contracts";
 
 const profileCommands = {
     deleteProfile: `${APP_NAME}.deleteProfile`,
     editProfile: `${APP_NAME}.editProfile`,
 };
-
-interface IProfileAuthentication {
-    kind: AuthKind;
-    username?: string;
-    password?: string;
-    token?: string;
-    cert?: vscode.Uri;
-    key?: vscode.Uri;
-    pfx?: vscode.Uri;
-    passphrase?: string;
-}
-
-export interface Profile {
-    name: string;
-    baseUrl: string;
-    auth: IProfileAuthentication;
-    metadata?: string;
-    headers: { [key: string]: string };
-}
 
 export class ProfileItem extends vscode.TreeItem {
     constructor(public profile: Profile) {

@@ -3,8 +3,8 @@ import * as vscode from "vscode";
 import cl100kBase from "tiktoken/encoders/cl100k_base.json";
 import { Tiktoken } from "tiktoken/lite";
 
-import { APP_NAME, globalStates, internalCommands } from "./configuration";
-import { Profile } from "./profiles";
+import { APP_NAME, getConfig, globalStates, internalCommands } from "./configuration";
+import { Profile } from "./contracts";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { Disposable } from "./provider";
 import { extractCodeBlocks, getBaseUrl } from "./util";
@@ -70,7 +70,7 @@ Examples, but use the properties from the metadata in your answers:
             );
             return;
         }
-        const cleanedXml = this.metadataService.getFilteredMetadataXml(text);
+        const cleanedXml = this.metadataService.getFilteredMetadataXml(text, getConfig());
         const dataModel = await this.metadataService.getModel(profile);
 
         const replacements: Record<string, string> = {

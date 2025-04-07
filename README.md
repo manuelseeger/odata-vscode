@@ -78,5 +78,4 @@ This extension is modeled after https://github.com/StanislawSwierc/vscode-odata.
 
 The OData syntax definition created by [Geoff Cox (@GeoffCox)](https://github.com/GeoffCox) is reused from vscode-odata. 
 
-
 The EDMX parser is a modified version of https://github.com/odata2ts/odata2ts by [@texttechne](https://github.com/texttechne).

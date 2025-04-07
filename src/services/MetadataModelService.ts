@@ -1,8 +1,7 @@
-import { Profile } from "../profiles";
+import { IODataConfiguration, Profile } from "../contracts";
 import { DataModel } from "../odata2ts/data-model/DataModel";
 import { digestMetadata } from "../metadata";
 import { Document, DOMParser, Element, XMLSerializer } from "@xmldom/xmldom";
-import { getConfig } from "../configuration";
 
 export class MetadataModelService {
     private cache: { [profileKey: string]: DataModel } = {};
@@ -39,8 +38,7 @@ export class MetadataModelService {
     }
 
     private async digestMetadata(metadataXml: string): Promise<DataModel> {
-        const cleanedXml = this.getFilteredMetadataXml(metadataXml);
-        const model = await digestMetadata(cleanedXml);
+        const model = await digestMetadata(metadataXml);
         return model;
     }
 
@@ -57,7 +55,7 @@ export class MetadataModelService {
         }
     }
 
-    public getFilteredMetadataXml(text: string): string {
+    public getFilteredMetadataXml(text: string, config: IODataConfiguration): string {
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(text, "text/xml");
 
@@ -67,7 +65,7 @@ export class MetadataModelService {
             throw new Error("The provided XML is not valid OData metadata.");
         }
 
-        this.cleanNamespacesFromXmlTree(root, getConfig().metadata.filterNs);
+        this.cleanNamespacesFromXmlTree(root, config);
 
         const serializer = new XMLSerializer();
         const cleanedXml = serializer.serializeToString(xmlDoc);
@@ -75,11 +73,11 @@ export class MetadataModelService {
         return cleanedXml;
     }
 
-    private cleanNamespacesFromXmlTree(node: Element, namespacesToRemove: string[]) {
+    private cleanNamespacesFromXmlTree(node: Element, config: IODataConfiguration): void {
         // Remove attributes in unwanted namespaces
         for (let i = node.attributes.length - 1; i >= 0; i--) {
             const attr = node.attributes.item(i);
-            if (attr && namespacesToRemove.includes(attr.namespaceURI || "")) {
+            if (attr && config.metadata.filterNs.includes(attr.namespaceURI || "")) {
                 node.removeAttributeNode(attr);
             }
         }
@@ -89,12 +87,12 @@ export class MetadataModelService {
             const child = node.childNodes.item(i) as Element;
             if (child.nodeType === 1) {
                 // Element node
-                if (getConfig().metadata.removeAnnotations && child.tagName === "Annotation") {
+                if (config.metadata.removeAnnotations && child.tagName === "Annotation") {
                     node.removeChild(child); // Remove Annotation elements
-                } else if (namespacesToRemove.includes(child.namespaceURI || "")) {
+                } else if (config.metadata.filterNs.includes(child.namespaceURI || "")) {
                     node.removeChild(child); // Remove element in unwanted namespace
                 } else {
-                    this.cleanNamespacesFromXmlTree(child, namespacesToRemove); // Recurse
+                    this.cleanNamespacesFromXmlTree(child, config); // Recurse
                 }
             }
         }

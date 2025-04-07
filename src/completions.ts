@@ -3,13 +3,14 @@ import { DataModel } from "./odata2ts/data-model/DataModel";
 import {
     EntityContainerModel,
     EntityType,
+    PropertyModel,
     ODataVersion,
 } from "./odata2ts/data-model/DataTypeModel";
 import { LocationRange } from "./parser/parser.js";
 import { SyntaxParser } from "./parser/syntaxparser";
-import { Profile } from "./profiles";
+import { Profile } from "./contracts";
 import { MetadataModelService } from "./services/MetadataModelService";
-import { entityTypeFromResource, getPropertyDoc, ResourceType } from "./metadata";
+import { entityTypeFromResource, ResourceType } from "./metadata";
 import { combineODataUrl } from "./formatting";
 import { Disposable } from "./provider";
 import { globalStates, ODataMode } from "./configuration";
@@ -550,3 +551,9 @@ const odataSystemQueryOptions = {
         { name: "$schemaversion", doc: "Indicates the version of the schema for the service." },
     ],
 };
+
+export function getPropertyDoc(property: PropertyModel): vscode.MarkdownString {
+    return new vscode.MarkdownString(
+        `**Name**: ${property.odataName}\n\n**Type**: ${property.odataType}`,
+    );
+}

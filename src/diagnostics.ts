@@ -9,7 +9,7 @@ import {
     SyntaxLocation,
 } from "./parser/syntaxparser";
 import { MetadataModelService } from "./services/MetadataModelService";
-import { Profile } from "./profiles";
+import { Profile } from "./contracts";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 
 import { entityTypeFromResource, ResourceType } from "./metadata";
