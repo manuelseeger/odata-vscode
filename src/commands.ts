@@ -4,6 +4,7 @@ import { Profile } from "./profiles";
 import { commands, getConfig, globalStates, internalCommands, ODataMode } from "./configuration";
 import { combineODataUrl } from "./formatting";
 import { QueryRunner } from "./services/QueryRunner";
+import { getMetadataUrl } from "./util";
 
 export class CommandProvider extends Disposable {
     public _id: string = "CommandProvider";
@@ -114,7 +115,7 @@ export class CommandProvider extends Disposable {
         const metadata = await this.requestProfileMetadata(profile);
         profile.metadata = metadata;
         const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        const index = profiles.findIndex((p) => p.baseUrl === profile.baseUrl);
+        const index = profiles.findIndex((p) => p.name === profile.name);
         if (index >= 0) {
             profiles[index] = profile;
         } else {
@@ -175,11 +176,6 @@ export class CommandProvider extends Disposable {
 
         const res = await this.runner.run(query, profile);
 
-        if (!res.ok) {
-            vscode.window.showErrorMessage(`Running query failed: ${res.status} ${res.statusText}`);
-            return;
-        }
-
         let format = "plaintext";
         const contentType = res.headers.get("Content-Type");
         if (contentType) {
@@ -196,6 +192,23 @@ export class CommandProvider extends Disposable {
                 language: format,
                 content: newContent,
             });
+        }
+
+        if (!res.ok) {
+            let show: string | undefined = undefined;
+            if (newContent && newContent.length > 0) {
+                show = await vscode.window.showErrorMessage(
+                    `Running query failed: ${res.status} ${res.statusText}`,
+                    "Show Response",
+                );
+            } else {
+                vscode.window.showErrorMessage(
+                    `Running query failed: ${res.status} ${res.statusText}`,
+                );
+            }
+            if (!show || show !== "Show Response") {
+                return;
+            }
         }
 
         this.resultDocument = await vscode.languages.setTextDocumentLanguage(
@@ -217,12 +230,21 @@ export class CommandProvider extends Disposable {
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
 
+    /**
+     * Requests and returns the metadata for the given OData profile.
+     *
+     * This method uses the provided profile's details to build the metadata URL and performs an HTTP GET request.
+     * If the request is successful, the XML metadata is returned as a string; otherwise, an empty string is returned.
+     *
+     * @param profile The OData profile containing the base URL and authentication details.
+     * @returns A promise that resolves to the metadata string or an empty string on failure.
+     */
     async requestProfileMetadata(profile: Profile): Promise<string> {
         // request the /$metadata endpoint via http using the profile details
         const requestInit = {
             headers: { Accept: "application/xml" },
         } as RequestInit;
-        const metadataUrl = `${profile.baseUrl.replace(/\/+$/, "")}/$metadata`;
+        const metadataUrl = getMetadataUrl(profile.baseUrl);
         let response: Response;
         try {
             response = await this.runner.fetch(metadataUrl, profile, requestInit);

@@ -201,6 +201,7 @@ export class ProfileTreeProvider
             "@vscode-elements/elements-lite/components/textfield/textfield.css",
             "@vscode-elements/elements-lite/components/textarea/textarea.css",
             "@vscode-elements/elements-lite/components/select/select.css",
+            "@vscode-elements/elements-lite/components/divider/divider.css",
         ];
         const stylesUriList = styles.map((style) =>
             webview.asWebviewUri(
@@ -238,9 +239,12 @@ export class ProfileTreeProvider
                   <label for="name" class="vscode-label">Name</label>
                   <input type="text" id="name" name="name" value="${profile ? profile.name : ""}" required class="vscode-textfield" /><br/><br/>
                   
-                  <label for="baseUrl" class="vscode-label">Base URL</label>
-                  <p>URL of your service. The path where your $metadata file resides.</p>
-                  <input type="text" id="baseUrl" name="baseUrl" value="${profile ? profile.baseUrl : ""}" required  class="vscode-textfield"/><br/><br/>
+                  <label for="baseUrl" class="vscode-label">Service URL</label>
+                  <p>Either provide the full URL of your $metadata file or the path where the $metadata file resides.</p>
+                  <input type="text" id="baseUrl" name="baseUrl" value="${profile ? profile.baseUrl : ""}" required  class="vscode-textfield full-width"/>
+                  <br/>
+                  <br/>
+                  <hr class="vscode-divider""/>
                   
                   <label for="authKind" class="vscode-label">Auth Type</label>
                   <select id="authKind" name="authKind" class="vscode-select">
@@ -272,7 +276,10 @@ export class ProfileTreeProvider
                         <input type="input" id="key" name="key" class="vscode-textfield"  value="${profile && profile.auth.key ? profile.auth.key.path : ""}"/>
                         <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
                     </div>
-                    <br/><br/>
+                  <br/>
+                  <br/>
+                  <hr class="vscode-divider""/>
+                  
                     <label for="pfx" class="vscode-label">PFX</label>
                     <div >
                         <input type="text" id="pfx" name="pfx" class="vscode-textfield"  value="${profile && profile.auth.pfx ? profile.auth.pfx.path : ""}"/>
@@ -280,9 +287,12 @@ export class ProfileTreeProvider
                     </div>
                     <br/><br/>
                     <label for="passphrase" class="vscode-label">Passphrase</label>
-                    <input type="password" id="passphrase" name="passphrase" class="vscode-textfield" value="${profile && profile.auth.passphrase ? profile.auth.passphrase : ""}"/><br/><br/>
+                    <input type="password" id="passphrase" name="passphrase" class="vscode-textfield" value="${profile && profile.auth.passphrase ? profile.auth.passphrase : ""}"/>
                   </div>
-                  
+                  <br/>
+                  <br/>
+                  <hr class="vscode-divider""/>
+                
                   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                     <label class="vscode-label">Headers</label>
                     <div class="icon" id="addHeaderButton"><i class="codicon codicon-add"></i></div>
@@ -333,9 +343,9 @@ function getFiltersForType(type: string): { [name: string]: string[] } {
     switch (type) {
         case "cert":
         case "key":
-            return { Certificates: ["crt", "pem", "key"] };
+            return { Certificates: ["crt", "pem", "key"], "All Files": ["*"] };
         case "pfx":
-            return { "PFX Files": ["pfx", "p12"] };
+            return { "PFX Files": ["pfx", "p12"], "All Files": ["*"] };
         default:
             return { "All Files": ["*"] };
     }

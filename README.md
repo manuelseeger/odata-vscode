@@ -69,6 +69,7 @@ You can still use all features but the query runner. Create an endpoint profile 
 Github Copilot has a character limit for requests. If your service metadata is above that, Copilot will refuse the request. Options:
 - If your metadata includes annotations, enable `odata.metadata.removeAnnotations` in settings to filter all annotations from metadata
 - If your metadata includes non-EDMX namespaces, maintain them in `odata.metadata.filterNs` to filter them out
+- If you service allows filtering metadata, add your service URL with a filter, for example `http://your.service/api/$metadata?$filter=Customer`
 - Manually shorten your metadata file in profiles, for example remove entity definitions you are not working with
 
 ## Acknowledgment
