@@ -11,7 +11,7 @@ import { SyntaxParser } from "./parser/syntaxparser";
 import { Profile } from "./contracts";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { entityTypeFromResource, ResourceType } from "./metadata";
-import { combineODataUrl } from "./formatting";
+import { combineODataUrl } from "./util";
 import { Disposable } from "./provider";
 import { globalStates, ODataMode } from "./configuration";
 

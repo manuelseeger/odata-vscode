@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { Disposable } from "./provider";
 import { Profile } from "./contracts";
 import { commands, getConfig, globalStates, internalCommands, ODataMode } from "./configuration";
-import { combineODataUrl } from "./formatting";
+import { combineODataUrl } from "./util";
 import { QueryRunner } from "./services/QueryRunner";
 import { getMetadataUrl } from "./util";
 

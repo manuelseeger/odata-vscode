@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { getMetadataUrl, getBaseUrl, extractCodeBlocks } from "../../util";
+import { getMetadataUrl, getBaseUrl, extractCodeBlocks, combineODataUrl } from "../../util";
 
 suite("getMetadataUrl", () => {
     test("should append /$metadata to base URL without trailing slashes", () => {
@@ -129,5 +129,50 @@ suite("extractCodeBlocks", () => {
         assert.deepStrictEqual(result, [
             "https://example.com/odata/Customers?$filter=Name eq 'John'",
         ]);
+    });
+});
+
+suite("combineODataUrl", () => {
+    test("should combine multiline OData URL with valid query parameters", () => {
+        const input = `https://example.com/odata/Customers
+?$filter=Name eq 'John'&$orderby=Name asc`;
+        const result = combineODataUrl(input);
+        assert.strictEqual(
+            result,
+            "https://example.com/odata/Customers?$filter=Name eq 'John'&$orderby=Name asc",
+        );
+    });
+
+    test("should throw an error for invalid OData URL format", () => {
+        const input = `https://example.com/odata/Customers
+$filter=Name eq 'John'`;
+        assert.throws(() => combineODataUrl(input), /Invalid OData URL format/);
+    });
+
+    test("should handle query parameters with extra spaces", () => {
+        const input = `https://example.com/odata/Orders
+?$filter=  OrderDate  eq  '2025-04-08'  &  $top  =  5`;
+        const result = combineODataUrl(input);
+        assert.strictEqual(
+            result,
+            "https://example.com/odata/Orders?$filter=OrderDate eq '2025-04-08'&$top=5",
+        );
+    });
+
+    test("should handle URLs with no query parameters", () => {
+        const input = `https://example.com/odata/Products`;
+        assert.throws(() => combineODataUrl(input), /Invalid OData URL format/);
+    });
+
+    test("should handle complex query parameters", () => {
+        const input = `https://example.com/odata/
+    Products
+        ?$filter=Price gt 100 and Price lt 500&
+        $expand=Category,Tags`;
+        const result = combineODataUrl(input);
+        assert.strictEqual(
+            result,
+            "https://example.com/odata/Products?$filter=Price gt 100 and Price lt 500&$expand=Category,Tags",
+        );
     });
 });
