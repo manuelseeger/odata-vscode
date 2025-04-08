@@ -3,6 +3,9 @@ import { Profile, AuthKind } from "../../contracts/types";
 import { Disposable } from "../../provider";
 import * as vscode from "vscode";
 import * as assert from "assert";
+import { activate } from "../../extension";
+import { instance, mock, when, anything } from "ts-mockito";
+import { IQueryRunner } from "../../contracts/IQueryRunner";
 
 export async function setupTestEnvironment() {
     const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
@@ -29,4 +32,26 @@ export async function setupTestEnvironment() {
     context.globalState.update("odata.selectedProfile", profile);
 
     return { context, baseUrl };
+}
+
+export async function setupWithMockedRunner(records: { [key: string]: string }) {
+    const context = {
+        subscriptions: [],
+    } as unknown as vscode.ExtensionContext;
+
+    const queryRunnerMock = mock<IQueryRunner>();
+
+    // Override mock for each record: when called with the key, return its value
+    for (const [key, value] of Object.entries(records)) {
+        when(queryRunnerMock.run(key, anything())).thenResolve(
+            new Response(value, {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            }),
+        );
+    }
+
+    return await activate(context, {
+        queryRunner: instance(queryRunnerMock),
+    });
 }
