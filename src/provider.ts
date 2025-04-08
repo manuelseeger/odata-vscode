@@ -1,5 +1,5 @@
-import { IFileReader } from "./contracts";
 import * as vscode from "vscode";
+import { IFileReader } from "./contracts/IFileReader";
 
 export abstract class Disposable {
     public abstract _id: string;

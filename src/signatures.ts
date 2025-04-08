@@ -1,7 +1,7 @@
 import * as vscode from "vscode";
 import { Disposable } from "./provider";
 import { ODataMode } from "./configuration";
-import { odata } from "./contracts";
+import { odata } from "./contracts/types";
 
 export class SignatureHelpProvider extends Disposable implements vscode.SignatureHelpProvider {
     public _id: string = "SignatureHelpProvider";

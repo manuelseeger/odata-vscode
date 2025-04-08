@@ -1,5 +1,5 @@
 import { ProfileTreeProvider } from "../../profiles";
-import { Profile, AuthKind } from "../../contracts";
+import { Profile, AuthKind } from "../../contracts/types";
 import { Disposable } from "../../provider";
 import * as vscode from "vscode";
 import * as assert from "assert";

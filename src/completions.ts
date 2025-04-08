@@ -8,12 +8,13 @@ import {
 } from "./odata2ts/data-model/DataTypeModel";
 import { LocationRange } from "./parser/parser.js";
 import { SyntaxParser } from "./parser/syntaxparser";
-import { Profile } from "./contracts";
-import { MetadataModelService } from "./services/MetadataModelService";
+import { Profile } from "./contracts/types";
+
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { combineODataUrl } from "./util";
 import { Disposable } from "./provider";
 import { globalStates, ODataMode } from "./configuration";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
 export class DefaultCompletionItemProvider
     extends Disposable
@@ -23,7 +24,7 @@ export class DefaultCompletionItemProvider
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
         private context: vscode.ExtensionContext,
-        private readonly metadataService: MetadataModelService,
+        private readonly metadataService: IMetadataModelService,
     ) {
         super();
         this.subscriptions = [
@@ -152,7 +153,7 @@ export class MetadataCompletionItemProvider
     public _id: string = "MetadataCompletionItemProvider";
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
-        private metadataService: MetadataModelService,
+        private metadataService: IMetadataModelService,
         private syntaxParser: SyntaxParser,
         private context: vscode.ExtensionContext,
     ) {

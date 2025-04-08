@@ -4,10 +4,10 @@ import cl100kBase from "tiktoken/encoders/cl100k_base.json";
 import { Tiktoken } from "tiktoken/lite";
 
 import { APP_NAME, getConfig, globalStates, internalCommands } from "./configuration";
-import { Profile } from "./contracts";
-import { MetadataModelService } from "./services/MetadataModelService";
+import { Profile } from "./contracts/types";
 import { Disposable } from "./provider";
 import { extractCodeBlocks, getBaseUrl } from "./util";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
 export class ChatParticipantProvider extends Disposable {
     public _id: string = "ChatParticipantProvider";
@@ -28,7 +28,7 @@ Examples, but use the properties from the metadata in your answers:
     private participant: vscode.ChatParticipant;
     constructor(
         private context: vscode.ExtensionContext,
-        private metadataService: MetadataModelService,
+        private metadataService: IMetadataModelService,
     ) {
         super();
         this.participant = vscode.chat.createChatParticipant(

@@ -1,8 +1,10 @@
 import { Agent, fetch } from "undici";
 import { getConfig } from "../configuration";
-import { AuthKind, IFileReader, Profile } from "../contracts";
+import { AuthKind, Profile } from "../contracts/types";
+import { IQueryRunner } from "../contracts/IQueryRunner";
+import { IFileReader } from "../contracts/IFileReader";
 
-export class QueryRunner {
+export class QueryRunner implements IQueryRunner {
     private fileReader: IFileReader;
 
     constructor(fileReader: IFileReader) {

@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { LocationRange, parse, SyntaxError } from "./parser.js";
+import { ISyntaxParser } from "../contracts/ISyntaxParser";
 
 export type ParseSyntaxErrorHandler = (uri: vscode.Uri, error: SyntaxError) => void;
 export type ParseSuccessHandler = (uri: vscode.Uri, result: ParseResult) => void;
@@ -40,7 +41,7 @@ export type SyntaxLocationType =
     | "expandPath"
     | "firstMemberExpr";
 
-export class SyntaxParser {
+export class SyntaxParser implements ISyntaxParser {
     private _debounceTimer: NodeJS.Timeout | undefined;
     private _lastDocument: vscode.TextDocument | null = null;
     private _lastQuery: string | null = null;

@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
 import { Disposable } from "./provider";
-import { Profile } from "./contracts";
+import { Profile } from "./contracts/types";
 import { commands, getConfig, globalStates, internalCommands, ODataMode } from "./configuration";
 import { combineODataUrl } from "./util";
-import { QueryRunner } from "./services/QueryRunner";
 import { getMetadataUrl } from "./util";
+import { IQueryRunner } from "./contracts/IQueryRunner";
 
 export class CommandProvider extends Disposable {
     public _id: string = "CommandProvider";
@@ -13,7 +13,7 @@ export class CommandProvider extends Disposable {
 
     constructor(
         private context: vscode.ExtensionContext,
-        private runner: QueryRunner,
+        private runner: IQueryRunner,
     ) {
         super();
         this.subscriptions = [

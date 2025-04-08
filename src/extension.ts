@@ -15,14 +15,26 @@ import { QueryRunner } from "./services/QueryRunner";
 import { VSCodeFileReader } from "./provider";
 import * as v2 from "./odataV2.json";
 import * as v4 from "./odataV4.json";
-import { odata } from "./contracts";
+import { odata } from "./contracts/types";
 import { SignatureHelpProvider } from "./signatures";
+import { IQueryRunner } from "./contracts/IQueryRunner";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
+import { IFileReader } from "./contracts/IFileReader";
+import { ISyntaxParser } from "./contracts/ISyntaxParser";
 
-export async function activate(context: vscode.ExtensionContext) {
-    const fileReader = new VSCodeFileReader();
+export async function activate(
+    context: vscode.ExtensionContext,
+    deps?: {
+        queryRunner?: IQueryRunner;
+        fileReader?: IFileReader;
+        metadataService?: IMetadataModelService;
+        syntaxParser?: ISyntaxParser;
+    },
+) {
+    const fileReader = deps?.fileReader || new VSCodeFileReader();
     const syntaxParser = new SyntaxParser();
-    const metadataService = new MetadataModelService();
-    const queryRunner = new QueryRunner(fileReader);
+    const metadataService = deps?.metadataService || new MetadataModelService();
+    const queryRunner = deps?.queryRunner || new QueryRunner(fileReader);
 
     const reference: odata.Reference = {
         v2: v2 as odata.Spec,

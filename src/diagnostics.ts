@@ -8,13 +8,14 @@ import {
     ParseSyntaxErrorHandler,
     SyntaxLocation,
 } from "./parser/syntaxparser";
-import { MetadataModelService } from "./services/MetadataModelService";
-import { Profile } from "./contracts";
+
+import { Profile } from "./contracts/types";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
 import { getConfig, globalStates } from "./configuration";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
 /**
  * Provides diagnostic services for OData queries in a Visual Studio Code extension.
@@ -36,7 +37,7 @@ export class ODataDiagnosticProvider extends Disposable {
     public _id: string = "ODataDiagnosticProvider";
     private diagnostics: vscode.DiagnosticCollection;
     constructor(
-        private metadataService: MetadataModelService,
+        private metadataService: IMetadataModelService,
         private context: vscode.ExtensionContext,
     ) {
         super();

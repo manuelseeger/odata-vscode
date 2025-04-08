@@ -1,9 +1,5 @@
 import { URI } from "vscode-uri";
 
-export interface IFileReader {
-    readFile(path: string): Promise<Uint8Array>;
-}
-
 export enum AuthKind {
     None = "none",
     Basic = "basic",

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { IODataConfiguration, IODataMetadataConfiguration, ODataFormat } from "./contracts";
+import { IODataConfiguration, IODataMetadataConfiguration, ODataFormat } from "./contracts/types";
 
 export const APP_NAME = "odata";
 

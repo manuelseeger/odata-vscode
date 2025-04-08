@@ -2,7 +2,7 @@ import * as assert from "assert";
 import * as vscode from "vscode";
 import { SignatureHelpProvider } from "../../signatures";
 
-import { odata } from "../../contracts";
+import { odata } from "../../contracts/types";
 
 suite("SignatureHelpProvider Integration Tests", () => {
     let signatureHelpProvider: SignatureHelpProvider;

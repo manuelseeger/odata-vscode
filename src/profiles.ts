@@ -3,7 +3,7 @@ import * as path from "path";
 
 import { Disposable } from "./provider";
 import { APP_NAME, commands, globalStates, internalCommands } from "./configuration";
-import { Profile, IProfileAuthentication, AuthKind } from "./contracts";
+import { Profile, IProfileAuthentication, AuthKind } from "./contracts/types";
 
 const profileCommands = {
     deleteProfile: `${APP_NAME}.deleteProfile`,

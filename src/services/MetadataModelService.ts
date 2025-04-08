@@ -1,9 +1,10 @@
-import { IODataConfiguration, Profile } from "../contracts";
+import { IODataConfiguration, Profile } from "../contracts/types";
 import { DataModel } from "../odata2ts/data-model/DataModel";
 import { digestMetadata } from "../metadata";
 import { Document, DOMParser, Element, XMLSerializer } from "@xmldom/xmldom";
+import { IMetadataModelService } from "../contracts/IMetadataModelService";
 
-export class MetadataModelService {
+export class MetadataModelService implements IMetadataModelService {
     private cache: { [profileKey: string]: DataModel } = {};
 
     constructor() {}
