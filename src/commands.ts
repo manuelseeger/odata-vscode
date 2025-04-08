@@ -20,7 +20,7 @@ export class CommandProvider extends Disposable {
             vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
             vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
             vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
-
+            vscode.commands.registerCommand(commands.copyQuery, this.copyQueryToClipboard, this),
             vscode.commands.registerCommand(
                 internalCommands.openAndRunQuery,
                 this.openAndRunQuery,
@@ -261,5 +261,34 @@ export class CommandProvider extends Disposable {
         }
         const metadata = await response.text();
         return metadata;
+    }
+
+    /**
+     * Copy the query in the editor to the clipboard.
+     *
+     * This command takes the current editor content, combines the URL, and copies the resulting one-line URL to the clipboard.
+     */
+    async copyQueryToClipboard(): Promise<string | undefined> {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showInformationMessage("No active editor found.");
+            return;
+        }
+
+        const document = editor.document;
+        if (document.languageId !== ODataMode.language) {
+            vscode.window.showInformationMessage("This command affects only OData files.");
+            return;
+        }
+
+        try {
+            const text = document.getText();
+            const combinedUrl = combineODataUrl(text);
+            await vscode.env.clipboard.writeText(combinedUrl);
+            vscode.window.showInformationMessage("Query copied to clipboard.");
+            return combinedUrl;
+        } catch (exception) {
+            vscode.window.showWarningMessage("Failed to copy query to clipboard");
+        }
     }
 }

@@ -30,22 +30,22 @@ In Copilot Chat, chat with participant `@odata`, example:
 
 ## Commands
 
-| Name | Description |
-| ----- | ----- |
-| `odata.run`          | Send query in ActiveTextEditor to selected profile  |
-| `odata.addProfile` | Add a new endpoint profile. _Start here_ |
-| `odata.selectProfile` | Select an endpoint profile |
-| `odata.getMetadata` | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
+| Name                  | Description                                                                 |
+|-----------------------|-----------------------------------------------------------------------------|
+| `odata.run`           | Send query in ActiveTextEditor to the selected profile                     |
+| `odata.copy`          | Copy the combined, single-line query to clipboard                          |
+| `odata.addProfile`    | Add a new endpoint profile. _Start here_                                   |
+| `odata.selectProfile` | Select an endpoint profile                                                 |
+| `odata.getMetadata`   | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
 
 ## Settings
 
 | Setting                        | Description                                                                                  | Default Value |
 |--------------------------------|----------------------------------------------------------------------------------------------|---------------|
-| `odata.defaultFormat`          | Set the default response format | `json`       |
-| `odata.metadata.removeAnnotations` | Removes annotations from metadata to reduce size. | `false`       |
-| `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.  | `[]`          |
-| `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`). | `true`        |
-
+| `odata.defaultFormat`          | Set the default response format                                                              | `json`        |
+| `odata.metadata.removeAnnotations` | Removes annotations from metadata to reduce size.                                          | `false`       |
+| `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.                                     | `[]`          |
+| `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`).               | `true`        |
 
 ## Known Issues and Limitations
 

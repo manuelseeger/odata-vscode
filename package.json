@@ -2,7 +2,7 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Language and Query Runner",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "publisher": "manuelseeger",
   "repository": {
     "type": "git",
@@ -45,6 +45,16 @@
       ]
     },
     "menus": {
+      "commandPalette": [
+        {
+          "command": "odata.run",
+          "when": "editorLangId == odata"
+        },
+        {
+          "command": "odata.copy",
+          "when": "editorLangId == odata"
+        }
+      ],
       "view/item/context": [
         {
           "command": "odata.requestMetadata",
@@ -113,6 +123,10 @@
         "title": "Request Endpoint Metadata",
         "icon": "$(refresh)",
         "when": "viewItem == profile"
+      },
+      {
+        "command": "odata.copy",
+        "title": "OData: Copy Query to Clipboard"
       }
     ],
     "chatParticipants": [

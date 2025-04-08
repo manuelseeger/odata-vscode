@@ -8,6 +8,7 @@ export const commands = {
     selectProfile: `${APP_NAME}.selectProfile`,
     addProfile: `${APP_NAME}.addProfile`,
     run: `${APP_NAME}.run`,
+    copyQuery: `${APP_NAME}.copy`,
 };
 
 export const internalCommands = {
