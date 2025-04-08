@@ -47,3 +47,32 @@ export interface IODataConfiguration {
     defaultFormat: ODataFormat;
     strictParser: boolean; // Added strictParser setting
 }
+
+export namespace odata {
+    export interface Param {
+        name: string;
+        type: string;
+        description: string;
+    }
+
+    export interface Function {
+        name: string;
+        doc: string;
+        params?: Param[];
+    }
+
+    export interface SystemQueryOption {
+        name: string;
+        doc: string;
+    }
+
+    export interface Spec {
+        functions: Function[];
+        systemQueryOptions: SystemQueryOption[];
+    }
+
+    export interface Reference {
+        v2: Spec;
+        v4: Spec;
+    }
+}
