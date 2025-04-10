@@ -35,14 +35,17 @@ import { IMetadataModelService } from "./contracts/IMetadataModelService";
  */
 export class ODataDiagnosticProvider extends Disposable {
     public _id: string = "ODataDiagnosticProvider";
-    private diagnostics: vscode.DiagnosticCollection;
+    private _diagnostics: vscode.DiagnosticCollection;
+    public get diagnostics(): vscode.DiagnosticCollection {
+        return this._diagnostics;
+    }
     constructor(
         private metadataService: IMetadataModelService,
         private context: vscode.ExtensionContext,
     ) {
         super();
-        this.diagnostics = vscode.languages.createDiagnosticCollection("odata");
-        this.subscriptions = [this.diagnostics];
+        this._diagnostics = vscode.languages.createDiagnosticCollection("odata");
+        this.subscriptions = [this._diagnostics];
     }
 
     /**

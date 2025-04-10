@@ -65,7 +65,7 @@ export class SyntaxParser implements ISyntaxParser {
         }, 500);
     }
 
-    parse(text: string): ParsedTree | null {
+    private parse(text: string): ParsedTree | null {
         if (text.length === 0) {
             return null;
         }
@@ -97,6 +97,11 @@ export class SyntaxParser implements ISyntaxParser {
         }
         this._process(document);
         return this._lastResult;
+    }
+
+    processText(text: string): ParseResult | null {
+        const tree = this.parse(text);
+        return this._postProcess(tree!);
     }
 
     private _process(document: vscode.TextDocument) {

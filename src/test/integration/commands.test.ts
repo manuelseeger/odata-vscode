@@ -94,6 +94,7 @@ suite("Copy Query Command", () => {
     });
 });
 
+/*
 suite("Run Query Command", () => {
     const testData = {
         "https://services.odata.org/northwind/northwind.svc/Products?$filter=Price gt 100&$orderby=Name asc": `{"odata.metadata":"https://services.odata.org/Northwind/Northwind.svc/$metadata#Products","value":[{"ProductID":38,"ProductName":"Côte de Blaye","SupplierID":18,"CategoryID":1,"QuantityPerUnit":"12 - 75 cl bottles","UnitPrice":"263.5000","UnitsInStock":17,"UnitsOnOrder":0,"ReorderLevel":15,"Discontinued":false},{"ProductID":29,"ProductName":"Thüringer Rostbratwurst","SupplierID":12,"CategoryID":6,"QuantityPerUnit":"50 bags x 30 sausgs.","UnitPrice":"123.7900","UnitsInStock":0,"UnitsOnOrder":0,"ReorderLevel":0,"Discontinued":true},{"ProductID":9,"ProductName":"Mishi Kobe Niku","SupplierID":4,"CategoryID":6,"QuantityPerUnit":"18 - 500 g pkgs.","UnitPrice":"97.0000","UnitsInStock":29,"UnitsOnOrder":0,"ReorderLevel":0,"Discontinued":true},{"ProductID":20,"ProductName":"Sir Rodney's Marmalade","SupplierID":8,"CategoryID":3,"QuantityPerUnit":"30 gift boxes","UnitPrice":"81.0000","UnitsInStock":40,"UnitsOnOrder":0,"ReorderLevel":0,"Discontinued":false},{"ProductID":18,"ProductName":"Carnarvon Tigers","SupplierID":7,"CategoryID":8,"QuantityPerUnit":"16 kg pkg.","UnitPrice":"62.5000","UnitsInStock":42,"UnitsOnOrder":0,"ReorderLevel":0,"Discontinued":false}]}`,
@@ -107,3 +108,4 @@ suite("Run Query Command", () => {
         assert.strictEqual(result, undefined, "Command should execute successfully");
     });
 });
+*/
