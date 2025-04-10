@@ -1,12 +1,10 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { DefaultCompletionItemProvider, MetadataCompletionItemProvider } from "../../completions";
+import { MetadataCompletionItemProvider } from "../../completions";
 import { IMetadataModelService } from "../../contracts/IMetadataModelService";
 import { Profile } from "../../contracts/types";
 import { setupTests } from "./testutil";
 import { MetadataModelService } from "../../services/MetadataModelService";
-import { ISyntaxParser } from "../../contracts/ISyntaxParser";
-import { SyntaxParser } from "../../parser/syntaxparser";
 
 suite("DefaultCompletionItemProvider", () => {
     let completionProvider: MetadataCompletionItemProvider;

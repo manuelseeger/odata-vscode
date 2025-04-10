@@ -9,13 +9,33 @@ import { IQueryRunner } from "./contracts/IQueryRunner";
 export class CommandProvider extends Disposable {
     public _id: string = "CommandProvider";
     private queryDocument: vscode.TextDocument | undefined = undefined;
-    private resultDocument: vscode.TextDocument | undefined = undefined;
+    private _resultDocument: vscode.TextDocument | undefined = undefined;
+
+    public get resultDocument(): vscode.TextDocument | undefined {
+        return this._resultDocument;
+    }
+    private set resultDocument(value: vscode.TextDocument | undefined) {
+        this._resultDocument = value;
+    }
 
     constructor(
         private context: vscode.ExtensionContext,
         private runner: IQueryRunner,
+        subscribe: boolean = true,
     ) {
         super();
+        if (subscribe) {
+            this.registerCommands();
+        }
+    }
+
+    /**
+     * Register the commands for the command provider.
+     *
+     * This is put into a dedicated method so that we can run CommandProvider in extension
+     * testing without re-registering the commands.
+     */
+    private registerCommands() {
         this.subscriptions = [
             vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
             vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
@@ -177,7 +197,7 @@ export class CommandProvider extends Disposable {
         const res = await this.runner.run(query, profile);
 
         let format = "plaintext";
-        const contentType = res.headers.get("Content-Type");
+        const contentType = res.headers!.get("Content-Type");
         if (contentType) {
             if (contentType.includes("json")) {
                 format = "json";

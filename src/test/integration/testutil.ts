@@ -3,10 +3,12 @@ import { Profile, AuthKind } from "../../contracts/types";
 import { Disposable } from "../../provider";
 import * as vscode from "vscode";
 import * as assert from "assert";
-import { activate } from "../../extension";
+
 import { instance, mock, when, anything } from "ts-mockito";
 import { IQueryRunner } from "../../contracts/IQueryRunner";
 import { globalStates } from "../../configuration";
+import { QueryRunner } from "../../services/QueryRunner";
+import { Response } from "undici";
 
 export async function setupTestEnvironment() {
     const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
@@ -35,34 +37,12 @@ export async function setupTestEnvironment() {
     return { context, baseUrl };
 }
 
-export async function setupWithMockedRunner(records: { [key: string]: string }) {
-    const context = {
-        subscriptions: [],
-    } as unknown as vscode.ExtensionContext;
-
-    const queryRunnerMock = mock<IQueryRunner>();
-
-    // Override mock for each record: when called with the key, return its value
-    for (const [key, value] of Object.entries(records)) {
-        when(queryRunnerMock.run(key, anything())).thenResolve(
-            new Response(value, {
-                status: 200,
-                headers: { "Content-Type": "application/json" },
-            }),
-        );
-    }
-
-    return await activate(context, {
-        queryRunner: instance(queryRunnerMock),
-    });
-}
-
-export function setupTests(metadataString?: string): {
+export function setupTests(records: { [key: string]: string } = {}): {
     profile: Profile;
     context: vscode.ExtensionContext;
+    queryRunner: IQueryRunner;
 } {
-    if (!metadataString) {
-        metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+    const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
     <edmx:DataServices>
         <Schema Namespace="testing" xmlns="http://docs.oasis-open.org/odata/ns/edm">
             <EntityType Name="Order">
@@ -89,7 +69,6 @@ export function setupTests(metadataString?: string): {
         </Schema>
     </edmx:DataServices>
 </edmx:Edmx>`;
-    }
 
     const profile = {
         name: "TestProfile",
@@ -112,5 +91,17 @@ export function setupTests(metadataString?: string): {
         },
     } as unknown as vscode.ExtensionContext;
 
-    return { profile, context: mockContext };
+    const queryRunner: QueryRunner = mock(QueryRunner);
+
+    // Override mock for each record: when called with the key, return its value
+    for (const [key, value] of Object.entries(records!)) {
+        when(queryRunner.run(key, anything())).thenResolve(
+            new Response(value, {
+                status: 200,
+                headers: { "Content-Type": "application/json" },
+            }),
+        );
+    }
+
+    return { profile, context: mockContext, queryRunner: instance(queryRunner) };
 }
