@@ -4,7 +4,7 @@ export enum AuthKind {
     None = "none",
     Basic = "basic",
     Bearer = "bearer",
-    ClientCert = "cliencert",
+    ClientCert = "clientcert",
 }
 
 export interface IProfileAuthentication {
