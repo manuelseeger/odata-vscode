@@ -15,6 +15,7 @@ import { combineODataUrl } from "./util";
 import { Disposable } from "./provider";
 import { globalStates, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
+import { ISyntaxParser } from "./contracts/ISyntaxParser";
 
 export class DefaultCompletionItemProvider
     extends Disposable
@@ -154,7 +155,7 @@ export class MetadataCompletionItemProvider
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
         private metadataService: IMetadataModelService,
-        private syntaxParser: SyntaxParser,
+
         private context: vscode.ExtensionContext,
     ) {
         super();

@@ -53,10 +53,10 @@ export function combineODataUrl(input: string): string {
     const formattedParams: string = queryParams
         .split("&")
         .map((param) => {
-            const [key, value] = param.split("=");
-            if (!key || !value) {
-                throw new Error(`Invalid query parameter: ${param}`);
-            }
+            let [key, value] = param.split("=");
+            // Handle cases where key or value might be undefined
+            key = key ? key.trim() : "";
+            value = value ? value.trim() : "";
             const trimmedKey: string = key.trim();
             const trimmedValue: string = value.trim().replace(/\s+/g, " "); // Condense whitespace
             return `${trimmedKey}=${trimmedValue}`;

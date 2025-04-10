@@ -5,59 +5,18 @@ import { AuthKind, Profile } from "../../contracts/types";
 import { ODataDiagnosticProvider } from "../../diagnostics";
 import { Location, LocationRange, SyntaxError, SyntaxParser } from "../../parser/syntaxparser";
 import { MetadataModelService } from "../../services/MetadataModelService";
+import { setupTests } from "./testutil";
 
 suite("ODataDiagnosticProvider", () => {
-    const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
-    <edmx:DataServices>
-        <Schema Namespace="testing" xmlns="http://docs.oasis-open.org/odata/ns/edm">
-            <EntityType Name="Order">
-                <Key>
-                    <PropertyRef Name="OrderID"/>
-                </Key>
-                <Property Name="OrderID" Type="Edm.Int32"/>
-                <Property Name="OrderDate" Type="Edm.DateTimeOffset"/>
-                <Property Name="CustomerName" Type="Edm.String"/>
-                <NavigationProperty Name="Items" Type="Collection(testing.Item)" Nullable="false"/>
-            </EntityType>
-            <EntityType Name="Item">
-                <Key>
-                    <PropertyRef Name="ItemID"/>
-                </Key>
-                <Property Name="ItemID" Type="Edm.Int32"/>
-                <Property Name="ItemName" Type="Edm.String"/>
-                <Property Name="Quantity" Type="Edm.Int32"/>
-            </EntityType>
-            <EntityContainer Name="DefaultContainer">
-                <EntitySet Name="Orders" EntityType="testing.Order"/>
-                <EntitySet Name="Items" EntityType="testing.Item"/>
-            </EntityContainer>
-        </Schema>
-    </edmx:DataServices>
-</edmx:Edmx>`;
-
     let diagnosticProvider: ODataDiagnosticProvider;
-    let mockMetadataService: IMetadataModelService;
-    let mockContext: vscode.ExtensionContext;
+
+    let context: vscode.ExtensionContext;
     let profile: Profile;
 
     setup(() => {
-        profile = {
-            name: "TestProfile",
-            baseUrl: "https://example.com/odata/",
-            metadata: metadataString,
-            auth: { kind: AuthKind.None },
-            headers: {},
-        } as Profile;
-
-        mockMetadataService = new MetadataModelService();
-
-        mockContext = {
-            globalState: {
-                get: (key: string) => profile as Profile,
-            },
-        } as unknown as vscode.ExtensionContext;
-
-        diagnosticProvider = new ODataDiagnosticProvider(mockMetadataService, mockContext);
+        ({ profile, context } = setupTests());
+        const metadataService = new MetadataModelService();
+        diagnosticProvider = new ODataDiagnosticProvider(metadataService, context);
     });
 
     test("should initialize diagnostic collection", () => {
@@ -132,5 +91,29 @@ suite("ODataDiagnosticProvider", () => {
         assert.strictEqual(diagnostics![0].range.start.character, 26);
         assert.strictEqual(diagnostics![0].range.end.line, 0);
         assert.strictEqual(diagnostics![0].range.end.character, 38);
+    });
+
+    test("should generate warning for non-existing expand property", async () => {
+        // arrange
+        const parser = new SyntaxParser();
+        // https://example.com/odata/Orders?$expand=NonExistantProperty
+        const odata = `${profile.baseUrl}Orders?$expand=NonExistantProperty`;
+        const result = parser.processText(odata);
+
+        const queryDocument = await vscode.workspace.openTextDocument({
+            content: odata,
+        });
+
+        // act
+        await diagnosticProvider.handleParseSucess(queryDocument.uri, result!);
+
+        // assert
+        const diagnostics = diagnosticProvider.diagnostics.get(queryDocument.uri);
+        assert.strictEqual(diagnostics?.length, 1);
+        assert.strictEqual(
+            diagnostics![0].message,
+            `'Resource Orders doesn't have a navigational property NonExistantProperty in profile TestProfile.`,
+        );
+        assert.strictEqual(diagnostics![0].severity, vscode.DiagnosticSeverity.Warning);
     });
 });

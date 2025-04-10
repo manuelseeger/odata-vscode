@@ -6,6 +6,7 @@ import * as assert from "assert";
 import { activate } from "../../extension";
 import { instance, mock, when, anything } from "ts-mockito";
 import { IQueryRunner } from "../../contracts/IQueryRunner";
+import { globalStates } from "../../configuration";
 
 export async function setupTestEnvironment() {
     const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
@@ -54,4 +55,62 @@ export async function setupWithMockedRunner(records: { [key: string]: string }) 
     return await activate(context, {
         queryRunner: instance(queryRunnerMock),
     });
+}
+
+export function setupTests(metadataString?: string): {
+    profile: Profile;
+    context: vscode.ExtensionContext;
+} {
+    if (!metadataString) {
+        metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+    <edmx:DataServices>
+        <Schema Namespace="testing" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+            <EntityType Name="Order">
+                <Key>
+                    <PropertyRef Name="OrderID"/>
+                </Key>
+                <Property Name="OrderID" Type="Edm.Int32"/>
+                <Property Name="OrderDate" Type="Edm.DateTimeOffset"/>
+                <Property Name="CustomerName" Type="Edm.String"/>
+                <NavigationProperty Name="Items" Type="Collection(testing.Item)" Nullable="false"/>
+            </EntityType>
+            <EntityType Name="Item">
+                <Key>
+                    <PropertyRef Name="ItemID"/>
+                </Key>
+                <Property Name="ItemID" Type="Edm.Int32"/>
+                <Property Name="ItemName" Type="Edm.String"/>
+                <Property Name="Quantity" Type="Edm.Int32"/>
+            </EntityType>
+            <EntityContainer Name="DefaultContainer">
+                <EntitySet Name="Orders" EntityType="testing.Order"/>
+                <EntitySet Name="Items" EntityType="testing.Item"/>
+            </EntityContainer>
+        </Schema>
+    </edmx:DataServices>
+</edmx:Edmx>`;
+    }
+
+    const profile = {
+        name: "TestProfile",
+        baseUrl: "https://example.com/odata/",
+        metadata: metadataString,
+        auth: { kind: AuthKind.None },
+        headers: {},
+    } as Profile;
+
+    const mockContext = {
+        globalState: {
+            get: (key: string) => {
+                if (key === globalStates.selectedProfile) {
+                    return profile;
+                } else if (key === globalStates.profiles) {
+                    return [profile];
+                }
+                return undefined;
+            },
+        },
+    } as unknown as vscode.ExtensionContext;
+
+    return { profile, context: mockContext };
 }

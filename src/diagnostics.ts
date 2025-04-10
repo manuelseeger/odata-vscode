@@ -335,7 +335,7 @@ export class ODataDiagnosticProvider extends Disposable {
             const range = spanToRange(syntaxNode.span);
             const diagnostic = new vscode.Diagnostic(
                 range,
-                `'Resource ${resource.name} doesn't have a navigational property ${syntaxNode.value} in profile ${profile.name}.`,
+                `'Resource ${resource.name} doesn't have a navigational property ${syntaxNodeToString(syntaxNode)} in profile ${profile.name}.`,
                 vscode.DiagnosticSeverity.Warning,
             );
             diagnostics.push(diagnostic);
@@ -362,7 +362,7 @@ export class ODataDiagnosticProvider extends Disposable {
             const range = spanToRange(syntaxNode.span);
             const diagnostic = new vscode.Diagnostic(
                 range,
-                `Property '${syntaxNode.value}' not found in the resource ${resource.name} of profile ${profile.name}.`,
+                `Property '${syntaxNodeToString(syntaxNode)}' not found in the resource ${resource.name} of profile ${profile.name}.`,
                 vscode.DiagnosticSeverity.Warning,
             );
             diagnostics.push(diagnostic);
@@ -486,4 +486,13 @@ function spanToRange(span: LocationRange): vscode.Range {
         new vscode.Position(span.start.line - 1, span.start.column - 1),
         new vscode.Position(span.end.line - 1, span.end.column - 1),
     );
+}
+
+function syntaxNodeToString(node: SyntaxLocation): string {
+    if (typeof node.value === "string") {
+        return node.value;
+    } else if (Array.isArray(node.value)) {
+        return node.value.flat(Infinity).join("");
+    }
+    return "";
 }

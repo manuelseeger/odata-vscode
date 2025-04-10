@@ -48,7 +48,7 @@ export async function activate(
         new CommandProvider(context, queryRunner),
         new DefaultCompletionItemProvider(context, metadataService),
         new SystemQueryCompletionItemProvider(),
-        new MetadataCompletionItemProvider(metadataService, syntaxParser, context),
+        new MetadataCompletionItemProvider(metadataService, context),
         new ODataDocumentFormatter(syntaxParser),
     );
 
