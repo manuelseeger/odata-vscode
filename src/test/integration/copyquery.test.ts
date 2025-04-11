@@ -1,8 +1,13 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { commands } from "../../configuration";
+import { setupTests } from "./testutil";
 
 suite("Copy Query Command", () => {
+    setup(async () => {
+        await setupTests();
+    });
+
     test("Should copy combined OData URL to clipboard", async () => {
         // Arrange
         const baseUrl = "https://services.odata.org/northwind/northwind.svc/";

@@ -47,6 +47,12 @@ export async function setupTests(
     await setTabSize(4);
     await setEOL("\n");
 
+    const extension = vscode.extensions.getExtension("manuelseeger.odata");
+    if (!extension) {
+        throw new Error("Extension not found");
+    }
+    await extension.activate();
+
     if (!profile) {
         profile = {
             name: "TestProfile",
