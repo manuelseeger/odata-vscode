@@ -16,7 +16,9 @@
     "Formatters",
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onChatParticipant:odata.odata-chat"
+  ],
   "main": "./dist/extension.js",
   "icon": "assets/odata.128x128.png",
   "license": "MIT",

@@ -6,11 +6,13 @@ import { SyntaxParser } from "../../parser/syntaxparser";
 
 suite("Document Formatter", () => {
     let context: vscode.ExtensionContext;
-    let formatter: ODataDocumentFormatter;
+    //let formatter: ODataDocumentFormatter;
     setup(async () => {
-        const syntaxParser = new SyntaxParser();
-        formatter = new ODataDocumentFormatter(syntaxParser);
+        //const syntaxParser = new SyntaxParser();
+        //formatter = new ODataDocumentFormatter(syntaxParser);
         ({ context } = await setupTests());
+        // test wait for extension activation
+        await new Promise((resolve) => setTimeout(resolve, 1000));
     });
 
     const testCases = [
