@@ -13,19 +13,42 @@ import { SyntaxParser } from "./parser/syntaxparser";
 import { ODataDocumentFormatter } from "./formatting";
 import { QueryRunner } from "./services/QueryRunner";
 import { VSCodeFileReader } from "./provider";
+import * as v2 from "./odataV2.json";
+import * as v4 from "./odataV4.json";
+import { odata } from "./contracts/types";
+import { SignatureHelpProvider } from "./signatures";
+import { IQueryRunner } from "./contracts/IQueryRunner";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
+import { IFileReader } from "./contracts/IFileReader";
+import { ISyntaxParser } from "./contracts/ISyntaxParser";
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(
+    context: vscode.ExtensionContext,
+    deps?: {
+        queryRunner?: IQueryRunner;
+        fileReader?: IFileReader;
+        metadataService?: IMetadataModelService;
+        syntaxParser?: ISyntaxParser;
+    },
+) {
+    const fileReader = deps?.fileReader || new VSCodeFileReader();
     const syntaxParser = new SyntaxParser();
-    const metadataService = new MetadataModelService();
-    const queryRunner = new QueryRunner(new VSCodeFileReader());
+    const metadataService = deps?.metadataService || new MetadataModelService();
+    const queryRunner = deps?.queryRunner || new QueryRunner(fileReader);
+
+    const reference: odata.Reference = {
+        v2: v2 as odata.Spec,
+        v4: v4 as odata.Spec,
+    };
 
     context.subscriptions.push(
+        new SignatureHelpProvider(context, reference),
         new ChatParticipantProvider(context, metadataService),
         new ProfileTreeProvider(context),
         new CommandProvider(context, queryRunner),
         new DefaultCompletionItemProvider(context, metadataService),
         new SystemQueryCompletionItemProvider(),
-        new MetadataCompletionItemProvider(metadataService, syntaxParser, context),
+        new MetadataCompletionItemProvider(metadataService, context),
         new ODataDocumentFormatter(syntaxParser),
     );
 

@@ -8,13 +8,14 @@ import {
     ParseSyntaxErrorHandler,
     SyntaxLocation,
 } from "./parser/syntaxparser";
-import { MetadataModelService } from "./services/MetadataModelService";
-import { Profile } from "./profiles";
+
+import { Profile } from "./contracts/types";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
 import { getConfig, globalStates } from "./configuration";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
 /**
  * Provides diagnostic services for OData queries in a Visual Studio Code extension.
@@ -34,14 +35,17 @@ import { getConfig, globalStates } from "./configuration";
  */
 export class ODataDiagnosticProvider extends Disposable {
     public _id: string = "ODataDiagnosticProvider";
-    private diagnostics: vscode.DiagnosticCollection;
+    private _diagnostics: vscode.DiagnosticCollection;
+    public get diagnostics(): vscode.DiagnosticCollection {
+        return this._diagnostics;
+    }
     constructor(
-        private metadataService: MetadataModelService,
+        private metadataService: IMetadataModelService,
         private context: vscode.ExtensionContext,
     ) {
         super();
-        this.diagnostics = vscode.languages.createDiagnosticCollection("odata");
-        this.subscriptions = [this.diagnostics];
+        this._diagnostics = vscode.languages.createDiagnosticCollection("odata");
+        this.subscriptions = [this._diagnostics];
     }
 
     /**
@@ -82,18 +86,18 @@ export class ODataDiagnosticProvider extends Disposable {
         const diagnostics: vscode.Diagnostic[] = [];
         this.diagnostics.set(uri, diagnostics);
 
-        const document = await vscode.workspace.openTextDocument(uri);
-        const text = document.getText();
-
         const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        const metadata = await this.metadataService.getModel(profile!);
+        if (!profile) {
+            return;
+        }
+        const metadata = await this.metadataService.getModel(profile);
         if (!metadata) {
             return;
         }
 
-        const resource = this.diagnoseResourcePath(diagnostics, metadata, result.tree, profile!);
+        const resource = this.diagnoseResourcePath(diagnostics, metadata, result.tree, profile);
         if (resource) {
-            this.diagnoseQueryOptions(diagnostics, metadata, result, resource, profile!);
+            this.diagnoseQueryOptions(diagnostics, metadata, result, resource, profile);
         }
 
         this.diagnostics.set(uri, diagnostics);
@@ -331,7 +335,7 @@ export class ODataDiagnosticProvider extends Disposable {
             const range = spanToRange(syntaxNode.span);
             const diagnostic = new vscode.Diagnostic(
                 range,
-                `'Resource ${resource.name} doesn't have a navigational property ${syntaxNode.value} in profile ${profile.name}.`,
+                `'Resource ${resource.name} doesn't have a navigational property ${syntaxNodeToString(syntaxNode)} in profile ${profile.name}.`,
                 vscode.DiagnosticSeverity.Warning,
             );
             diagnostics.push(diagnostic);
@@ -358,7 +362,7 @@ export class ODataDiagnosticProvider extends Disposable {
             const range = spanToRange(syntaxNode.span);
             const diagnostic = new vscode.Diagnostic(
                 range,
-                `Property '${syntaxNode.value}' not found in the resource ${resource.name} of profile ${profile.name}.`,
+                `Property '${syntaxNodeToString(syntaxNode)}' not found in the resource ${resource.name} of profile ${profile.name}.`,
                 vscode.DiagnosticSeverity.Warning,
             );
             diagnostics.push(diagnostic);
@@ -482,4 +486,13 @@ function spanToRange(span: LocationRange): vscode.Range {
         new vscode.Position(span.start.line - 1, span.start.column - 1),
         new vscode.Position(span.end.line - 1, span.end.column - 1),
     );
+}
+
+function syntaxNodeToString(node: SyntaxLocation): string {
+    if (typeof node.value === "string") {
+        return node.value;
+    } else if (Array.isArray(node.value)) {
+        return node.value.flat(Infinity).join("");
+    }
+    return "";
 }

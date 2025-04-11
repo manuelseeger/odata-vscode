@@ -19,6 +19,7 @@
 			"dist",
 			"assets",
 			"eslint.config.mjs",
-			"webpack.config.js"
+			"webpack.config.js",
+			"coverage"
 		],
 }

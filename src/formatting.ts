@@ -82,35 +82,3 @@ export class ODataDocumentFormatter
         return edits;
     }
 }
-
-export function combineODataUrl(input: string): string {
-    // Remove line breaks and condense to a single line
-    const singleLine: string = input.replace(/\s*\n\s*/g, "");
-
-    // Split the URL into host/resource path and query parameters
-    const [baseUrl, queryParams] = singleLine.split("?");
-
-    if (!baseUrl || !queryParams) {
-        throw new Error("Invalid OData URL format");
-    }
-
-    // Remove all whitespace from the base URL
-    const cleanedBaseUrl: string = baseUrl.replace(/\s+/g, "");
-
-    // Trim and normalize query parameters
-    const formattedParams: string = queryParams
-        .split("&")
-        .map((param) => {
-            const [key, value] = param.split("=");
-            if (!key || !value) {
-                throw new Error(`Invalid query parameter: ${param}`);
-            }
-            const trimmedKey: string = key.trim();
-            const trimmedValue: string = value.trim().replace(/\s+/g, " "); // Condense whitespace
-            return `${trimmedKey}=${trimmedValue}`;
-        })
-        .join("&");
-
-    // Combine the cleaned base URL and formatted query parameters
-    return `${cleanedBaseUrl}?${formattedParams}`;
-}

@@ -1,6 +1,5 @@
 import * as vscode from "vscode";
-
-export type ODataFormat = "json" | "xml";
+import { IODataConfiguration, IODataMetadataConfiguration, ODataFormat } from "./contracts/types";
 
 export const APP_NAME = "odata";
 
@@ -9,6 +8,7 @@ export const commands = {
     selectProfile: `${APP_NAME}.selectProfile`,
     addProfile: `${APP_NAME}.addProfile`,
     run: `${APP_NAME}.run`,
+    copyQuery: `${APP_NAME}.copy`,
 };
 
 export const internalCommands = {
@@ -21,23 +21,7 @@ export const globalStates = {
     profiles: `${APP_NAME}.profiles`,
 };
 
-export interface IODataMetadataConfigurationMapEntry {
-    url: string;
-    path: string;
-}
-
-export interface IODataMetadataConfiguration {
-    filterNs: string[];
-    removeAnnotations: boolean;
-}
-
-export interface IODataConfiguration {
-    metadata: IODataMetadataConfiguration;
-    defaultFormat: ODataFormat;
-    strictParser: boolean; // Added strictParser setting
-}
-
-export function getConfig() {
+export function getConfig(): IODataConfiguration {
     const extensionSettings = vscode.workspace.getConfiguration(APP_NAME);
 
     const config: IODataConfiguration = {

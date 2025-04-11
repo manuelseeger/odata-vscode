@@ -1,25 +1,46 @@
 import * as vscode from "vscode";
 import { Disposable } from "./provider";
-import { Profile } from "./profiles";
+import { Profile } from "./contracts/types";
 import { commands, getConfig, globalStates, internalCommands, ODataMode } from "./configuration";
-import { combineODataUrl } from "./formatting";
-import { QueryRunner } from "./services/QueryRunner";
+import { combineODataUrl } from "./util";
+import { getMetadataUrl } from "./util";
+import { IQueryRunner } from "./contracts/IQueryRunner";
 
 export class CommandProvider extends Disposable {
     public _id: string = "CommandProvider";
     private queryDocument: vscode.TextDocument | undefined = undefined;
-    private resultDocument: vscode.TextDocument | undefined = undefined;
+    private _resultDocument: vscode.TextDocument | undefined = undefined;
+
+    public get resultDocument(): vscode.TextDocument | undefined {
+        return this._resultDocument;
+    }
+    private set resultDocument(value: vscode.TextDocument | undefined) {
+        this._resultDocument = value;
+    }
 
     constructor(
         private context: vscode.ExtensionContext,
-        private runner: QueryRunner,
+        private runner: IQueryRunner,
+        subscribe: boolean = true,
     ) {
         super();
+        if (subscribe) {
+            this.registerCommands();
+        }
+    }
+
+    /**
+     * Register the commands for the command provider.
+     *
+     * This is put into a dedicated method so that we can run CommandProvider in extension
+     * testing without re-registering the commands.
+     */
+    private registerCommands() {
         this.subscriptions = [
             vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
             vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
             vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
-
+            vscode.commands.registerCommand(commands.copyQuery, this.copyQueryToClipboard, this),
             vscode.commands.registerCommand(
                 internalCommands.openAndRunQuery,
                 this.openAndRunQuery,
@@ -114,7 +135,7 @@ export class CommandProvider extends Disposable {
         const metadata = await this.requestProfileMetadata(profile);
         profile.metadata = metadata;
         const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        const index = profiles.findIndex((p) => p.baseUrl === profile.baseUrl);
+        const index = profiles.findIndex((p) => p.name === profile.name);
         if (index >= 0) {
             profiles[index] = profile;
         } else {
@@ -169,16 +190,19 @@ export class CommandProvider extends Disposable {
 
         const defaultFormat = getConfig().defaultFormat;
 
-        if (!query.endsWith("$count") && !query.includes("$format")) {
-            query += `&$format=${defaultFormat}`;
-        }
-
-        const res = await this.runner.run(query, profile);
-
-        if (!res.ok) {
-            vscode.window.showErrorMessage(`Running query failed: ${res.status} ${res.statusText}`);
+        let url: URL;
+        try {
+            url = new URL(query);
+        } catch (error) {
+            vscode.window.showErrorMessage("Invalid URL: " + query);
             return;
         }
+
+        if (!query.endsWith("$count") && !url.searchParams.has("$format")) {
+            url.searchParams.append("$format", defaultFormat);
+        }
+
+        const res = await this.runner.run(url.href, profile);
 
         let format = "plaintext";
         const contentType = res.headers.get("Content-Type");
@@ -196,6 +220,23 @@ export class CommandProvider extends Disposable {
                 language: format,
                 content: newContent,
             });
+        }
+
+        if (!res.ok) {
+            let show: string | undefined = undefined;
+            if (newContent && newContent.length > 0) {
+                show = await vscode.window.showErrorMessage(
+                    `Running query failed: ${res.status} ${res.statusText}`,
+                    "Show Response",
+                );
+            } else {
+                vscode.window.showErrorMessage(
+                    `Running query failed: ${res.status} ${res.statusText}`,
+                );
+            }
+            if (!show || show !== "Show Response") {
+                return;
+            }
         }
 
         this.resultDocument = await vscode.languages.setTextDocumentLanguage(
@@ -217,12 +258,21 @@ export class CommandProvider extends Disposable {
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
 
+    /**
+     * Requests and returns the metadata for the given OData profile.
+     *
+     * This method uses the provided profile's details to build the metadata URL and performs an HTTP GET request.
+     * If the request is successful, the XML metadata is returned as a string; otherwise, an empty string is returned.
+     *
+     * @param profile The OData profile containing the base URL and authentication details.
+     * @returns A promise that resolves to the metadata string or an empty string on failure.
+     */
     async requestProfileMetadata(profile: Profile): Promise<string> {
         // request the /$metadata endpoint via http using the profile details
         const requestInit = {
             headers: { Accept: "application/xml" },
         } as RequestInit;
-        const metadataUrl = `${profile.baseUrl.replace(/\/+$/, "")}/$metadata`;
+        const metadataUrl = getMetadataUrl(profile.baseUrl);
         let response: Response;
         try {
             response = await this.runner.fetch(metadataUrl, profile, requestInit);
@@ -239,5 +289,34 @@ export class CommandProvider extends Disposable {
         }
         const metadata = await response.text();
         return metadata;
+    }
+
+    /**
+     * Copy the query in the editor to the clipboard.
+     *
+     * This command takes the current editor content, combines the URL, and copies the resulting one-line URL to the clipboard.
+     */
+    async copyQueryToClipboard(): Promise<string | undefined> {
+        const editor = vscode.window.activeTextEditor;
+        if (!editor) {
+            vscode.window.showInformationMessage("No active editor found.");
+            return;
+        }
+
+        const document = editor.document;
+        if (document.languageId !== ODataMode.language) {
+            vscode.window.showInformationMessage("This command affects only OData files.");
+            return;
+        }
+
+        try {
+            const text = document.getText();
+            const combinedUrl = combineODataUrl(text);
+            await vscode.env.clipboard.writeText(combinedUrl);
+            vscode.window.showInformationMessage("Query copied to clipboard.");
+            return combinedUrl;
+        } catch (exception) {
+            vscode.window.showWarningMessage("Failed to copy query to clipboard");
+        }
     }
 }

@@ -3,16 +3,19 @@ import { DataModel } from "./odata2ts/data-model/DataModel";
 import {
     EntityContainerModel,
     EntityType,
+    PropertyModel,
     ODataVersion,
 } from "./odata2ts/data-model/DataTypeModel";
 import { LocationRange } from "./parser/parser.js";
 import { SyntaxParser } from "./parser/syntaxparser";
-import { Profile } from "./profiles";
-import { MetadataModelService } from "./services/MetadataModelService";
-import { entityTypeFromResource, getPropertyDoc, ResourceType } from "./metadata";
-import { combineODataUrl } from "./formatting";
+import { Profile } from "./contracts/types";
+
+import { entityTypeFromResource, ResourceType } from "./metadata";
+import { combineODataUrl } from "./util";
 import { Disposable } from "./provider";
 import { globalStates, ODataMode } from "./configuration";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
+import { ISyntaxParser } from "./contracts/ISyntaxParser";
 
 export class DefaultCompletionItemProvider
     extends Disposable
@@ -22,7 +25,7 @@ export class DefaultCompletionItemProvider
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
         private context: vscode.ExtensionContext,
-        private readonly metadataService: MetadataModelService,
+        private readonly metadataService: IMetadataModelService,
     ) {
         super();
         this.subscriptions = [
@@ -151,8 +154,8 @@ export class MetadataCompletionItemProvider
     public _id: string = "MetadataCompletionItemProvider";
     public triggerCharacters = [".", "=", ",", "(", "/", "'"];
     constructor(
-        private metadataService: MetadataModelService,
-        private syntaxParser: SyntaxParser,
+        private metadataService: IMetadataModelService,
+
         private context: vscode.ExtensionContext,
     ) {
         super();
@@ -550,3 +553,9 @@ const odataSystemQueryOptions = {
         { name: "$schemaversion", doc: "Indicates the version of the schema for the service." },
     ],
 };
+
+export function getPropertyDoc(property: PropertyModel): vscode.MarkdownString {
+    return new vscode.MarkdownString(
+        `**Name**: ${property.odataName}\n\n**Type**: ${property.odataType}`,
+    );
+}
