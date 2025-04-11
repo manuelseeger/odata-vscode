@@ -1,10 +1,16 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
 import { setupTests } from "./testutil";
+import { ODataDocumentFormatter } from "../../formatting";
+import { SyntaxParser } from "../../parser/syntaxparser";
 
 suite("Document Formatter", () => {
+    let context: vscode.ExtensionContext;
+    let formatter: ODataDocumentFormatter;
     setup(async () => {
-        await setupTests();
+        const syntaxParser = new SyntaxParser();
+        formatter = new ODataDocumentFormatter(syntaxParser);
+        ({ context } = await setupTests());
     });
 
     const testCases = [

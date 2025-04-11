@@ -183,7 +183,7 @@
     "package": "webpack --mode production --devtool hidden-source-map",
     "prepackage": "npm run clean",
     "compile-tests": "tsc -p . --outDir out",
-    "pretest": "npm run compile-tests && npm run test:unit",
+    "pretest": "npm run clean && npm run compile-tests && npm run test:unit",
     "lint": "eslint src",
     "test": "vscode-test",
     "clean": "rimraf out dist",
