@@ -1,20 +1,10 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-
-async function setTabSize(size: number) {
-    const config = vscode.workspace.getConfiguration("editor");
-    await config.update("tabSize", size, vscode.ConfigurationTarget.Global);
-}
-
-async function setEOL(eol: string) {
-    const config = vscode.workspace.getConfiguration("files");
-    await config.update("eol", eol, vscode.ConfigurationTarget.Global);
-}
+import { setupTests } from "./testutil";
 
 suite("Document Formatter", () => {
     setup(async () => {
-        await setTabSize(4);
-        await setEOL("\n");
+        await setupTests();
     });
 
     const testCases = [

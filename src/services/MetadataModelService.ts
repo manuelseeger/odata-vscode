@@ -14,11 +14,10 @@ export class MetadataModelService implements IMetadataModelService {
             return this.cache[profile.baseUrl];
         }
 
-        const metadata = profile.metadata;
-        if (!metadata) {
+        if (!profile.metadata || profile.metadata.length === 0) {
             throw new Error("No metadata document found.");
         }
-        const model = await this.digestMetadata(metadata);
+        const model = await this.digestMetadata(profile.metadata);
         // cache digested model
         this.cache[profile.baseUrl] = model;
         return model;

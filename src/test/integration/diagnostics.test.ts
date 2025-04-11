@@ -13,8 +13,8 @@ suite("ODataDiagnosticProvider", () => {
     let context: vscode.ExtensionContext;
     let profile: Profile;
 
-    setup(() => {
-        ({ profile, context } = setupTests());
+    setup(async () => {
+        ({ profile, context } = await setupTests());
         const metadataService = new MetadataModelService();
         diagnosticProvider = new ODataDiagnosticProvider(metadataService, context);
     });

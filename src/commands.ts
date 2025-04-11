@@ -190,14 +190,22 @@ export class CommandProvider extends Disposable {
 
         const defaultFormat = getConfig().defaultFormat;
 
-        if (!query.endsWith("$count") && !query.includes("$format")) {
-            query += `&$format=${defaultFormat}`;
+        let url: URL;
+        try {
+            url = new URL(query);
+        } catch (error) {
+            vscode.window.showErrorMessage("Invalid URL: " + query);
+            return;
         }
 
-        const res = await this.runner.run(query, profile);
+        if (!query.endsWith("$count") && !url.searchParams.has("$format")) {
+            url.searchParams.append("$format", defaultFormat);
+        }
+
+        const res = await this.runner.run(url.href, profile);
 
         let format = "plaintext";
-        const contentType = res.headers!.get("Content-Type");
+        const contentType = res.headers.get("Content-Type");
         if (contentType) {
             if (contentType.includes("json")) {
                 format = "json";

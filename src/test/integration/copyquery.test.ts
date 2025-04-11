@@ -18,6 +18,8 @@ suite("Copy Query Command", () => {
 
         // Act
         await vscode.commands.executeCommand(commands.copyQuery);
+        // Wait for clipboard to be updated
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Assert
         const clipboardContent = await vscode.env.clipboard.readText();
@@ -34,6 +36,8 @@ suite("Copy Query Command", () => {
 
         // Act
         const result = await vscode.commands.executeCommand(commands.copyQuery);
+        // Wait for clipboard to be updated
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Assert
         assert.strictEqual(
@@ -54,6 +58,8 @@ suite("Copy Query Command", () => {
 
         // Act
         const result = await vscode.commands.executeCommand(commands.copyQuery);
+        // Wait for clipboard to be updated
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         const clipboardContent = await vscode.env.clipboard.readText();
         // Assert
@@ -82,6 +88,8 @@ suite("Copy Query Command", () => {
 
         // Act
         await vscode.commands.executeCommand(commands.copyQuery);
+        // Wait for clipboard to be updated
+        await new Promise((resolve) => setTimeout(resolve, 50));
 
         // Assert
         const clipboardContent = await vscode.env.clipboard.readText();

@@ -1,8 +1,5 @@
-import { ProfileTreeProvider } from "../../profiles";
 import { Profile, AuthKind } from "../../contracts/types";
-import { Disposable } from "../../provider";
 import * as vscode from "vscode";
-import * as assert from "assert";
 
 import { instance, mock, when, anything } from "ts-mockito";
 import { IQueryRunner } from "../../contracts/IQueryRunner";
@@ -10,39 +7,7 @@ import { globalStates } from "../../configuration";
 import { QueryRunner } from "../../services/QueryRunner";
 import { Response } from "undici";
 
-export async function setupTestEnvironment() {
-    const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
-    const extension = vscode.extensions.getExtension("manuelseeger.odata");
-    assert.ok(extension, "Extension not found");
-
-    const context = await extension!.activate();
-
-    const profilTree = context.subscriptions.find(
-        (sub: Disposable) => sub._id === "ProfileTreeProvider",
-    ) as ProfileTreeProvider;
-    assert.ok(profilTree, "Profile tree provider not found");
-
-    const profile: Profile = {
-        name: "Northwind",
-        baseUrl: baseUrl,
-        metadata: "",
-        auth: {
-            kind: AuthKind.None,
-        },
-        headers: {},
-    };
-    profilTree.addProfile(profile);
-    context.globalState.update("odata.selectedProfile", profile);
-
-    return { context, baseUrl };
-}
-
-export function setupTests(records: { [key: string]: string } = {}): {
-    profile: Profile;
-    context: vscode.ExtensionContext;
-    queryRunner: IQueryRunner;
-} {
-    const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
+export const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
     <edmx:DataServices>
         <Schema Namespace="testing" xmlns="http://docs.oasis-open.org/odata/ns/edm">
             <EntityType Name="Order">
@@ -70,32 +35,45 @@ export function setupTests(records: { [key: string]: string } = {}): {
     </edmx:DataServices>
 </edmx:Edmx>`;
 
-    const profile = {
-        name: "TestProfile",
-        baseUrl: "https://example.com/odata/",
-        metadata: metadataString,
-        auth: { kind: AuthKind.None },
-        headers: {},
-    } as Profile;
+export async function setupTests(
+    queryRunnerMap: { [key: string]: string } = {},
+    profile?: Profile,
+): Promise<{
+    profile: Profile;
+    context: vscode.ExtensionContext;
+    queryRunner: IQueryRunner;
+    runnerMock: any;
+}> {
+    await setTabSize(4);
+    await setEOL("\n");
 
-    const mockContext = {
-        globalState: {
-            get: (key: string) => {
-                if (key === globalStates.selectedProfile) {
-                    return profile;
-                } else if (key === globalStates.profiles) {
-                    return [profile];
-                }
-                return undefined;
-            },
-        },
-    } as unknown as vscode.ExtensionContext;
+    if (!profile) {
+        profile = {
+            name: "TestProfile",
+            baseUrl: "https://example.com/odata/",
+            metadata: metadataString,
+            auth: { kind: AuthKind.None },
+            headers: {},
+        } as Profile;
+    }
+
+    const globalStateMock: vscode.Memento & { setKeysForSync(keys: readonly string[]): void } =
+        mock<vscode.Memento & { setKeysForSync(keys: readonly string[]): void }>();
+
+    const mockContext: vscode.ExtensionContext = mock<vscode.ExtensionContext>();
+
+    when(mockContext.globalState).thenReturn(instance(globalStateMock));
+
+    when(globalStateMock.get(globalStates.selectedProfile)).thenReturn(profile);
+    when(globalStateMock.get(globalStates.profiles, anything())).thenReturn([profile]);
 
     const queryRunner: QueryRunner = mock(QueryRunner);
 
     // Override mock for each record: when called with the key, return its value
-    for (const [key, value] of Object.entries(records!)) {
-        when(queryRunner.run(key, anything())).thenResolve(
+    for (const [key, value] of Object.entries(queryRunnerMap!)) {
+        const url = new URL(key);
+        url.searchParams.append("$format", "json");
+        when(queryRunner.run(url.href, anything())).thenResolve(
             new Response(value, {
                 status: 200,
                 headers: { "Content-Type": "application/json" },
@@ -103,5 +81,36 @@ export function setupTests(records: { [key: string]: string } = {}): {
         );
     }
 
-    return { profile, context: mockContext, queryRunner: instance(queryRunner) };
+    const doesnotexist = new URL(`${profile.baseUrl}DoesNotExist`);
+    doesnotexist.searchParams.append("$format", "json");
+    when(queryRunner.run(doesnotexist.href, anything())).thenResolve(
+        new Response("", {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+        }),
+    );
+
+    when(queryRunner.fetch(`${profile.baseUrl}$metadata`, anything(), anything())).thenResolve(
+        new Response(metadataString, {
+            status: 200,
+            headers: { "Content-Type": "application/xml" },
+        }),
+    );
+
+    return {
+        profile,
+        context: instance(mockContext),
+        queryRunner: instance(queryRunner),
+        runnerMock: queryRunner,
+    };
+}
+
+export async function setTabSize(size: number) {
+    const config = vscode.workspace.getConfiguration("editor");
+    await config.update("tabSize", size, vscode.ConfigurationTarget.Global);
+}
+
+export async function setEOL(eol: string) {
+    const config = vscode.workspace.getConfiguration("files");
+    await config.update("eol", eol, vscode.ConfigurationTarget.Global);
 }

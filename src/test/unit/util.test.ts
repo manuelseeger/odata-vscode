@@ -143,10 +143,11 @@ suite("combineODataUrl", () => {
         );
     });
 
-    test("should throw an error for invalid OData URL format", () => {
+    test("should combine invalid OData URL format", () => {
         const input = `https://example.com/odata/Customers
 $filter=Name eq 'John'`;
-        assert.throws(() => combineODataUrl(input), /Invalid OData URL format/);
+        const result = combineODataUrl(input);
+        assert.strictEqual(result, "https://example.com/odata/Customers$filter=Nameeq'John'");
     });
 
     test("should handle query parameters with extra spaces", () => {
@@ -161,7 +162,8 @@ $filter=Name eq 'John'`;
 
     test("should handle URLs with no query parameters", () => {
         const input = `https://example.com/odata/Products`;
-        assert.throws(() => combineODataUrl(input), /Invalid OData URL format/);
+        const result = combineODataUrl(input);
+        assert.strictEqual(result, "https://example.com/odata/Products");
     });
 
     test("should handle complex query parameters", () => {

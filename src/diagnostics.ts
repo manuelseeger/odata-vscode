@@ -86,18 +86,18 @@ export class ODataDiagnosticProvider extends Disposable {
         const diagnostics: vscode.Diagnostic[] = [];
         this.diagnostics.set(uri, diagnostics);
 
-        const document = await vscode.workspace.openTextDocument(uri);
-        const text = document.getText();
-
         const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        const metadata = await this.metadataService.getModel(profile!);
+        if (!profile) {
+            return;
+        }
+        const metadata = await this.metadataService.getModel(profile);
         if (!metadata) {
             return;
         }
 
-        const resource = this.diagnoseResourcePath(diagnostics, metadata, result.tree, profile!);
+        const resource = this.diagnoseResourcePath(diagnostics, metadata, result.tree, profile);
         if (resource) {
-            this.diagnoseQueryOptions(diagnostics, metadata, result, resource, profile!);
+            this.diagnoseQueryOptions(diagnostics, metadata, result, resource, profile);
         }
 
         this.diagnostics.set(uri, diagnostics);

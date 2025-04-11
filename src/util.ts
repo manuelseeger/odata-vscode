@@ -40,29 +40,29 @@ export function combineODataUrl(input: string): string {
     const singleLine: string = input.replace(/\s*\n\s*/g, "");
 
     // Split the URL into host/resource path and query parameters
-    const [baseUrl, queryParams] = singleLine.split("?");
-
-    if (!baseUrl || !queryParams) {
-        throw new Error("Invalid OData URL format");
-    }
+    let [baseUrl, queryParams] = singleLine.split("?");
 
     // Remove all whitespace from the base URL
     const cleanedBaseUrl: string = baseUrl.replace(/\s+/g, "");
 
-    // Trim and normalize query parameters
-    const formattedParams: string = queryParams
-        .split("&")
-        .map((param) => {
-            let [key, value] = param.split("=");
-            // Handle cases where key or value might be undefined
-            key = key ? key.trim() : "";
-            value = value ? value.trim() : "";
-            const trimmedKey: string = key.trim();
-            const trimmedValue: string = value.trim().replace(/\s+/g, " "); // Condense whitespace
-            return `${trimmedKey}=${trimmedValue}`;
-        })
-        .join("&");
+    let formattedParams: string = "";
+    if (queryParams) {
+        // Trim and normalize query parameters
+        formattedParams = queryParams
+            .split("&")
+            .map((param) => {
+                let [key, value] = param.split("=");
+                // Handle cases where key or value might be undefined
+                key = key ? key.trim() : "";
+                value = value ? value.trim() : "";
+                const trimmedKey: string = key.trim();
+                const trimmedValue: string = value.trim().replace(/\s+/g, " "); // Condense whitespace
+                return `${trimmedKey}=${trimmedValue}`;
+            })
+            .join("&");
+        formattedParams = `?${formattedParams}`;
+    }
 
     // Combine the cleaned base URL and formatted query parameters
-    return `${cleanedBaseUrl}?${formattedParams}`;
+    return `${cleanedBaseUrl}${formattedParams}`;
 }

@@ -12,8 +12,8 @@ suite("DefaultCompletionItemProvider", () => {
     let profile: Profile;
     let metadataService: IMetadataModelService;
 
-    setup(() => {
-        ({ profile, context } = setupTests());
+    setup(async () => {
+        ({ profile, context } = await setupTests());
         metadataService = new MetadataModelService();
 
         completionProvider = new MetadataCompletionItemProvider(metadataService, context);
