@@ -61,6 +61,14 @@ const extensionConfig = {
           from: path.resolve(__dirname, 'node_modules/@vscode-elements/elements-lite/components'),
           to: path.resolve(__dirname, 'dist/modules/@vscode-elements/elements-lite/components'),
       },
+      {
+        from: path.resolve(__dirname, 'src/odataV2.json'),
+        to: path.resolve(__dirname, 'dist/odataV2.json'),
+      },
+      {
+        from: path.resolve(__dirname, 'src/odataV4.json'),
+        to: path.resolve(__dirname, 'dist/odataV4.json'),
+      },
       ],
     })
   ],

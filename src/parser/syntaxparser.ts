@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { LocationRange, parse, SyntaxError } from "./parser.js";
+import { ISyntaxParser } from "../contracts/ISyntaxParser";
 
 export type ParseSyntaxErrorHandler = (uri: vscode.Uri, error: SyntaxError) => void;
 export type ParseSuccessHandler = (uri: vscode.Uri, result: ParseResult) => void;
@@ -40,7 +41,7 @@ export type SyntaxLocationType =
     | "expandPath"
     | "firstMemberExpr";
 
-export class SyntaxParser {
+export class SyntaxParser implements ISyntaxParser {
     private _debounceTimer: NodeJS.Timeout | undefined;
     private _lastDocument: vscode.TextDocument | null = null;
     private _lastQuery: string | null = null;
@@ -64,7 +65,7 @@ export class SyntaxParser {
         }, 500);
     }
 
-    parse(text: string): ParsedTree | null {
+    private parse(text: string): ParsedTree | null {
         if (text.length === 0) {
             return null;
         }
@@ -96,6 +97,11 @@ export class SyntaxParser {
         }
         this._process(document);
         return this._lastResult;
+    }
+
+    processText(text: string): ParseResult | null {
+        const tree = this.parse(text);
+        return this._postProcess(tree!);
     }
 
     private _process(document: vscode.TextDocument) {

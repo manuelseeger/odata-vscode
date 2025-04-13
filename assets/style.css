@@ -21,7 +21,7 @@
 }
 
 #clientCertFields .icon {
-  position: absolute; top: 50%; right: 8px; transform: translateY(-50%); cursor: pointer;;
+  position: absolute; top: 50%; right: 8px; transform: translateY(-50%); cursor: pointer;
 }
 
 #clientCertFields input[type="text"] {
@@ -30,4 +30,8 @@
 
 #clientCertFields div {
   position: relative; display: inline-block;
+}
+
+.full-width {
+  width: 100%!important;
 }

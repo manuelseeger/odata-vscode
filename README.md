@@ -30,22 +30,22 @@ In Copilot Chat, chat with participant `@odata`, example:
 
 ## Commands
 
-| Name | Description |
-| ----- | ----- |
-| `odata.run`          | Send query in ActiveTextEditor to selected profile  |
-| `odata.addProfile` | Add a new endpoint profile. _Start here_ |
-| `odata.selectProfile` | Select an endpoint profile |
-| `odata.getMetadata` | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
+| Name                  | Description                                                                 |
+|-----------------------|-----------------------------------------------------------------------------|
+| `odata.run`           | Send query in ActiveTextEditor to the selected profile                     |
+| `odata.copy`          | Copy the combined, single-line query to clipboard                          |
+| `odata.addProfile`    | Add a new endpoint profile. _Start here_                                   |
+| `odata.selectProfile` | Select an endpoint profile                                                 |
+| `odata.getMetadata`   | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
 
 ## Settings
 
 | Setting                        | Description                                                                                  | Default Value |
 |--------------------------------|----------------------------------------------------------------------------------------------|---------------|
-| `odata.defaultFormat`          | Set the default response format | `json`       |
-| `odata.metadata.removeAnnotations` | Removes annotations from metadata to reduce size. | `false`       |
-| `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.  | `[]`          |
-| `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`). | `true`        |
-
+| `odata.defaultFormat`          | Set the default response format                                                              | `json`        |
+| `odata.metadata.removeAnnotations` | Removes annotations from metadata to reduce size.                                          | `false`       |
+| `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.                                     | `[]`          |
+| `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`).               | `true`        |
 
 ## Known Issues and Limitations
 
@@ -69,6 +69,7 @@ You can still use all features but the query runner. Create an endpoint profile 
 Github Copilot has a character limit for requests. If your service metadata is above that, Copilot will refuse the request. Options:
 - If your metadata includes annotations, enable `odata.metadata.removeAnnotations` in settings to filter all annotations from metadata
 - If your metadata includes non-EDMX namespaces, maintain them in `odata.metadata.filterNs` to filter them out
+- If you service allows filtering metadata, add your service URL with a filter, for example `http://your.service/api/$metadata?$filter=Customer`
 - Manually shorten your metadata file in profiles, for example remove entity definitions you are not working with
 
 ## Acknowledgment
@@ -76,6 +77,5 @@ Github Copilot has a character limit for requests. If your service metadata is a
 This extension is modeled after https://github.com/StanislawSwierc/vscode-odata.
 
 The OData syntax definition created by [Geoff Cox (@GeoffCox)](https://github.com/GeoffCox) is reused from vscode-odata. 
-
 
 The EDMX parser is a modified version of https://github.com/odata2ts/odata2ts by [@texttechne](https://github.com/texttechne).

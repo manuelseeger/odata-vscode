@@ -7,3 +7,4 @@ playground/
 .secrets
 .vscode-test/
 out/
+coverage/

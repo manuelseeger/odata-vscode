@@ -1,12 +1,10 @@
-import * as vscode from "vscode";
-import { DataModel } from "./odata2ts/data-model/DataModel";
 import { parseStringPromise } from "xml2js";
-import { getMinimalConfig } from "./odata2ts/defaultConfig";
+import { DataModel, NamespaceWithAlias } from "./odata2ts/data-model/DataModel";
 import { ODataEdmxModelBase } from "./odata2ts/data-model/edmx/ODataEdmxModelBase";
 import { SchemaV3 } from "./odata2ts/data-model/edmx/ODataEdmxModelV3";
 import { SchemaV4 } from "./odata2ts/data-model/edmx/ODataEdmxModelV4";
-import { Modes, RunOptions } from "./odata2ts/OptionModel";
-import { NamespaceWithAlias } from "./odata2ts/data-model/DataModel";
+import { getMinimalConfig } from "./odata2ts/defaultConfig";
+import { RunOptions } from "./odata2ts/OptionModel";
 
 import { digest as digestV2 } from "./odata2ts/data-model/DataModelDigestionV2";
 import { digest as digestV4 } from "./odata2ts/data-model/DataModelDigestionV4";
@@ -19,7 +17,6 @@ import {
     EntitySetType,
     EntityType,
     FunctionImportType,
-    PropertyModel,
     SingletonType,
 } from "./odata2ts/data-model/DataTypeModel";
 
@@ -45,12 +42,6 @@ export function entityTypeFromResource(
     }
 
     return undefined;
-}
-
-export function getPropertyDoc(property: PropertyModel): vscode.MarkdownString {
-    return new vscode.MarkdownString(
-        `**Name**: ${property.odataName}\n\n**Type**: ${property.odataType}`,
-    );
 }
 
 function getServiceName(schemas: Array<SchemaV3 | SchemaV4>) {

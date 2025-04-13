@@ -1,31 +1,42 @@
 import * as vscode from "vscode";
 import { ChatParticipantProvider } from "./chat";
-import { ProfileTreeProvider } from "./profiles";
 import { CommandProvider } from "./commands";
 import {
     DefaultCompletionItemProvider,
     MetadataCompletionItemProvider,
     SystemQueryCompletionItemProvider,
 } from "./completions";
-import { MetadataModelService } from "./services/MetadataModelService";
+import { odata } from "./contracts/types";
 import { ODataDiagnosticProvider } from "./diagnostics";
-import { SyntaxParser } from "./parser/syntaxparser";
 import { ODataDocumentFormatter } from "./formatting";
-import { QueryRunner } from "./services/QueryRunner";
+import * as v2 from "./odataV2.json";
+import * as v4 from "./odataV4.json";
+import { SyntaxParser } from "./parser/syntaxparser";
+import { ProfileTreeProvider } from "./profiles";
 import { VSCodeFileReader } from "./provider";
+import { MetadataModelService } from "./services/MetadataModelService";
+import { QueryRunner } from "./services/QueryRunner";
+import { SignatureHelpProvider } from "./signatures";
 
-export function activate(context: vscode.ExtensionContext) {
+export async function activate(context: vscode.ExtensionContext) {
+    const fileReader = new VSCodeFileReader();
     const syntaxParser = new SyntaxParser();
     const metadataService = new MetadataModelService();
-    const queryRunner = new QueryRunner(new VSCodeFileReader());
+    const queryRunner = new QueryRunner(fileReader);
+
+    const reference: odata.Reference = {
+        v2: v2 as odata.Spec,
+        v4: v4 as odata.Spec,
+    };
 
     context.subscriptions.push(
+        new SignatureHelpProvider(context, reference),
         new ChatParticipantProvider(context, metadataService),
         new ProfileTreeProvider(context),
         new CommandProvider(context, queryRunner),
         new DefaultCompletionItemProvider(context, metadataService),
         new SystemQueryCompletionItemProvider(),
-        new MetadataCompletionItemProvider(metadataService, syntaxParser, context),
+        new MetadataCompletionItemProvider(metadataService, context),
         new ODataDocumentFormatter(syntaxParser),
     );
 
