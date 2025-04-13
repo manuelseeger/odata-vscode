@@ -7,7 +7,7 @@ import { SyntaxParser } from "../../parser/syntaxparser";
 suite("Document Formatter", () => {
     let context: vscode.ExtensionContext;
     let formatter: ODataDocumentFormatter;
-    setup(async () => {
+    suiteSetup(async () => {
         ({ context } = await setupTests());
         formatter = new ODataDocumentFormatter(new SyntaxParser());
     });
