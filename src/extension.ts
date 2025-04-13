@@ -1,40 +1,28 @@
 import * as vscode from "vscode";
 import { ChatParticipantProvider } from "./chat";
-import { ProfileTreeProvider } from "./profiles";
 import { CommandProvider } from "./commands";
 import {
     DefaultCompletionItemProvider,
     MetadataCompletionItemProvider,
     SystemQueryCompletionItemProvider,
 } from "./completions";
-import { MetadataModelService } from "./services/MetadataModelService";
+import { odata } from "./contracts/types";
 import { ODataDiagnosticProvider } from "./diagnostics";
-import { SyntaxParser } from "./parser/syntaxparser";
 import { ODataDocumentFormatter } from "./formatting";
-import { QueryRunner } from "./services/QueryRunner";
-import { VSCodeFileReader } from "./provider";
 import * as v2 from "./odataV2.json";
 import * as v4 from "./odataV4.json";
-import { odata } from "./contracts/types";
+import { SyntaxParser } from "./parser/syntaxparser";
+import { ProfileTreeProvider } from "./profiles";
+import { VSCodeFileReader } from "./provider";
+import { MetadataModelService } from "./services/MetadataModelService";
+import { QueryRunner } from "./services/QueryRunner";
 import { SignatureHelpProvider } from "./signatures";
-import { IQueryRunner } from "./contracts/IQueryRunner";
-import { IMetadataModelService } from "./contracts/IMetadataModelService";
-import { IFileReader } from "./contracts/IFileReader";
-import { ISyntaxParser } from "./contracts/ISyntaxParser";
 
-export async function activate(
-    context: vscode.ExtensionContext,
-    deps?: {
-        queryRunner?: IQueryRunner;
-        fileReader?: IFileReader;
-        metadataService?: IMetadataModelService;
-        syntaxParser?: ISyntaxParser;
-    },
-) {
-    const fileReader = deps?.fileReader || new VSCodeFileReader();
+export async function activate(context: vscode.ExtensionContext) {
+    const fileReader = new VSCodeFileReader();
     const syntaxParser = new SyntaxParser();
-    const metadataService = deps?.metadataService || new MetadataModelService();
-    const queryRunner = deps?.queryRunner || new QueryRunner(fileReader);
+    const metadataService = new MetadataModelService();
+    const queryRunner = new QueryRunner(fileReader);
 
     const reference: odata.Reference = {
         v2: v2 as odata.Spec,

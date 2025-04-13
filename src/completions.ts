@@ -1,21 +1,21 @@
 import * as vscode from "vscode";
+import { Profile } from "./contracts/types";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 import {
     EntityContainerModel,
     EntityType,
-    PropertyModel,
     ODataVersion,
+    PropertyModel,
 } from "./odata2ts/data-model/DataTypeModel";
 import { LocationRange } from "./parser/parser.js";
-import { SyntaxParser } from "./parser/syntaxparser";
-import { Profile } from "./contracts/types";
 
-import { entityTypeFromResource, ResourceType } from "./metadata";
-import { combineODataUrl } from "./util";
-import { Disposable } from "./provider";
 import { globalStates, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
-import { ISyntaxParser } from "./contracts/ISyntaxParser";
+import { entityTypeFromResource, ResourceType } from "./metadata";
+import { Disposable } from "./provider";
+import { combineODataUrl } from "./util";
+import * as odataV2 from "./odataV2.json";
+import * as odataV4 from "./odataV4.json";
 
 export class DefaultCompletionItemProvider
     extends Disposable
@@ -64,7 +64,7 @@ export class DefaultCompletionItemProvider
             ]);
         }
 
-        const methods = odataMethods["V2"];
+        const methods = odataV2.functions;
         const methodCompletions = methods.map((methodObj) => {
             const item = new vscode.CompletionItem(
                 methodObj.name,
@@ -87,7 +87,7 @@ export class DefaultCompletionItemProvider
         const version = model.getODataVersion();
 
         if (version === ODataVersion.V4) {
-            const methodsV4 = odataMethods["V4"];
+            const methodsV4 = odataV4.functions;
             methodsV4.forEach((methodObj) => {
                 const item = new vscode.CompletionItem(
                     methodObj.name,
@@ -126,10 +126,7 @@ export class SystemQueryCompletionItemProvider
             // Merge system query options from both V2 and V4 into a single list for completion.
             // We don't differentiate between V2 and V4 for system query options as many services
             // mix and match them between versions.
-            const combinedOptions = [
-                ...odataSystemQueryOptions["V2"],
-                ...odataSystemQueryOptions["V4"],
-            ];
+            const combinedOptions = [...odataV2.systemQueryOptions, ...odataV4.systemQueryOptions];
             const completionItems = combinedOptions.map((option) => {
                 const completion = new vscode.CompletionItem(
                     option.name,
@@ -383,176 +380,6 @@ function isInSpan(position: vscode.Position, span: LocationRange): boolean {
     }
     return false;
 }
-
-const odataMethods = {
-    V2: [
-        {
-            name: "substringof",
-            doc: "Determines if a substring exists within a string.",
-            params: [
-                {
-                    name: "substring",
-                    type: "Edm.String",
-                    description: "The substring to search for.",
-                },
-                { name: "string", type: "Edm.String", description: "The string to search within." },
-            ],
-        },
-        {
-            name: "startswith",
-            doc: "Checks if a string starts with a specified substring.",
-            params: [
-                { name: "string", type: "Edm.String", description: "The string to check." },
-                { name: "prefix", type: "Edm.String", description: "The prefix to look for." },
-            ],
-        },
-        {
-            name: "endswith",
-            doc: "Checks if a string ends with a specified substring.",
-            params: [
-                { name: "string", type: "Edm.String", description: "The string to check." },
-                { name: "suffix", type: "Edm.String", description: "The suffix to look for." },
-            ],
-        },
-        {
-            name: "indexof",
-            doc: "Finds the zero-based index of a substring within a string.",
-            params: [
-                { name: "string", type: "Edm.String", description: "The string to search within." },
-                { name: "substring", type: "Edm.String", description: "The substring to find." },
-            ],
-        },
-        {
-            name: "replace",
-            doc: "Replaces occurrences of a substring with another substring.",
-            params: [
-                { name: "string", type: "Edm.String", description: "The original string." },
-                { name: "find", type: "Edm.String", description: "The substring to replace." },
-                { name: "replace", type: "Edm.String", description: "The replacement substring." },
-            ],
-        },
-        {
-            name: "tolower",
-            doc: "Converts a string to lower-case.",
-            params: [{ name: "string", type: "Edm.String", description: "The string to convert." }],
-        },
-        {
-            name: "toupper",
-            doc: "Converts a string to upper-case.",
-            params: [{ name: "string", type: "Edm.String", description: "The string to convert." }],
-        },
-        {
-            name: "trim",
-            doc: "Removes trailing and leading whitespace from a string.",
-            params: [{ name: "string", type: "Edm.String", description: "The string to trim." }],
-        },
-        {
-            name: "substring",
-            doc: "Extracts a substring from a string starting at a specified index.",
-            params: [
-                { name: "string", type: "Edm.String", description: "The original string." },
-                { name: "start", type: "Edm.Int32", description: "The zero-based starting index." },
-                { name: "length", type: "Edm.Int32", description: "The length of the substring." },
-            ],
-        },
-        {
-            name: "concat",
-            doc: "Concatenates two or more strings together.",
-            params: [
-                { name: "string1", type: "Edm.String", description: "The first string." },
-                { name: "string2", type: "Edm.String", description: "The second string." },
-            ],
-        },
-        { name: "round", doc: "Rounds a number to the nearest integer." },
-        { name: "floor", doc: "Rounds a number down to the nearest integer." },
-        { name: "ceiling", doc: "Rounds a number up to the nearest integer." },
-        { name: "year", doc: "Extracts the year component from a date." },
-        { name: "month", doc: "Extracts the month component from a date." },
-        { name: "day", doc: "Extracts the day component from a date." },
-        { name: "hour", doc: "Extracts the hour component from a time." },
-        { name: "minute", doc: "Extracts the minute component from a time." },
-        { name: "second", doc: "Extracts the second component from a time." },
-        { name: "isof", doc: "Checks if a value is of a specified type." },
-        { name: "cast", doc: "Casts a value to a specified type." },
-    ],
-    V4: [
-        {
-            name: "contains",
-            doc: "Determines if a string contains a specified substring.",
-            params: [
-                { name: "string", type: "Edm.String", description: "The string to search within." },
-                {
-                    name: "substring",
-                    type: "Edm.String",
-                    description: "The substring to search for.",
-                },
-            ],
-        },
-        {
-            name: "length",
-            doc: "Gets the length of a string.",
-            params: [{ name: "string", type: "Edm.String", description: "The string to measure." }],
-        },
-        {
-            name: "abs",
-            doc: "Returns the absolute value of a number.",
-            params: [
-                { name: "number", type: "Edm.Decimal", description: "The number to process." },
-            ],
-        },
-        {
-            name: "mod",
-            doc: "Calculates the remainder after division of two numbers.",
-            params: [
-                { name: "dividend", type: "Edm.Decimal", description: "The number to be divided." },
-                { name: "divisor", type: "Edm.Decimal", description: "The number to divide by." },
-            ],
-        },
-        {
-            name: "fractionalseconds",
-            doc: "Extracts fractional seconds from a time value.",
-            params: [{ name: "time", type: "Edm.DateTimeOffset", description: "The time value." }],
-        },
-        { name: "date", doc: "Extracts the date portion from a datetime value." },
-        { name: "time", doc: "Extracts the time portion from a datetime value." },
-        {
-            name: "totaloffsetminutes",
-            doc: "Calculates the total minutes of the time zone offset.",
-        },
-        { name: "now", doc: "Returns the current datetime." },
-        { name: "mindatetime", doc: "Returns the minimum possible datetime." },
-        { name: "maxdatetime", doc: "Returns the maximum possible datetime." },
-        { name: "any", doc: "Checks if any element of a collection meets a condition." },
-        { name: "all", doc: "Determines if all elements of a collection meet a condition." },
-        { name: "geo.distance", doc: "Calculates the distance between two geo points." },
-        { name: "geo.length", doc: "Calculates the total length of a geometry." },
-        { name: "geo.intersects", doc: "Determines if two geometries intersect." },
-    ],
-};
-
-const odataSystemQueryOptions = {
-    V2: [
-        { name: "$select", doc: "Selects a specific set of properties to return." },
-        { name: "$filter", doc: "Filters the resources based on provided criteria." },
-        { name: "$orderby", doc: "Sorts resources based on one or more properties." },
-        { name: "$top", doc: "Limits the number of resources returned." },
-        { name: "$skip", doc: "Skips a specified number of resources." },
-        { name: "$expand", doc: "Includes related entities inline with the primary resource." },
-        { name: "$format", doc: "Specifies the media type for the response (json, xml)." },
-        { name: "$inlinecount", doc: "Returns the total count of matching resources." },
-    ],
-    V4: [
-        {
-            name: "$apply",
-            doc: "Applies aggregations or transformations to the resource collection.",
-        },
-        { name: "$search", doc: "Filters resources based on a free-text search expression." },
-        { name: "$count", doc: "Returns the count of matching resources." },
-        { name: "$skiptoken", doc: "Specifies a continuation token for paginating results." },
-        { name: "$compute", doc: "Adds computed properties based on specified expressions." },
-        { name: "$schemaversion", doc: "Indicates the version of the schema for the service." },
-    ],
-};
 
 export function getPropertyDoc(property: PropertyModel): vscode.MarkdownString {
     return new vscode.MarkdownString(
