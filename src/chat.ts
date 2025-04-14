@@ -1,13 +1,11 @@
 import * as vscode from "vscode";
 
-import cl100kBase from "tiktoken/encoders/cl100k_base.json";
-import { Tiktoken } from "tiktoken/lite";
-
 import { APP_NAME, getConfig, globalStates, internalCommands } from "./configuration";
 import { Profile } from "./contracts/types";
 import { Disposable } from "./provider";
 import { extractCodeBlocks, getBaseUrl } from "./util";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
+import { approximateTokenCount } from "./tokenizer";
 
 export class ChatParticipantProvider extends Disposable {
     public _id: string = "ChatParticipantProvider";
@@ -51,12 +49,6 @@ Examples, but use the properties from the metadata in your answers:
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken,
     ) => {
-        const encoding = new Tiktoken(
-            cl100kBase.bpe_ranks,
-            cl100kBase.special_tokens,
-            cl100kBase.pat_str,
-        );
-
         const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (!profile) {
             vscode.window.showWarningMessage("No profile selected.");
@@ -84,16 +76,6 @@ Examples, but use the properties from the metadata in your answers:
             return replacements[key] || "";
         });
 
-        // Github Copilot Chat has an input limit of 64000 tokens
-        const tokens = encoding.encode(prompt);
-        if (tokens.length > 64000) {
-            vscode.window.showWarningMessage(
-                "Metadata file too large, please provide a smaller file.",
-            );
-            return;
-        }
-        encoding.free();
-
         const messages = [vscode.LanguageModelChatMessage.User(prompt)];
 
         // add the message history, so that we can ask followup questions
@@ -110,7 +92,41 @@ Examples, but use the properties from the metadata in your answers:
         });
         messages.push(vscode.LanguageModelChatMessage.User(request.prompt));
 
-        const chatResponse = await request.model.sendRequest(messages, {}, token);
+        // check if the prompt is too long
+        let tokenCount = 0;
+        for (const m of messages) {
+            tokenCount += approximateTokenCount(
+                (m.content as unknown as vscode.LanguageModelTextPart[])[0].value,
+            );
+        }
+        console.log(tokenCount);
+        console.log(request.model.maxInputTokens);
+
+        if (tokenCount > request.model.maxInputTokens) {
+            stream.markdown(
+                new vscode.MarkdownString("$(error) Prompt is too long, please shorten it.", true),
+            );
+            return;
+        }
+
+        let chatResponse: vscode.LanguageModelChatResponse;
+        try {
+            chatResponse = await request.model.sendRequest(messages, {}, token);
+        } catch (e) {
+            if (e instanceof vscode.LanguageModelError) {
+                switch (e.code) {
+                    case vscode.LanguageModelError.Blocked.name:
+                    case vscode.LanguageModelError.NoPermissions.name:
+                    case vscode.LanguageModelError.NotFound.name:
+                    case "Unknown":
+                        stream.markdown("Error: " + e + "\n" + "Please try again later.");
+                        break;
+                }
+            } else {
+                stream.markdown("Error: " + e + "\n" + "Please try again later.");
+            }
+            return;
+        }
 
         const buffer = [];
         for await (const fragment of chatResponse.text) {
