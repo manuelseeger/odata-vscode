@@ -1,0 +1,128 @@
+[
+  {
+    "classLabel": "Class 8",
+    "characters": [
+      44,
+      59,
+      58
+    ],
+    "avgContribution": 0.976056538106398
+  },
+  {
+    "classLabel": "Class 7",
+    "characters": [
+      52,
+      55
+    ],
+    "avgContribution": 0.8112442396313366
+  },
+  {
+    "classLabel": "Class 6",
+    "characters": [
+      54,
+      34,
+      49
+    ],
+    "avgContribution": 0.7083128857791117
+  },
+  {
+    "classLabel": "Class 5",
+    "characters": [
+      57,
+      51,
+      50,
+      53
+    ],
+    "avgContribution": 0.6045527674986475
+  },
+  {
+    "classLabel": "Class 4",
+    "characters": [
+      48,
+      56,
+      42,
+      63,
+      61,
+      40,
+      41,
+      75
+    ],
+    "avgContribution": 0.5072448915348432
+  },
+  {
+    "classLabel": "Class 3",
+    "characters": [
+      95,
+      74,
+      77,
+      69,
+      85
+    ],
+    "avgContribution": 0.41726972942915425
+  },
+  {
+    "classLabel": "Class 2",
+    "characters": [
+      38,
+      79,
+      72,
+      86,
+      62,
+      109,
+      60,
+      122,
+      82,
+      73,
+      89,
+      87,
+      84,
+      67,
+      90,
+      66,
+      107,
+      81,
+      100,
+      47
+    ],
+    "avgContribution": 0.28894300868326717
+  },
+  {
+    "classLabel": "Class 1",
+    "characters": [
+      70,
+      83,
+      119,
+      71,
+      99,
+      120,
+      117,
+      45,
+      32,
+      46,
+      76,
+      68,
+      102,
+      112,
+      101,
+      115,
+      104,
+      65,
+      106,
+      97,
+      98,
+      114,
+      78,
+      116,
+      113,
+      103,
+      80,
+      121,
+      108,
+      118,
+      110,
+      111,
+      105
+    ],
+    "avgContribution": 0.18270669323876756
+  }
+]

@@ -16,6 +16,20 @@
 				"kind": "build",
 				"isDefault": true
 			}
+		},
+		{
+			"label": "compile",
+			"type": "npm",
+			"script": "compile",
+			"problemMatcher": "$ts-webpack-watch",
+			"isBackground": true,
+			"presentation": {
+				"reveal": "never",
+				"group": "watchers"
+			},
+			"group": {
+				"kind": "build",
+			}
 		}
 	]
 }

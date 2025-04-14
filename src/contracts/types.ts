@@ -41,7 +41,7 @@ export interface IODataMetadataConfiguration {
 export interface IODataConfiguration {
     metadata: IODataMetadataConfiguration;
     defaultFormat: ODataFormat;
-    strictParser: boolean; // Added strictParser setting
+    strictParser: boolean;
 }
 
 export namespace odata {
@@ -71,4 +71,14 @@ export namespace odata {
         v2: Spec;
         v4: Spec;
     }
+}
+
+export interface TokenClass {
+    classLabel: string;
+    characters: number[];
+    avgContribution: number;
+}
+
+export interface TokenWeights {
+    [key: string]: number;
 }
