@@ -10,8 +10,11 @@
 		"allowJs": true, // Include .js files -> the parser
 		"outDir": "out",
 		"strict": true,
-		"resolveJsonModule": true
-	
+		"resolveJsonModule": true,
+
+		"jsx": "react",
+		"jsxFactory": "vscpp",
+		"jsxFragmentFactory": "vscppf"
 	},
 	"exclude": [
 			"playground",
