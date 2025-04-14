@@ -2,6 +2,9 @@
   cursor: pointer;
 }
 
+#progressRing {
+  display:none;
+}
 
 #headersContainer input {
   width: 30%;

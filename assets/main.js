@@ -48,10 +48,31 @@
         container.appendChild(row);
     });
 
-    document.getElementById('requestMetadataButton').addEventListener('click', () => {
+    // Show the progress ring when the metadata request starts
+    const requestMetadataButton = document.getElementById('requestMetadataButton');
+    const progressRing = document.getElementById('progressRing');
+
+    requestMetadataButton.addEventListener('click', () => {
+        progressRing.style.display = 'inline-block';
         vscode.postMessage({ command: 'requestMetadata', data: getformData() });
     });
-    
+
+    // Hide the progress ring when metadata is received
+    window.addEventListener('message', (event) => {
+        const message = event.data;
+        if (message.command === 'metadataReceived') {
+            progressRing.style.display = 'none';
+            const metadata = message.data;
+            document.getElementById('metadata').value = metadata;
+        } else if (message.command === 'fileSelected') {
+            const inputName = message.inputName;
+            const inputEl = document.querySelector(`input[name="${inputName}"]`);
+            if (inputEl) {
+                inputEl.value = message.filePath;
+            }
+        }
+    });
+
     function autoSaveProfile() {
         const formData = getformData();
         if (!formData.name || !formData.baseUrl) {
@@ -94,19 +115,4 @@
             });
         });
     }
-    
-    // receive messages from the extension
-    window.addEventListener('message', (event) => {
-        const message = event.data;
-        if (message.command === 'metadataReceived') {
-            const metadata = message.data;
-            document.getElementById('metadata').value = metadata;
-        } else if (message.command === 'fileSelected') {
-            const inputName = message.inputName;
-            const inputEl = document.querySelector(`input[name="${inputName}"]`);
-            if (inputEl) {
-                inputEl.value = message.filePath;
-            }
-        }
-    });
 }());

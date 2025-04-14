@@ -8,6 +8,7 @@ import { Profile, IProfileAuthentication, AuthKind } from "./contracts/types";
 const profileCommands = {
     deleteProfile: `${APP_NAME}.deleteProfile`,
     editProfile: `${APP_NAME}.editProfile`,
+    requestMetadata: `${APP_NAME}.requestProfileMetadata`,
 };
 
 export class ProfileItem extends vscode.TreeItem {
@@ -47,6 +48,12 @@ export class ProfileTreeProvider
                     this.deleteProfile(profileItem.profile);
                 },
             ),
+            vscode.commands.registerCommand(
+                profileCommands.requestMetadata,
+                async (profileItem: ProfileItem) => {
+                    await this.requestProfileMetadata(profileItem.profile);
+                },
+            ),
         ];
     }
 
@@ -78,6 +85,17 @@ export class ProfileTreeProvider
         profiles = profiles.filter((p) => p.name !== profile.name);
         this.context.globalState.update(globalStates.profiles, profiles);
         this.refresh();
+    }
+
+    async requestProfileMetadata(profile: Profile) {
+        const metadata = await vscode.commands.executeCommand<string>(
+            internalCommands.requestMetadata,
+            profile,
+        );
+        if (metadata) {
+            profile.metadata = metadata;
+            this.saveProfile(profile);
+        }
     }
 
     public openProfileWebview(profile?: Profile) {
@@ -177,6 +195,7 @@ export class ProfileTreeProvider
             "@vscode-elements/elements-lite/components/textarea/textarea.css",
             "@vscode-elements/elements-lite/components/select/select.css",
             "@vscode-elements/elements-lite/components/divider/divider.css",
+            "@vscode-elements/elements-lite/components/progress-ring/progress-ring.css",
         ];
         const stylesUriList = styles.map((style) =>
             webview.asWebviewUri(
@@ -291,6 +310,24 @@ export class ProfileTreeProvider
                   <br/><br/>
                   
                   <button id="requestMetadataButton" type="button" class="vscode-button">Request Metadata</button>
+                  
+                  <svg id="progressRing" class="vscode-progress-ring" part="vscode-progress-ring" viewBox="0 0 16 16">
+                    <circle
+                        class="background"
+                        part="background"
+                        cx="8px"
+                        cy="8px"
+                        r="7px"
+                    ></circle>
+                    <circle
+                        class="indicator"
+                        part="indicator"
+                        cx="8px"
+                        cy="8px"
+                        r="7px"
+                    ></circle>
+                  </svg>
+
                 </div>
                 <div style="flex: 1;">
                   <label for="metadata" class="vscode-label">Metadata:</label>
