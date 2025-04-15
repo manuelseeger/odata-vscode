@@ -32,7 +32,7 @@ In Copilot Chat, chat with participant `@odata`, example:
 
 | Name                  | Description                                                                 |
 |-----------------------|-----------------------------------------------------------------------------|
-| `odata.run`           | Send query in ActiveTextEditor to the selected profile                     |
+| `odata.run`           | Send query in active text editor to the selected profile                     |
 | `odata.copy`          | Copy the combined, single-line query to clipboard                          |
 | `odata.addProfile`    | Add a new endpoint profile. _Start here_                                   |
 | `odata.selectProfile` | Select an endpoint profile                                                 |
@@ -46,6 +46,7 @@ In Copilot Chat, chat with participant `@odata`, example:
 | `odata.metadata.removeAnnotations` | Removes annotations from metadata to reduce size.                                          | `false`       |
 | `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.                                     | `[]`          |
 | `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`).               | `true`        |
+| `odata.disableRunner`          | Disable the query runner, for example if your authentication is not supported.               | `false`       |
 
 ## Known Issues and Limitations
 

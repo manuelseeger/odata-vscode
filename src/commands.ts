@@ -66,6 +66,9 @@ export class CommandProvider extends Disposable {
         query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
         query = query.trim();
         this.openQuery(query);
+        if (getConfig().disableRunner) {
+            return;
+        }
         await this.runQuery(query);
     }
 
@@ -74,7 +77,11 @@ export class CommandProvider extends Disposable {
      *
      * Run the query from the active editor. The query is expected to be a valid OData URL.
      */
+
     async runEditorQuery() {
+        if (getConfig().disableRunner) {
+            return;
+        }
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
             return;

@@ -28,6 +28,7 @@ export function getConfig(): IODataConfiguration {
         metadata: extensionSettings.get("metadata") as IODataMetadataConfiguration,
         defaultFormat: extensionSettings.get("defaultFormat") as ODataFormat,
         strictParser: extensionSettings.get("strictParser", true),
+        disableRunner: extensionSettings.get("disableRunner", false),
     };
     return config;
 }

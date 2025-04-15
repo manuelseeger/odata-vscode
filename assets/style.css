@@ -3,7 +3,14 @@
 }
 
 #progressRing {
-  display:none;
+  display: none;
+  vertical-align: middle; 
+  margin-left: 2em;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
 }
 
 #headersContainer input {

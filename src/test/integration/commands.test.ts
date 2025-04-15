@@ -115,6 +115,21 @@ suite("CommandProvider", () => {
             ).once();
             assert.ok(metadata);
         });
+
+        test("should not invoke runner if disabled", async () => {
+            // Arrange
+            const config = vscode.workspace.getConfiguration("myExtension");
+            const query = `GET ${profile.baseUrl}MyCollection`;
+
+            // Set a configuration value
+            await config.update("odata.disableRunner", true, vscode.ConfigurationTarget.Workspace);
+
+            // Act
+            await commandProvider.openAndRunQuery(query);
+
+            // Assert
+            verify(runnerMock.run(anything(), anything())).never();
+        });
     });
 
     suite("Chat invoked commands", () => {

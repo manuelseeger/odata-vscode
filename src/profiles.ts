@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import * as path from "path";
 
 import { Disposable } from "./provider";
-import { APP_NAME, commands, globalStates, internalCommands } from "./configuration";
+import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
 import { Profile, IProfileAuthentication, AuthKind } from "./contracts/types";
 
 const profileCommands = {
@@ -309,7 +309,7 @@ export class ProfileTreeProvider
                   </div>
                   <br/><br/>
                   
-                  <button id="requestMetadataButton" type="button" class="vscode-button">Request Metadata</button>
+                  <button id="requestMetadataButton" type="button" class="vscode-button" ${getConfig().disableRunner ? "disabled" : ""}>Request Metadata</button>
                   
                   <svg id="progressRing" class="vscode-progress-ring" part="vscode-progress-ring" viewBox="0 0 16 16">
                     <circle

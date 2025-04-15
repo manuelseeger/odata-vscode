@@ -115,10 +115,10 @@ export class ChatParticipantProvider extends Disposable {
                 const query = codeBlocks[0].trim();
 
                 stream.button({
-                    title: "Run",
+                    title: getConfig().disableRunner ? "Open" : "Run",
                     command: internalCommands.openAndRunQuery,
                     arguments: [query],
-                    tooltip: "Open and run the generated query and show results",
+                    tooltip: `Open ${getConfig().disableRunner ? "" : "and run "}the generated query and show results`,
                 });
                 buffer.length = 0;
             }

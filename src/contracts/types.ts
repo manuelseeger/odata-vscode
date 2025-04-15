@@ -42,6 +42,7 @@ export interface IODataConfiguration {
     metadata: IODataMetadataConfiguration;
     defaultFormat: ODataFormat;
     strictParser: boolean;
+    disableRunner: boolean;
 }
 
 export namespace odata {
@@ -77,8 +78,4 @@ export interface TokenClass {
     classLabel: string;
     characters: number[];
     avgContribution: number;
-}
-
-export interface TokenWeights {
-    [key: string]: number;
 }
