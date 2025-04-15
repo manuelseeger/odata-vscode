@@ -5,6 +5,7 @@ import cl100kBase from "tiktoken/encoders/cl100k_base.json";
 import { Tiktoken } from "tiktoken/lite";
 import { TokenClass } from "../contracts/types";
 import { Tokenizer } from "../services/Tokenizer";
+import { TokenWeights } from "../contracts/ITokenizer";
 
 interface TestData {
     filename: string;
@@ -37,13 +38,13 @@ function main(): void {
         testData.push({ filename: file, content });
     }
     // Analyze tokenization statistics on existing metadata files
-    analyzeTestData();
+    const weights = analyzeTestData();
 
     // Verify heuristic against tiktoken
-    verify();
+    verify(weights);
 }
 
-function analyzeTestData(): TokenClass[] {
+function analyzeTestData(): TokenWeights {
     const encoder = new Tiktoken(
         cl100kBase.bpe_ranks,
         cl100kBase.special_tokens,
@@ -132,7 +133,7 @@ function analyzeTestData(): TokenClass[] {
 
     // also write an exploded map of character to their class's weight:
     const explodedMapPath = path.join(__dirname, "../definitions/tokenWeights.json");
-    const explodedMap: Record<number | string, number> = {};
+    const explodedMap: TokenWeights = {};
     for (const cl of classArray) {
         for (const ch of cl.characters) {
             explodedMap[ch] = cl.avgContribution;
@@ -143,10 +144,10 @@ function analyzeTestData(): TokenClass[] {
     explodedMap["AVG"] = explodedMap["TOTAL"] / explodedMap["COUNT"];
     fs.writeFileSync(explodedMapPath, JSON.stringify(explodedMap, null, 2));
 
-    return classArray;
+    return explodedMap;
 }
 
-function verify(): void {
+function verify(weights: TokenWeights): void {
     const encoder = new Tiktoken(
         cl100kBase.bpe_ranks,
         cl100kBase.special_tokens,
@@ -155,6 +156,7 @@ function verify(): void {
     console.log("\n--- Verification ---");
 
     const tokenizer = new Tokenizer();
+    tokenizer.weights = weights;
 
     // Compute global benchmark: total tokens / total characters
     let totalTokens = 0,

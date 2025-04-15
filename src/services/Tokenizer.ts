@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { TokenWeights, ITokenizer } from "../contracts/ITokenizer";
+import * as weights from "../definitions/tokenWeights.json";
 
 /**
  * Approximate the number of tokens in a string using a heuristic based on the
@@ -18,10 +19,7 @@ export class Tokenizer implements ITokenizer {
         this._weights = value;
     }
     constructor() {
-        // load the weights using fs to ensure the latest file is always read
-        const weightsPath = path.join(__dirname, "../", "definitions", "tokenWeights.json");
-        const weightsData = fs.readFileSync(weightsPath, "utf8");
-        this._weights = JSON.parse(weightsData) as TokenWeights;
+        this._weights = weights as TokenWeights;
     }
 
     public approximateTokenCount(text: string): number {
