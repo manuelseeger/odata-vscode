@@ -4,6 +4,7 @@ import * as path from "path";
 import cl100kBase from "tiktoken/encoders/cl100k_base.json";
 import { Tiktoken } from "tiktoken/lite";
 import { TokenClass } from "../contracts/types";
+import { Tokenizer } from "../services/Tokenizer";
 
 interface TestData {
     filename: string;
@@ -36,12 +37,10 @@ function main(): void {
         testData.push({ filename: file, content });
     }
     // Analyze tokenization statistics on existing metadata files
-    const classArray = analyzeTestData();
-    const globalDefaultWeight =
-        classArray.reduce((acc, cls) => acc + cls.avgContribution, 0) / classArray.length;
+    analyzeTestData();
 
     // Verify heuristic against tiktoken
-    verify(classArray, globalDefaultWeight);
+    verify();
 }
 
 function analyzeTestData(): TokenClass[] {
@@ -147,13 +146,15 @@ function analyzeTestData(): TokenClass[] {
     return classArray;
 }
 
-function verify(classArray: TokenClass[], defaultWeight: number): void {
+function verify(): void {
     const encoder = new Tiktoken(
         cl100kBase.bpe_ranks,
         cl100kBase.special_tokens,
         cl100kBase.pat_str,
     );
     console.log("\n--- Verification ---");
+
+    const tokenizer = new Tokenizer();
 
     // Compute global benchmark: total tokens / total characters
     let totalTokens = 0,
@@ -166,38 +167,40 @@ function verify(classArray: TokenClass[], defaultWeight: number): void {
     const globalBenchmark = totalChars ? totalTokens / totalChars : 0;
     console.log(`Global Benchmark (tokens per character): ${globalBenchmark.toFixed(4)}`);
 
-    let totalActual = 0,
-        totalHeuristicErr = 0,
-        totalGlobalErr = 0;
+    let totalActual = 0;
+    const heuristicPercList: number[] = [];
+    const globalPercList: number[] = [];
     testData.forEach(({ filename, content }) => {
         const actual = encoder.encode(content).length;
         totalActual += actual;
-        const approx = [...content].reduce((sum, ch) => {
-            const code = ch.codePointAt(0) as number;
-            const weight =
-                classArray.find((cl) => cl.characters.includes(code))?.avgContribution ||
-                defaultWeight;
-            return sum + weight;
-        }, 0);
+        // Use the tokenizer instance to compute the heuristic token count
+        const approx = tokenizer.approximateTokenCount(content);
         const heuristicDeviation = approx - actual;
-        const heuristicPerc = actual ? ((heuristicDeviation / actual) * 100).toFixed(2) : "N/A";
+        const heuristicPerc = actual ? Math.abs(heuristicDeviation / actual) * 100 : 0;
 
         const globalApprox = content.length * globalBenchmark;
         const globalDeviation = globalApprox - actual;
-        const globalPerc = actual ? ((globalDeviation / actual) * 100).toFixed(2) : "N/A";
+        const globalPerc = actual ? Math.abs(globalDeviation / actual) * 100 : 0;
 
-        totalHeuristicErr += Math.abs(heuristicDeviation);
-        totalGlobalErr += Math.abs(globalDeviation);
+        heuristicPercList.push(heuristicPerc);
+        globalPercList.push(globalPerc);
 
         console.log(
-            `File: ${filename} | Actual: ${actual} | Heuristic Dev%: ${heuristicPerc}% | Global Dev%: ${globalPerc}%`,
+            `File: ${filename} | Actual: ${actual} | Heuristic Dev%: ${heuristicPerc.toFixed(2)}% | Global Dev%: ${globalPerc.toFixed(2)}%`,
         );
     });
-    console.log("\n--- Final Total Error ---");
-    console.log(
-        `Heuristic Total Dev%: ${(totalActual ? (totalHeuristicErr / totalActual) * 100 : 0).toFixed(2)}%, ` +
-            `Global Total Dev%: ${(totalActual ? (totalGlobalErr / totalActual) * 100 : 0).toFixed(2)}%`,
-    );
+
+    // Compute average deviation per test file
+    const avgHeuristicPerc = heuristicPercList.length
+        ? heuristicPercList.reduce((acc, perc) => acc + perc, 0) / heuristicPercList.length
+        : 0;
+    const avgGlobalPerc = globalPercList.length
+        ? globalPercList.reduce((acc, perc) => acc + perc, 0) / globalPercList.length
+        : 0;
+
+    console.log("\n--- Final Average Deviation per File ---");
+    console.log(`Average Heuristic Dev%: ${avgHeuristicPerc.toFixed(2)}%`);
+    console.log(`Average Global Dev%: ${avgGlobalPerc.toFixed(2)}%`);
 }
 
 if (require.main === module) {

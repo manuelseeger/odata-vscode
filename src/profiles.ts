@@ -376,10 +376,10 @@ function parseProfile(data: any): Profile {
     };
 
     return {
-        name: data.name,
-        baseUrl: data.baseUrl,
+        name: data.name.trim(),
+        baseUrl: data.baseUrl.trim(),
         auth,
         metadata: data.metadata || undefined,
-        headers: data.headers,
+        headers: data.headers || {},
     };
 }

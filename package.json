@@ -194,7 +194,8 @@
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
     "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
     "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy",
-    "coverage": "vscode-test --coverage --coverage-reporter json --coverage-output ../../coverage --reporter ../../node_modules/@vscode/test-cli/out/fullJsonStreamReporter.cjs"
+    "coverage": "vscode-test --coverage --coverage-reporter json --coverage-output ../../coverage --reporter ../../node_modules/@vscode/test-cli/out/fullJsonStreamReporter.cjs",
+    "buildtokenizer": "ts-node src/tools/buildtokenizer.ts"
   },
   "devDependencies": {
     "@types/node": "20.x",

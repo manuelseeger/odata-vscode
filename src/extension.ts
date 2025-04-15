@@ -17,12 +17,14 @@ import { VSCodeFileReader } from "./provider";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { QueryRunner } from "./services/QueryRunner";
 import { SignatureHelpProvider } from "./signatures";
+import { Tokenizer } from "./services/Tokenizer";
 
 export async function activate(context: vscode.ExtensionContext) {
     const fileReader = new VSCodeFileReader();
     const syntaxParser = new SyntaxParser();
     const metadataService = new MetadataModelService();
     const queryRunner = new QueryRunner(fileReader);
+    const tokenizer = new Tokenizer();
 
     const reference: odata.Reference = {
         v2: v2 as odata.Spec,
@@ -31,7 +33,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         new SignatureHelpProvider(context, reference),
-        new ChatParticipantProvider(context, metadataService),
+        new ChatParticipantProvider(context, metadataService, tokenizer),
         new ProfileTreeProvider(context),
         new CommandProvider(context, queryRunner),
         new DefaultCompletionItemProvider(context, metadataService),

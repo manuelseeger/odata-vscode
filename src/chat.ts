@@ -5,8 +5,9 @@ import { Profile } from "./contracts/types";
 import { Disposable } from "./provider";
 import { extractCodeBlocks, getBaseUrl } from "./util";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
-import { approximateTokenCount } from "./tokenizer";
+
 import { BasePrompt } from "./prompts/base";
+import { ITokenizer } from "./contracts/ITokenizer";
 
 export class ChatParticipantProvider extends Disposable {
     public _id: string = "ChatParticipantProvider";
@@ -15,6 +16,7 @@ export class ChatParticipantProvider extends Disposable {
     constructor(
         private context: vscode.ExtensionContext,
         private metadataService: IMetadataModelService,
+        private tokenizer: ITokenizer,
     ) {
         super();
         this.participant = vscode.chat.createChatParticipant(
@@ -71,7 +73,7 @@ export class ChatParticipantProvider extends Disposable {
         // approximate token count and check if it exceeds the model's max input tokens
         let tokenCount = 0;
         for (const m of tsx.messages) {
-            tokenCount += approximateTokenCount(
+            tokenCount += this.tokenizer.approximateTokenCount(
                 (m.content as unknown as vscode.LanguageModelTextPart[])[0].value,
             );
         }

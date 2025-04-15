@@ -1,4 +1,4 @@
-import { approximateTokenCount } from "../../tokenizer";
+import { Tokenizer } from "../../services/Tokenizer";
 import { Tiktoken } from "tiktoken/lite";
 import cl100kBase from "tiktoken/encoders/cl100k_base.json";
 import * as fs from "fs";
@@ -8,6 +8,7 @@ import * as path from "path";
 suite("approximateTokens", () => {
     let encoding: Tiktoken;
     const metadataStrings = [] as string[];
+    let tokenizer: Tokenizer;
 
     suiteSetup(() => {
         const testdataPath = path.join(__dirname, "../../test/testdata");
@@ -24,6 +25,7 @@ suite("approximateTokens", () => {
             cl100kBase.special_tokens,
             cl100kBase.pat_str,
         );
+        tokenizer = new Tokenizer();
     });
 
     teardown(() => {
@@ -37,10 +39,10 @@ suite("approximateTokens", () => {
                 return;
             }
             const actualTokenCount = encoding.encode(metadataString).length;
-            const tokenCount = approximateTokenCount(metadataString);
+            const tokenCount = tokenizer.approximateTokenCount(metadataString);
 
             // Allow a margin of error of 5%
-            const marginOfError = Math.ceil(actualTokenCount * 0.1);
+            const marginOfError = Math.ceil(actualTokenCount * 0.05);
             const percentageOff = (
                 (Math.abs(actualTokenCount - tokenCount) / actualTokenCount) *
                 100
@@ -55,7 +57,7 @@ suite("approximateTokens", () => {
     test("should handle empty input", () => {
         const xmlText = "";
         const actualTokenCount = encoding.encode(xmlText).length;
-        const tokenCount = approximateTokenCount(xmlText);
+        const tokenCount = tokenizer.approximateTokenCount(xmlText);
 
         assert.strictEqual(actualTokenCount, 0);
         assert.strictEqual(tokenCount, 0);
