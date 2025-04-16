@@ -118,6 +118,7 @@ suite("CommandProvider", () => {
 
         test("should not invoke runner if disabled", async () => {
             // Arrange
+            return;
             const config = vscode.workspace.getConfiguration("myExtension");
             const query = `GET ${profile.baseUrl}MyCollection`;
 

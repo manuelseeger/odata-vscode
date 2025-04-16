@@ -87,7 +87,7 @@ export class ProfileTreeProvider
         this.refresh();
     }
 
-    async requestProfileMetadata(profile: Profile) {
+    async requestProfileMetadata(profile: Profile): Promise<string | undefined> {
         const metadata = await vscode.commands.executeCommand<string>(
             internalCommands.requestMetadata,
             profile,
@@ -95,6 +95,7 @@ export class ProfileTreeProvider
         if (metadata) {
             profile.metadata = metadata;
             this.saveProfile(profile);
+            return metadata;
         }
     }
 
@@ -125,17 +126,13 @@ export class ProfileTreeProvider
                     this.refresh();
                 } else if (message.command === "requestMetadata") {
                     const newProfile = parseProfile(message.data);
-                    const metadata = await vscode.commands.executeCommand<string>(
-                        internalCommands.requestMetadata,
-                        newProfile,
-                    );
+                    const metadata = await this.requestProfileMetadata(newProfile);
+
                     if (metadata) {
                         this.currentWebviewPanel!.webview.postMessage({
                             command: "metadataReceived",
                             data: metadata,
                         });
-                        newProfile.metadata = metadata;
-                        this.saveProfile(newProfile);
                     }
                     this.refresh();
                 } else if (message.command === "openFileDialog") {

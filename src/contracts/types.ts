@@ -35,7 +35,8 @@ export interface IODataMetadataConfigurationMapEntry {
 
 export interface IODataMetadataConfiguration {
     filterNs: string[];
-    removeAnnotations: boolean;
+    filterXPath: string[];
+    xpathDefaultNsPrefix: string;
 }
 
 export interface IODataConfiguration {

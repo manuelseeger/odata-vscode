@@ -158,17 +158,26 @@
           ],
           "default": "json"
         },
-        "odata.metadata.removeAnnotations": {
-          "type": "boolean",
-          "description": "Remove annotations from OData metadata"
-        },
         "odata.metadata.filterNs": {
           "type": "array",
-          "description": "Filter namespaces in the OData metadata file",
+          "description": "Filter out namespaces in the OData metadata file",
           "default": [],
           "items": {
             "type": "string"
           }
+        },
+        "odata.metadata.filterXPath": {
+          "type": "array",
+          "description": "Filter out nodes matching XPath expressions in the OData metadata file",
+          "default": ["//edm:Annotation"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "odata.metadata.xpathDefaultNsPrefix": {
+          "type": "string",
+          "description": "The prefix used for the default namespace in your XPath expressions.",
+          "default": "edm"
         },
         "odata.strictParser": {
           "type": "boolean",
@@ -236,6 +245,7 @@
     "@xmldom/xmldom": "^0.9.8",
     "undici": "^6.21.2",
     "vscode-uri": "^3.1.0",
-    "xml2js": "^0.6.2"
+    "xml2js": "^0.6.2",
+    "xpath": "^0.0.34"
   }
 }

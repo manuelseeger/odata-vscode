@@ -1,9 +1,11 @@
 import { suite, test } from "mocha";
 
 import { MetadataModelService } from "../../services/MetadataModelService";
-import { AuthKind, Profile } from "../../contracts/types";
+import { AuthKind, IODataConfiguration, Profile } from "../../contracts/types";
 import { DataModel } from "../../odata2ts/data-model/DataModel";
 import * as assert from "assert";
+import * as fs from "fs";
+import path from "path";
 
 export const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
     <edmx:DataServices>
@@ -28,6 +30,11 @@ export const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.
             <EntityContainer Name="DefaultContainer">
                 <EntitySet Name="Orders" EntityType="testing.Order"/>
                 <EntitySet Name="Items" EntityType="testing.Item"/>
+                <Annotation Term="Org.OData.Capabilities.V1.BatchSupportType">
+                    <Record>
+                        <PropertyValue Property="Supported" Bool="true" />
+                    </Record>
+                </Annotation>
             </EntityContainer>
         </Schema>
     </edmx:DataServices>
@@ -77,6 +84,120 @@ suite("MetadataModelService", () => {
             await assert.rejects(async () => {
                 await service.getModel(null!);
             });
+        });
+    });
+
+    suite("filterMetadataXml", () => {
+        test("should filter namespace from XML", () => {
+            const config = {
+                metadata: {
+                    filterNs: ["http://docs.oasis-open.org/odata/ns/edm"],
+                    filterXPath: [],
+                    xpathDefaultNsPrefix: "edm",
+                },
+                defaultFormat: "json",
+                strictParser: true,
+                disableRunner: false,
+            } as IODataConfiguration;
+
+            const result = service.getFilteredMetadataXml(metadataString, config);
+            assert.ok(result);
+            assert.strictEqual(result.includes("testing"), false);
+            assert.strictEqual(result.includes("DataServices"), true);
+        });
+
+        test("should throw error if XML is invalid", () => {
+            const invalidXml = "<invalid></invalid>";
+            const config = {
+                metadata: {
+                    filterNs: [],
+                    filterXPath: [],
+                    xpathDefaultNsPrefix: "edm",
+                    removeAnnotations: false,
+                },
+                defaultFormat: "json",
+                strictParser: true,
+                disableRunner: false,
+            } as IODataConfiguration;
+
+            assert.throws(() => {
+                service.getFilteredMetadataXml(invalidXml, config);
+            }, /The provided XML is not valid OData metadata./);
+        });
+
+        test("should filter XML with XPath", () => {
+            const config = {
+                metadata: {
+                    filterNs: [],
+                    filterXPath: ["//edm:EntityType[@Name='Order']"],
+                    xpathDefaultNsPrefix: "edm",
+                },
+                defaultFormat: "json",
+                strictParser: true,
+                disableRunner: false,
+            } as IODataConfiguration;
+
+            const result = service.getFilteredMetadataXml(metadataString, config);
+
+            assert.ok(result);
+            assert.strictEqual(
+                result.includes(`<EntityType Name="Order">`),
+                false,
+                "Order should be filtered out",
+            );
+            assert.strictEqual(
+                result.includes(`<EntityType Name="Item">`),
+                true,
+                "Item should remain in the XML",
+            );
+        });
+
+        test("should remove annotations", () => {
+            const config = {
+                metadata: {
+                    filterNs: [],
+                    filterXPath: ["//edm:Annotation"],
+                    xpathDefaultNsPrefix: "edm",
+                },
+                defaultFormat: "json",
+                strictParser: true,
+                disableRunner: false,
+            } as IODataConfiguration;
+
+            const result = service.getFilteredMetadataXml(metadataString, config);
+            assert.ok(result);
+            assert.strictEqual(
+                result.includes(`<Annotation Term="Org.OData.Capabilities.V1.BatchSupportType">`),
+                false,
+                "Annotation should be removed",
+            );
+        });
+
+        test("should filter large documents", function () {
+            this.timeout(10000);
+            const largeXml = fs.readFileSync(
+                path.join(__dirname, "..", "testdata", "msgraph.edmx"),
+                "utf-8",
+            );
+
+            const config = {
+                metadata: {
+                    filterNs: [],
+                    filterXPath: ["//edm:Annotation"],
+                    xpathDefaultNsPrefix: "edm",
+                },
+                defaultFormat: "json",
+                strictParser: true,
+                disableRunner: false,
+            } as IODataConfiguration;
+
+            const result = service.getFilteredMetadataXml(largeXml, config);
+            assert.ok(result);
+            assert.strictEqual(
+                result.includes(`<Annotation `),
+                false,
+                "Annotations should be removed",
+            );
         });
     });
 

@@ -1,8 +1,9 @@
 import { IODataConfiguration, Profile } from "../contracts/types";
 import { DataModel } from "../odata2ts/data-model/DataModel";
 import { digestMetadata } from "../metadata";
-import { Document, DOMParser, Element, XMLSerializer } from "@xmldom/xmldom";
+import { Document, DOMParser, Element, XMLSerializer, Node } from "@xmldom/xmldom";
 import { IMetadataModelService } from "../contracts/IMetadataModelService";
+import * as xpath from "xpath";
 
 export class MetadataModelService implements IMetadataModelService {
     private cache: { [profileKey: string]: DataModel } = {};
@@ -65,37 +66,52 @@ export class MetadataModelService implements IMetadataModelService {
             throw new Error("The provided XML is not valid OData metadata.");
         }
 
-        this.cleanNamespacesFromXmlTree(root, config);
+        // build a list of nodes to be filtered out from the document
+        const select = xpath.useNamespaces({
+            [config.metadata.xpathDefaultNsPrefix]: this.getFirstSchemaNamespace(xmlDoc) || "",
+        });
 
-        const serializer = new XMLSerializer();
-        const cleanedXml = serializer.serializeToString(xmlDoc);
+        const filtered: Node[] = [];
+        for (const xpathExpression of config.metadata.filterXPath) {
+            const matches = select(xpathExpression, root as unknown as globalThis.Node);
 
-        return cleanedXml;
-    }
-
-    private cleanNamespacesFromXmlTree(node: Element, config: IODataConfiguration): void {
-        // Remove attributes in unwanted namespaces
-        for (let i = node.attributes.length - 1; i >= 0; i--) {
-            const attr = node.attributes.item(i);
-            if (attr && config.metadata.filterNs.includes(attr.namespaceURI || "")) {
-                node.removeAttributeNode(attr);
-            }
-        }
-
-        // Recursively clean child elements
-        for (let i = node.childNodes.length - 1; i >= 0; i--) {
-            const child = node.childNodes.item(i) as Element;
-            if (child.nodeType === 1) {
-                // Element node
-                if (config.metadata.removeAnnotations && child.tagName === "Annotation") {
-                    node.removeChild(child); // Remove Annotation elements
-                } else if (config.metadata.filterNs.includes(child.namespaceURI || "")) {
-                    node.removeChild(child); // Remove element in unwanted namespace
-                } else {
-                    this.cleanNamespacesFromXmlTree(child, config); // Recurse
+            if (xpath.isArrayOfNodes(matches)) {
+                for (const node of matches) {
+                    if (xpath.isElement(node)) {
+                        filtered.push(node as unknown as Node);
+                    } else if (xpath.isAttribute(node)) {
+                        filtered.push(node as unknown as Node);
+                    }
+                }
+            } else {
+                if (xpath.isElement(matches)) {
+                    filtered.push(matches as unknown as Node);
+                } else if (xpath.isAttribute(matches)) {
+                    filtered.push(matches as unknown as Node);
                 }
             }
         }
+
+        // serialized while applying the filter
+        const nodeFilter = (node: Node): boolean => {
+            return !(
+                filtered.some((a) => a.isSameNode(node)) ||
+                config.metadata.filterNs.includes(node.namespaceURI || "")
+            );
+        };
+
+        const adaptedFilter = (node: Node): Node | null => {
+            return nodeFilter(node) ? node : null;
+        };
+
+        const serializer = new XMLSerializer();
+        const cleanedXml = serializer.serializeToString(
+            xmlDoc,
+            // @ts-ignore @xmldom/xmldom implementation expected filter to return node, but XMLSerializer interface expects boolean
+            adaptedFilter,
+        );
+
+        return cleanedXml;
     }
 
     public isMetadataXml(text: string): boolean {
@@ -118,5 +134,19 @@ export class MetadataModelService implements IMetadataModelService {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Get the namespace URI of the first <Schema> element in the XML document.
+     *
+     * There are multiple versions of the EDM namespace out there, fetch the one used in this
+     * document.
+     *
+     * @param xmlDoc - The XML document to search in.
+     * @returns The namespace URI of the first <Schema> element, or null if not found.
+     */
+    private getFirstSchemaNamespace(xmlDoc: Document): string | null {
+        const schemaElement = xmlDoc.getElementsByTagName("Schema")[0];
+        return schemaElement ? schemaElement.namespaceURI : null;
     }
 }

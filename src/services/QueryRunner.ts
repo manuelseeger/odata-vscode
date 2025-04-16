@@ -4,6 +4,8 @@ import { AuthKind, Profile } from "../contracts/types";
 import { IQueryRunner } from "../contracts/IQueryRunner";
 import { IFileReader } from "../contracts/IFileReader";
 
+type CompatibleResponse = Response & { bytes: () => Promise<Buffer> };
+
 export class QueryRunner implements IQueryRunner {
     private fileReader: IFileReader;
 
@@ -32,14 +34,14 @@ export class QueryRunner implements IQueryRunner {
             // https://github.com/nodejs/node/issues/48977
             mergedOptions as any,
         );
-        return r;
+        return r as unknown as CompatibleResponse;
     }
 
     public async fetch(url: string, profile: Profile, options: RequestInit): Promise<Response> {
         const profileRequestInit = await this.requestInit(profile);
         const mergedOptions = deepMerge(options, profileRequestInit);
         const r = await fetch(url, mergedOptions);
-        return r;
+        return r as unknown as CompatibleResponse;
     }
 
     async requestInit(profile: Profile): Promise<RequestInit> {

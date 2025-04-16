@@ -51,10 +51,12 @@ export class ChatParticipantProvider extends Disposable {
             );
             return;
         }
+        console.time("getFilteredMetadataXml");
         const cleanedXml = this.metadataService.getFilteredMetadataXml(
             profile.metadata,
             getConfig(),
         );
+        console.timeEnd("getFilteredMetadataXml");
         const dataModel = await this.metadataService.getModel(profile);
 
         const tsx = await renderPrompt(
@@ -74,7 +76,10 @@ export class ChatParticipantProvider extends Disposable {
         let tokenCount = 0;
         for (const m of tsx.messages) {
             tokenCount += this.tokenizer.approximateTokenCount(
-                (m.content as unknown as vscode.LanguageModelTextPart[])[0].value,
+                m.content
+                    .filter((part) => part instanceof vscode.LanguageModelTextPart)
+                    .map((part: vscode.LanguageModelTextPart) => part.value)
+                    .join(""),
             );
         }
         console.log(tokenCount);
