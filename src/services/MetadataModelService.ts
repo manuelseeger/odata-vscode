@@ -1,18 +1,21 @@
-import { IODataConfiguration, Profile } from "../contracts/types";
-import { DataModel } from "../odata2ts/data-model/DataModel";
-import { digestMetadata } from "../metadata";
-import { Document, DOMParser, Element, XMLSerializer, Node } from "@xmldom/xmldom";
-import { IMetadataModelService } from "../contracts/IMetadataModelService";
+import { Document, DOMParser, Node, XMLSerializer } from "@xmldom/xmldom";
+import { createHash } from "crypto";
 import * as xpath from "xpath";
+import { IMetadataModelService } from "../contracts/IMetadataModelService";
+import { IODataConfiguration, Profile } from "../contracts/types";
+import { digestMetadata } from "../metadata";
+import { DataModel } from "../odata2ts/data-model/DataModel";
 
 export class MetadataModelService implements IMetadataModelService {
-    private cache: { [profileKey: string]: DataModel } = {};
+    private modelCache: { [profileKey: string]: DataModel } = {};
+    private domCache: { [hash: string]: Document } = {};
+    private filteredXmlCache: { [key: string]: string } = {};
 
     constructor() {}
 
     public async getModel(profile: Profile): Promise<DataModel> {
-        if (this.cache[profile.baseUrl]) {
-            return this.cache[profile.baseUrl];
+        if (this.modelCache[profile.baseUrl]) {
+            return this.modelCache[profile.baseUrl];
         }
 
         if (!profile.metadata || profile.metadata.length === 0) {
@@ -20,12 +23,12 @@ export class MetadataModelService implements IMetadataModelService {
         }
         const model = await this.digestMetadata(profile.metadata);
         // cache digested model
-        this.cache[profile.baseUrl] = model;
+        this.modelCache[profile.baseUrl] = model;
         return model;
     }
 
     public async hasModel(profile: Profile): Promise<boolean> {
-        if (this.cache[profile.baseUrl]) {
+        if (this.modelCache[profile.baseUrl]) {
             return true;
         }
         const metadata = profile.metadata;
@@ -34,32 +37,43 @@ export class MetadataModelService implements IMetadataModelService {
         }
         const model = await this.digestMetadata(metadata);
         // cache digested model
-        this.cache[profile.baseUrl] = model;
+        this.modelCache[profile.baseUrl] = model;
         return true;
     }
 
-    private async digestMetadata(metadataXml: string): Promise<DataModel> {
-        const model = await digestMetadata(metadataXml);
-        return model;
-    }
-
     public async refreshModel(profile: Profile): Promise<DataModel> {
-        delete this.cache[profile.baseUrl];
+        delete this.modelCache[profile.baseUrl];
         return this.getModel(profile);
     }
 
-    public clearCache(profile?: Profile): void {
-        if (profile) {
-            delete this.cache[profile.baseUrl];
-        } else {
-            this.cache = {};
+    public clearCache(): void {
+        // Clear all caches
+        this.modelCache = {};
+        this.domCache = {};
+        this.filteredXmlCache = {};
+    }
+
+    public isMetadataXml(text: string): boolean {
+        try {
+            // Use cached XML parsing
+            const xmlDoc = this.getCachedXml(text);
+            return this.isMetadata(xmlDoc);
+        } catch (error) {
+            return false;
         }
     }
 
     public getFilteredMetadataXml(text: string, config: IODataConfiguration): string {
-        const parser = new DOMParser();
-        const xmlDoc = parser.parseFromString(text, "text/xml");
+        const textHash = this.hash(text);
+        // don't use content from cache if config changed
+        const configHash = this.hash(JSON.stringify(config.metadata));
+        const cacheKey = `${textHash}_${configHash}`;
+        if (this.filteredXmlCache[cacheKey]) {
+            return this.filteredXmlCache[cacheKey];
+        }
 
+        // Use cached XML parsing
+        const xmlDoc = this.getCachedXml(text);
         const root = xmlDoc.documentElement;
 
         if (!root || !this.isMetadata(xmlDoc)) {
@@ -107,21 +121,33 @@ export class MetadataModelService implements IMetadataModelService {
         const serializer = new XMLSerializer();
         const cleanedXml = serializer.serializeToString(
             xmlDoc,
-            // @ts-ignore @xmldom/xmldom implementation expected filter to return node, but XMLSerializer interface expects boolean
+            // @ts-ignore
             adaptedFilter,
         );
 
+        // Save filtered result in cache
+        this.filteredXmlCache[cacheKey] = cleanedXml;
         return cleanedXml;
     }
 
-    public isMetadataXml(text: string): boolean {
-        const parser = new DOMParser();
-        try {
-            const xmlDoc = parser.parseFromString(text, "text/xml");
-            return this.isMetadata(xmlDoc);
-        } catch (error) {
-            return false;
+    private async digestMetadata(metadata: string): Promise<DataModel> {
+        const model = await digestMetadata(metadata);
+        return model;
+    }
+
+    private hash(text: string): string {
+        return createHash("sha256").update(text).digest("hex");
+    }
+
+    private getCachedXml(text: string): Document {
+        const key = this.hash(text);
+        if (this.domCache[key]) {
+            return this.domCache[key];
         }
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, "text/xml");
+        this.domCache[key] = xmlDoc;
+        return xmlDoc;
     }
 
     private isMetadata(xmlDoc: Document): boolean {
