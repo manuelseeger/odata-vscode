@@ -318,7 +318,12 @@ export class CommandProvider extends Disposable {
 
         try {
             const text = document.getText();
-            const combinedUrl = combineODataUrl(text);
+            let combinedUrl = combineODataUrl(text);
+            const url = new URL(combinedUrl);
+            if (!url.searchParams.has("$format") && getConfig().defaultFormat) {
+                combinedUrl += `&$format=${getConfig().defaultFormat}`;
+            }
+
             await vscode.env.clipboard.writeText(combinedUrl);
             vscode.window.showInformationMessage("Query copied to clipboard.");
             return combinedUrl;

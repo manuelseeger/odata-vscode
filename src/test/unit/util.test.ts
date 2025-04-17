@@ -177,4 +177,17 @@ $filter=Name eq 'John'`;
             "https://example.com/odata/Products?$filter=Price gt 100 and Price lt 500&$expand=Category,Tags",
         );
     });
+
+    test("should handle multi line with trailing spaces", () => {
+        const input = `https://example.com/odata/  
+        Customers 
+            ?$filter=Name eq 'John' & 
+            $orderby=Name asc & 
+            $top=10`;
+        const result = combineODataUrl(input);
+        assert.strictEqual(
+            result,
+            "https://example.com/odata/Customers?$filter=Name eq 'John'&$orderby=Name asc&$top=10",
+        );
+    });
 });

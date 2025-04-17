@@ -13,12 +13,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Progress indicator when requesting metadata from profile
 - Option to filter metadata based on XPath expressions
 - Default XPath filter for Annotations
+- Add default format when copying query to clipboard
 
 ### Fixed
 
 - Model dependent token limits instead of hardcoded limits
 - Request metadata from treeview fixed
 - Trim profile endpoint URL
+- Trim trailing spaces when combining URL
 
 ### Removed
 

@@ -4,6 +4,7 @@ import * as path from "path";
 import { Disposable } from "./provider";
 import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
 import { Profile, IProfileAuthentication, AuthKind } from "./contracts/types";
+import { ITokenizer } from "./contracts/ITokenizer";
 
 const profileCommands = {
     deleteProfile: `${APP_NAME}.deleteProfile`,
@@ -31,7 +32,10 @@ export class ProfileTreeProvider
     // Add a class-level property to store the webview panel
     private currentWebviewPanel: vscode.WebviewPanel | undefined;
 
-    constructor(private context: vscode.ExtensionContext) {
+    constructor(
+        private tokenizer: ITokenizer,
+        private context: vscode.ExtensionContext,
+    ) {
         super();
         this.subscriptions = [
             vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
@@ -129,9 +133,19 @@ export class ProfileTreeProvider
                     const metadata = await this.requestProfileMetadata(newProfile);
 
                     if (metadata) {
+                        const models = await vscode.lm.selectChatModels();
+                        const limits = models.map((model) => {
+                            return {
+                                name: model.name,
+                                maxTokens: model.maxInputTokens,
+                            };
+                        });
+                        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
                         this.currentWebviewPanel!.webview.postMessage({
                             command: "metadataReceived",
                             data: metadata,
+                            tokenCount,
+                            limits,
                         });
                     }
                     this.refresh();

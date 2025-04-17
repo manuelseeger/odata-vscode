@@ -157,7 +157,7 @@ suite("CommandProvider", () => {
             // Arrange
             const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
             const query = "Products?$filter=Price gt 100&$orderby=Name asc";
-            const expectedCombinedUrl = `${baseUrl}${query}`;
+            const expectedCombinedUrl = `${baseUrl}${query}&$format=json`;
 
             const document = await vscode.workspace.openTextDocument({
                 language: "odata",
@@ -232,7 +232,35 @@ suite("CommandProvider", () => {
                 Products?
                     $filter=Price gt 100 &
                     $orderby=Name asc`;
-            const expectedCombinedUrl = `${baseUrl}Products?$filter=Price gt 100&$orderby=Name asc`;
+            const expectedCombinedUrl = `${baseUrl}Products?$filter=Price gt 100&$orderby=Name asc&$format=json`;
+            const document = await vscode.workspace.openTextDocument({
+                language: "odata",
+                content: `${baseUrl}\n${query}`,
+            });
+            await vscode.languages.setTextDocumentLanguage(document, "odata");
+            await vscode.window.showTextDocument(document);
+
+            // Act
+            await commandProvider.copyQueryToClipboard();
+            // Wait for clipboard to be updated
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            // Assert
+            const clipboardContent = await vscode.env.clipboard.readText();
+            assert.strictEqual(
+                clipboardContent,
+                expectedCombinedUrl,
+                "Clipboard content does not match the expected combined one-line URL",
+            );
+        });
+
+        test("Should copy OData query with default format", async () => {
+            const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
+            const query = `  
+    Orders? 
+        $orderby=CreationOn desc& 
+        $top=1`;
+            const expectedCombinedUrl = `${baseUrl}Orders?$orderby=CreationOn desc&$top=1&$format=json`;
             const document = await vscode.workspace.openTextDocument({
                 language: "odata",
                 content: `${baseUrl}\n${query}`,

@@ -50,6 +50,7 @@ export function combineODataUrl(input: string): string {
         // Trim and normalize query parameters
         formattedParams = queryParams
             .split("&")
+            .map((param) => param.trim())
             .map((param) => {
                 let [key, value] = param.split("=");
                 // Handle cases where key or value might be undefined
