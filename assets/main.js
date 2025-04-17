@@ -62,8 +62,8 @@
         const message = event.data;
         if (message.command === 'metadataReceived') {
             progressRing.style.display = 'none';
-            const metadata = message.data;
-            document.getElementById('metadata').value = metadata;
+            document.getElementById('metadata').value = message.data;
+            updateTokenCountUI(message.limits, message.tokenCount, message.filteredCount);
         } else if (message.command === 'fileSelected') {
             const inputName = message.inputName;
             const inputEl = document.querySelector(`input[name="${inputName}"]`);
@@ -114,5 +114,40 @@
                 vscode.postMessage({ command: 'openFileDialog', inputName: inputEl.name });
             });
         });
+    }
+
+    /**
+     * Update the Copilot model info and token count UI.
+     */
+    function updateTokenCountUI(limits, tokenCount, filteredCount) {
+        // Update visible token summary
+        document.getElementById('tokenCountInfo').textContent = tokenCount;
+        document.getElementById('filteredCountInfo').textContent = filteredCount;
+        const copilotSection = document.getElementById('copilotAdvancedSection');
+        const modelInfoEl = document.getElementById('modelInfo');
+        if (Array.isArray(limits) && limits.length > 0 && typeof tokenCount === 'number') {
+            // Build table rows for model info
+            const rows = limits.map(lim => {
+                const isAbove = filteredCount > lim.maxTokens;
+                const isNear = !isAbove && Math.abs(filteredCount - lim.maxTokens) <= tokenCount * 0.1;
+                const className = isNear ? 'near' : isAbove ? 'above' : '';
+                return `<tr><td>${lim.name}</td><td class="${className}">${lim.maxTokens}</td></tr>`;
+            }).join('');
+            // Populate model info table
+            modelInfoEl.innerHTML = `<table class="model-table">
+                      <tbody>${rows}</tbody>
+                    </table>`;
+        } 
+        // Handle arrow icon toggle
+        if (copilotSection && copilotSection.tagName === 'DETAILS') {
+            copilotSection.addEventListener('toggle', () => {
+                const icon = copilotSection.querySelector('.icon-arrow');
+                if (copilotSection.open) {
+                    icon.classList.replace('codicon-chevron-right', 'codicon-chevron-down');
+                } else {
+                    icon.classList.replace('codicon-chevron-down', 'codicon-chevron-right');
+                }
+            });
+        }
     }
 }());

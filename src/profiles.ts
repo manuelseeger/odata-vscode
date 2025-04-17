@@ -5,6 +5,7 @@ import { Disposable } from "./provider";
 import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
 import { Profile, IProfileAuthentication, AuthKind } from "./contracts/types";
 import { ITokenizer } from "./contracts/ITokenizer";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
 const profileCommands = {
     deleteProfile: `${APP_NAME}.deleteProfile`,
@@ -34,6 +35,7 @@ export class ProfileTreeProvider
 
     constructor(
         private tokenizer: ITokenizer,
+        private metadataService: IMetadataModelService,
         private context: vscode.ExtensionContext,
     ) {
         super();
@@ -127,26 +129,17 @@ export class ProfileTreeProvider
                 if (message.command === "saveProfile") {
                     const newProfile: Profile = parseProfile(message.data);
                     this.saveProfile(newProfile);
+                    // Update token counts and model info after saving (e.g., metadata edit)
+                    if (newProfile.metadata) {
+                        await this.sendMetadataToWebview(newProfile.metadata);
+                    }
                     this.refresh();
                 } else if (message.command === "requestMetadata") {
                     const newProfile = parseProfile(message.data);
                     const metadata = await this.requestProfileMetadata(newProfile);
 
                     if (metadata) {
-                        const models = await vscode.lm.selectChatModels();
-                        const limits = models.map((model) => {
-                            return {
-                                name: model.name,
-                                maxTokens: model.maxInputTokens,
-                            };
-                        });
-                        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
-                        this.currentWebviewPanel!.webview.postMessage({
-                            command: "metadataReceived",
-                            data: metadata,
-                            tokenCount,
-                            limits,
-                        });
+                        await this.sendMetadataToWebview(metadata);
                     }
                     this.refresh();
                 } else if (message.command === "openFileDialog") {
@@ -169,7 +162,10 @@ export class ProfileTreeProvider
             undefined,
             this.context.subscriptions,
         );
-
+        // If editing an existing profile with metadata, send model info on load
+        if (profile && profile.metadata) {
+            this.sendMetadataToWebview(profile.metadata);
+        }
         // Handle panel disposal
         this.currentWebviewPanel.onDidDispose(() => {
             this.currentWebviewPanel = undefined;
@@ -207,6 +203,7 @@ export class ProfileTreeProvider
             "@vscode-elements/elements-lite/components/select/select.css",
             "@vscode-elements/elements-lite/components/divider/divider.css",
             "@vscode-elements/elements-lite/components/progress-ring/progress-ring.css",
+            "@vscode-elements/elements-lite/components/collapsible/collapsible.css",
         ];
         const stylesUriList = styles.map((style) =>
             webview.asWebviewUri(
@@ -239,8 +236,8 @@ export class ProfileTreeProvider
           <body>
             <h1>${profile ? "Edit Profile" : "Create Profile"}</h1>
             <form id="profileForm">
-              <div style="display: flex; gap: 20px;">
-                <div style="flex: 1;">
+              <div class="profile-form-row">
+                <div class="profile-form-column">
                   <label for="name" class="vscode-label">Name</label>
                   <input type="text" id="name" name="name" value="${profile ? profile.name : ""}" required class="vscode-textfield" /><br/><br/>
                   
@@ -259,17 +256,17 @@ export class ProfileTreeProvider
                     <option value="cliencert" ${profile && profile.auth.kind === "cliencert" ? "selected" : ""}>Client Cert</option>
                   </select><br/><br/>
 
-                  <div id="basicFields" style="display:none;">
+                  <div id="basicFields" class="hidden">
                     <label for="username" class="vscode-label">Username</label>
                     <input type="text" id="username" name="username" class="vscode-textfield" value="${profile && profile.auth.username ? profile.auth.username : ""}"/><br/><br/>
                     <label for="password" class="vscode-label">Password</label>
                     <input type="password" id="password" name="password" class="vscode-textfield" value="${profile && profile.auth.password ? profile.auth.password : ""}"/><br/><br/>
                   </div>
-                  <div id="bearerFields" style="display:none;">
+                  <div id="bearerFields" class="hidden">
                     <label for="token" class="vscode-label">Token</label>
                     <input type="text" id="token" name="token" class="vscode-textfield" value="${profile && profile.auth.token ? profile.auth.token : ""}"/><br/><br/>
                   </div>
-                  <div id="clientCertFields" style="display:none;">
+                  <div id="clientCertFields" class="hidden">
                     <label for="cert" class="vscode-label">Certificate</label>
                     <div>
                         <input type="input" id="cert" name="cert" class="vscode-textfield" value="${profile && profile.auth.cert ? profile.auth.cert.path : ""}"/>
@@ -298,7 +295,7 @@ export class ProfileTreeProvider
                   <br/>
                   <hr class="vscode-divider""/>
                 
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                  <div class="headers-header">
                     <label class="vscode-label">Headers</label>
                     <div class="icon" id="addHeaderButton"><i class="codicon codicon-add"></i></div>
                   </div>
@@ -339,17 +336,61 @@ export class ProfileTreeProvider
                     ></circle>
                   </svg>
 
-                </div>
-                <div style="flex: 1;">
+                </div> <!-- end of left flex: 1 -->
+                <!-- Add metadata textarea as second flex column -->
+                <div class="profile-form-column">
                   <label for="metadata" class="vscode-label">Metadata:</label>
-                  <textarea id="metadata" name="metadata" style="width: 100%; height: 100%; box-sizing: border-box;" class="vscode-textarea">${profile && profile.metadata ? profile.metadata : ""}</textarea>
+                  <textarea id="metadata" name="metadata" class="vscode-textarea metadata-textarea">${profile && profile.metadata ? profile.metadata : ""}</textarea>
                 </div>
-              </div>
+              </div> <!-- end of flex row -->
+
             </form>
+            <br/><br/>
+            <hr class="vscode-divider""/>
+            
+            <label class="vscode-label">Metadata size</label>
+            <div id="tokenSummary" class="token-count">
+              
+              <span class="vscode-label">Tokens:</span>
+              <span id="tokenCountInfo" class="token-count-value"></span>
+              <span class="vscode-label">Tokens (filtered):</span>
+              <span id="filteredCountInfo" class="token-count-value"></span>
+            </div>
+            <p>Make sure the metadata fits into the Github Copilot input token limit. Use filtering in Settings to reduce size.</p>
+            <details id="copilotAdvancedSection" class="vscode-collapsible">
+              <summary>
+                <i class="codicon codicon-chevron-right icon-arrow"></i>
+                <h2 class="title">Github Copilot Models<span class="description">Github Copilot models and max input tokens</span></h2>
+              </summary>
+              <div>    
+                  <div id="modelInfo">No info on Copilot models yet, retry.</div>
+              </div>
+            </details>
             <script nonce="${nonce}" src="${scriptUri}" />
           </body>
         </html>
         `;
+    }
+
+    private async sendMetadataToWebview(metadata: string) {
+        if (!this.currentWebviewPanel) {
+            return;
+        }
+        const models = await vscode.lm.selectChatModels();
+        const limits = models.map((model) => ({
+            name: model.name,
+            maxTokens: model.maxInputTokens,
+        }));
+        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
+        const filteredMetadata = this.metadataService.getFilteredMetadataXml(metadata, getConfig());
+        const filteredCount = this.tokenizer.approximateTokenCount(filteredMetadata);
+        this.currentWebviewPanel.webview.postMessage({
+            command: "metadataReceived",
+            data: metadata,
+            tokenCount,
+            filteredCount,
+            limits,
+        });
     }
 }
 
@@ -390,7 +431,7 @@ function parseProfile(data: any): Profile {
         name: data.name.trim(),
         baseUrl: data.baseUrl.trim(),
         auth,
-        metadata: data.metadata || undefined,
+        metadata: data.metadata.trim() || undefined,
         headers: data.headers || {},
     };
 }

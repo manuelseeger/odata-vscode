@@ -34,7 +34,7 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(
         new SignatureHelpProvider(context, reference),
         new ChatParticipantProvider(context, metadataService, tokenizer),
-        new ProfileTreeProvider(context),
+        new ProfileTreeProvider(tokenizer, metadataService, context),
         new CommandProvider(context, queryRunner),
         new DefaultCompletionItemProvider(context, metadataService),
         new SystemQueryCompletionItemProvider(),
