@@ -18,6 +18,7 @@ import { MetadataModelService } from "./services/MetadataModelService";
 import { QueryRunner } from "./services/QueryRunner";
 import { SignatureHelpProvider } from "./signatures";
 import { Tokenizer } from "./services/Tokenizer";
+import { HoverProvider } from "./hovers";
 
 export async function activate(context: vscode.ExtensionContext) {
     const fileReader = new VSCodeFileReader();
@@ -40,6 +41,7 @@ export async function activate(context: vscode.ExtensionContext) {
         new SystemQueryCompletionItemProvider(),
         new MetadataCompletionItemProvider(metadataService, context),
         new ODataDocumentFormatter(syntaxParser),
+        new HoverProvider(metadataService, context),
     );
 
     const diagnosticsProvider = new ODataDiagnosticProvider(metadataService, context);
