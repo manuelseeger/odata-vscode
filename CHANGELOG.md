@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Trim profile endpoint URL
 - Trim trailing spaces when combining URL
 - Result document didn't always show correct language
+- Profile tree UI didn't update on metadata retrieval
 
 ### Removed
 

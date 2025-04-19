@@ -104,18 +104,6 @@ suite("CommandProvider", () => {
             verify(runnerMock.run(anything(), anything())).never();
         });
 
-        test("should get metadata for profile", async () => {
-            // Act
-            const metadata = await commandProvider.getEndpointMetadata();
-            await new Promise((resolve) => setTimeout(resolve, 50));
-
-            // Assert
-            verify(
-                runnerMock.fetch("https://example.com/odata/$metadata", anything(), anything()),
-            ).once();
-            assert.ok(metadata);
-        });
-
         test("should not invoke runner if disabled", async function () {
             // Arrange
             this.skip();

@@ -39,7 +39,6 @@ export class CommandProvider extends Disposable {
         this.subscriptions = [
             vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
             vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
-            vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
             vscode.commands.registerCommand(commands.copyQuery, this.copyQueryToClipboard, this),
             vscode.commands.registerCommand(
                 internalCommands.openAndRunQuery,
@@ -121,36 +120,6 @@ export class CommandProvider extends Disposable {
         }
         const profile = profiles.find((p) => p.name === profileName);
         this.context.globalState.update(globalStates.selectedProfile, profile);
-    }
-
-    /**
-     * Get the metadata for the selected profile and update the profile.
-     *
-     * If no profile is selected, prompt the user to select one.
-     * If no profile is found, return an empty string.
-     */
-    async getEndpointMetadata(): Promise<string> {
-        let profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        if (!profile) {
-            await this.selectProfile();
-            profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        }
-        if (!profile) {
-            return "";
-        }
-
-        const metadata = await this.requestProfileMetadata(profile);
-        profile.metadata = metadata;
-        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        const index = profiles.findIndex((p) => p.name === profile.name);
-        if (index >= 0) {
-            profiles[index] = profile;
-        } else {
-            profiles.push(profile);
-        }
-        this.context.globalState.update(globalStates.profiles, profiles);
-        this.context.globalState.update(globalStates.selectedProfile, profile);
-        return metadata;
     }
 
     /**

@@ -42,6 +42,7 @@ export class ProfileTreeProvider
         this.subscriptions = [
             vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
             vscode.commands.registerCommand(commands.addProfile, this.openProfileWebview, this),
+            vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
             vscode.commands.registerCommand(
                 profileCommands.editProfile,
                 (profileItem: ProfileItem) => {
@@ -89,7 +90,48 @@ export class ProfileTreeProvider
     deleteProfile(profile: Profile) {
         let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
         profiles = profiles.filter((p) => p.name !== profile.name);
+        if (profiles.length === 0) {
+            this.context.globalState.update(globalStates.selectedProfile, undefined);
+        } else if (
+            this.context.globalState.get<Profile>(globalStates.selectedProfile)?.name ===
+            profile.name
+        ) {
+            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
+        }
         this.context.globalState.update(globalStates.profiles, profiles);
+        this.refresh();
+    }
+
+    /**
+     * Get the metadata for the selected profile and update the profile.
+     *
+     * If no profile is selected, prompt the user to select one.
+     * If no profile is found, return an empty string.
+     */
+    async getEndpointMetadata() {
+        let profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        if (!profile) {
+            await vscode.commands.executeCommand<string>(commands.selectProfile);
+            profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        }
+        if (!profile) {
+            vscode.window.showErrorMessage("No profile selected or found.");
+            return;
+        }
+
+        const metadata = await this.requestProfileMetadata(profile);
+        if (!metadata) {
+            vscode.window.showErrorMessage("No metadata found for the selected profile.");
+            return;
+        }
+        profile.metadata = metadata;
+
+        this.saveProfile(profile);
+        this.context.globalState.update(globalStates.selectedProfile, profile);
+        vscode.window.showInformationMessage(
+            `Metadata updated successfully for profile ${profile.name}.`,
+        );
+        this.sendMetadataToWebview(metadata);
         this.refresh();
     }
 
