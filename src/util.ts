@@ -12,6 +12,7 @@ export function getMetadataUrl(baseUrl: string): string {
 
 export function getBaseUrl(url: string): string {
     // Normalize the URL by removing trailing slashes
+    url = url.trim();
     url = url.replace(/\/+$/, "");
     url = url.replace(/\/\$metadata(\?.*)?$/, "");
     const [basePart, queryPart] = url.split("?");

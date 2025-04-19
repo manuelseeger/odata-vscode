@@ -181,6 +181,12 @@ export class CommandProvider extends Disposable {
             editBuilder.replace(entireRange, query);
         });
 
+        // Set the language of the query document again after the edit; VSCode might determine
+        // the wrong language based on the edit above
+        this.queryDocument = await vscode.languages.setTextDocumentLanguage(
+            this.queryDocument,
+            "odata",
+        );
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
 
@@ -246,11 +252,6 @@ export class CommandProvider extends Disposable {
             }
         }
 
-        this.resultDocument = await vscode.languages.setTextDocumentLanguage(
-            this.resultDocument,
-            format,
-        );
-
         const editor = await vscode.window.showTextDocument(this.resultDocument, {
             preview: false,
         });
@@ -261,6 +262,13 @@ export class CommandProvider extends Disposable {
         await editor.edit((editBuilder) => {
             editBuilder.replace(entireRange, newContent);
         });
+
+        // Set the language of the result document again after the edit; VSCode might determine
+        // the wrong language based on the edit above (like JS instead of JSON)
+        this.resultDocument = await vscode.languages.setTextDocumentLanguage(
+            this.resultDocument,
+            format,
+        );
 
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
