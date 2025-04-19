@@ -5,7 +5,6 @@ import { instance, mock, when, anything } from "ts-mockito";
 import { IQueryRunner } from "../../contracts/IQueryRunner";
 import { globalStates } from "../../configuration";
 import { QueryRunner } from "../../services/QueryRunner";
-import { Response } from "undici";
 
 export const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
     <edmx:DataServices>

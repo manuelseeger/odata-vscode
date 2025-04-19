@@ -8,3 +8,4 @@ playground/
 .vscode-test/
 out/
 coverage/
+*.private.edmx

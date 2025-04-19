@@ -26,12 +26,12 @@ const extensionConfig = {
   },
   resolve: {
     // support reading TypeScript and JavaScript files, 📖 -> https://github.com/TypeStrong/ts-loader
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js', '.tsx']
   },
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.tsx$/,
         exclude: /node_modules/,
         use: [
           {
@@ -40,8 +40,13 @@ const extensionConfig = {
         ]
       },
       {
-        test: /\.wasm$/,
-        type: "webassembly/async"
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader'
+          }
+        ]
       }
     ]
   },
@@ -52,7 +57,7 @@ const extensionConfig = {
   plugins: [
     new CopyPlugin({
       patterns: [
-        { from: "./node_modules/tiktoken/tiktoken_bg.wasm" },
+        
         {
           from: path.resolve(__dirname, 'node_modules/@vscode/codicons/dist'),
           to: path.resolve(__dirname, 'dist/modules/@vscode/codicons/dist'),
@@ -62,13 +67,14 @@ const extensionConfig = {
           to: path.resolve(__dirname, 'dist/modules/@vscode-elements/elements-lite/components'),
       },
       {
-        from: path.resolve(__dirname, 'src/odataV2.json'),
-        to: path.resolve(__dirname, 'dist/odataV2.json'),
+        from: path.resolve(__dirname, 'src/definitions/odataV2.json'),
       },
       {
-        from: path.resolve(__dirname, 'src/odataV4.json'),
-        to: path.resolve(__dirname, 'dist/odataV4.json'),
+        from: path.resolve(__dirname, 'src/definitions/odataV4.json'),
       },
+      {
+        from: path.resolve(__dirname, 'src/definitions/tokenWeights.json'),
+      }
       ],
     })
   ],

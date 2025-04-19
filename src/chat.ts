@@ -1,34 +1,22 @@
 import * as vscode from "vscode";
-
-import cl100kBase from "tiktoken/encoders/cl100k_base.json";
-import { Tiktoken } from "tiktoken/lite";
-
+import { renderPrompt } from "@vscode/prompt-tsx";
 import { APP_NAME, getConfig, globalStates, internalCommands } from "./configuration";
 import { Profile } from "./contracts/types";
 import { Disposable } from "./provider";
 import { extractCodeBlocks, getBaseUrl } from "./util";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
+import { BasePrompt } from "./prompts/base";
+import { ITokenizer } from "./contracts/ITokenizer";
+
 export class ChatParticipantProvider extends Disposable {
     public _id: string = "ChatParticipantProvider";
-    private readonly BASE_PROMPT = `You help generate OData queries from EDMX medadata. Keep usage of functions,lambdas or other advanced features to a minimum. Return query code as an \`\`\`odata \`\`\` code block and give a short explanation.
-
-OData Version: {{version}}
-
-Metadata: 
-{{metadata}}
-
-Use this Uri is a base for the generated queries: {{base}}
-
-Examples, but use the properties from the metadata in your answers: 
-{{base}}/RequestedEntities?$filter=Name eq 'John'
-{{base}}/RequestedEntities?$select=Name, Age, ReferenceId
-{{base}}/RequestedEntities?$expand=RelatedEntity&$filter=Name eq 'John'&$select=Name, Age, RelatedEntity/ParentId`;
 
     private participant: vscode.ChatParticipant;
     constructor(
         private context: vscode.ExtensionContext,
         private metadataService: IMetadataModelService,
+        private tokenizer: ITokenizer,
     ) {
         super();
         this.participant = vscode.chat.createChatParticipant(
@@ -51,66 +39,77 @@ Examples, but use the properties from the metadata in your answers:
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken,
     ) => {
-        const encoding = new Tiktoken(
-            cl100kBase.bpe_ranks,
-            cl100kBase.special_tokens,
-            cl100kBase.pat_str,
-        );
-
         const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (!profile) {
             vscode.window.showWarningMessage("No profile selected.");
             return;
         }
 
-        const text = profile.metadata;
-        if (!text || !this.metadataService.isMetadataXml(text)) {
+        if (!profile.metadata || !this.metadataService.isMetadataXml(profile.metadata)) {
             vscode.window.showWarningMessage(
                 "No metadata document found, check and update profile",
             );
             return;
         }
-        const cleanedXml = this.metadataService.getFilteredMetadataXml(text, getConfig());
+        console.time("getFilteredMetadataXml");
+        const cleanedXml = this.metadataService.getFilteredMetadataXml(
+            profile.metadata,
+            getConfig(),
+        );
+        console.timeEnd("getFilteredMetadataXml");
         const dataModel = await this.metadataService.getModel(profile);
 
-        const replacements: Record<string, string> = {
-            metadata: cleanedXml,
-            base: getBaseUrl(profile.baseUrl),
-            version: dataModel.getODataVersion(),
-        };
+        const tsx = await renderPrompt(
+            BasePrompt,
+            {
+                base: getBaseUrl(profile.baseUrl),
+                metadata: cleanedXml,
+                version: dataModel.getODataVersion(),
+                userPrompt: request.prompt,
+                context: context,
+            },
+            { modelMaxPromptTokens: request.model.maxInputTokens },
+            request.model,
+        );
 
-        // Build the prompt from metadata, base URL and OData Version
-        const prompt = this.BASE_PROMPT.replaceAll(/{{(\w+)}}/g, (_, key) => {
-            return replacements[key] || "";
-        });
+        // approximate token count and check if it exceeds the model's max input tokens
+        let tokenCount = 0;
+        for (const m of tsx.messages) {
+            tokenCount += this.tokenizer.approximateTokenCount(
+                m.content
+                    .filter((part) => part instanceof vscode.LanguageModelTextPart)
+                    .map((part: vscode.LanguageModelTextPart) => part.value)
+                    .join(""),
+            );
+        }
+        console.log(tokenCount);
+        console.log(request.model.maxInputTokens);
 
-        // Github Copilot Chat has an input limit of 64000 tokens
-        const tokens = encoding.encode(prompt);
-        if (tokens.length > 64000) {
-            vscode.window.showWarningMessage(
-                "Metadata file too large, please provide a smaller file.",
+        if (tokenCount > request.model.maxInputTokens) {
+            stream.markdown(
+                new vscode.MarkdownString("$(error) Prompt is too long, please shorten it.", true),
             );
             return;
         }
-        encoding.free();
 
-        const messages = [vscode.LanguageModelChatMessage.User(prompt)];
-
-        // add the message history, so that we can ask followup questions
-        const previousMessages = context.history.filter(
-            (h) => h instanceof vscode.ChatResponseTurn,
-        );
-        previousMessages.forEach((m) => {
-            let fullMessage = "";
-            m.response.forEach((r) => {
-                const mdPart = r as vscode.ChatResponseMarkdownPart;
-                fullMessage += mdPart.value.value;
-            });
-            messages.push(vscode.LanguageModelChatMessage.Assistant(fullMessage));
-        });
-        messages.push(vscode.LanguageModelChatMessage.User(request.prompt));
-
-        const chatResponse = await request.model.sendRequest(messages, {}, token);
+        let chatResponse: vscode.LanguageModelChatResponse;
+        try {
+            chatResponse = await request.model.sendRequest(tsx.messages, {}, token);
+        } catch (e) {
+            if (e instanceof vscode.LanguageModelError) {
+                switch (e.code) {
+                    case vscode.LanguageModelError.Blocked.name:
+                    case vscode.LanguageModelError.NoPermissions.name:
+                    case vscode.LanguageModelError.NotFound.name:
+                    case "Unknown":
+                        stream.markdown("Error: " + e + "\n" + "Please try again later.");
+                        break;
+                }
+            } else {
+                stream.markdown("Error: " + e + "\n" + "Please try again later.");
+            }
+            return;
+        }
 
         const buffer = [];
         for await (const fragment of chatResponse.text) {
@@ -121,10 +120,10 @@ Examples, but use the properties from the metadata in your answers:
                 const query = codeBlocks[0].trim();
 
                 stream.button({
-                    title: "Run",
+                    title: getConfig().disableRunner ? "Open" : "Run",
                     command: internalCommands.openAndRunQuery,
                     arguments: [query],
-                    tooltip: "Open and run the generated query and show results",
+                    tooltip: `Open ${getConfig().disableRunner ? "" : "and run "}the generated query and show results`,
                 });
                 buffer.length = 0;
             }

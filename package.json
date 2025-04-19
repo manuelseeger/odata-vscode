@@ -2,7 +2,7 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Language and Query Runner",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "publisher": "manuelseeger",
   "repository": {
     "type": "git",
@@ -58,11 +58,6 @@
         }
       ],
       "view/item/context": [
-        {
-          "command": "odata.requestMetadata",
-          "when": "viewItem == odata.profile",
-          "group": "inline@1"
-        },
         {
           "command": "odata.editProfile",
           "when": "viewItem == odata.profile",
@@ -121,12 +116,6 @@
         "when": "viewItem == profile"
       },
       {
-        "command": "odata.requestMetadata",
-        "title": "Request Endpoint Metadata",
-        "icon": "$(refresh)",
-        "when": "viewItem == profile"
-      },
-      {
         "command": "odata.copy",
         "title": "OData: Copy Query to Clipboard"
       }
@@ -158,22 +147,36 @@
           ],
           "default": "json"
         },
-        "odata.metadata.removeAnnotations": {
-          "type": "boolean",
-          "description": "Remove annotations from OData metadata"
-        },
         "odata.metadata.filterNs": {
           "type": "array",
-          "description": "Filter namespaces in the OData metadata file",
+          "description": "Filter out namespaces in the OData metadata file",
           "default": [],
           "items": {
             "type": "string"
           }
         },
+        "odata.metadata.filterXPath": {
+          "type": "array",
+          "description": "Filter out nodes matching XPath expressions in the OData metadata file",
+          "default": ["//edm:Annotation"],
+          "items": {
+            "type": "string"
+          }
+        },
+        "odata.metadata.xpathDefaultNsPrefix": {
+          "type": "string",
+          "description": "The prefix used for the default namespace in your XPath expressions.",
+          "default": "edm"
+        },
         "odata.strictParser": {
           "type": "boolean",
           "description": "Enable strict parsing for OData queries.",
           "default": true
+        },
+        "odata.disableRunner": {
+          "type": "boolean",
+          "description": "Disable the OData query runner.",
+          "default": false
         }
       }
     }
@@ -194,7 +197,8 @@
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
     "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
     "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy",
-    "coverage": "vscode-test --coverage --coverage-reporter json --coverage-output ../../coverage --reporter ../../node_modules/@vscode/test-cli/out/fullJsonStreamReporter.cjs"
+    "coverage": "vscode-test --coverage --coverage-reporter json --coverage-output ../../coverage --reporter ../../node_modules/@vscode/test-cli/out/fullJsonStreamReporter.cjs",
+    "buildtokenizer": "ts-node src/tools/buildtokenizer.ts"
   },
   "devDependencies": {
     "@types/node": "20.x",
@@ -213,6 +217,7 @@
     "pegjs-backtrace": "^0.2.1",
     "prettier": "^3.5.3",
     "rimraf": "^6.0.1",
+    "tiktoken": "^1.0.20",
     "ts-loader": "^9.5.2",
     "ts-mockito": "^2.6.1",
     "ts-node": "^10.9.2",
@@ -225,10 +230,11 @@
     "@odata2ts/odata2ts": "^0.39.1",
     "@vscode-elements/elements-lite": "^0.3.0",
     "@vscode/codicons": "^0.0.36",
+    "@vscode/prompt-tsx": "^0.3.0-alpha.23",
     "@xmldom/xmldom": "^0.9.8",
-    "tiktoken": "^1.0.20",
     "undici": "^6.21.2",
     "vscode-uri": "^3.1.0",
-    "xml2js": "^0.6.2"
+    "xml2js": "^0.6.2",
+    "xpath": "^0.0.34"
   }
 }

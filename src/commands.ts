@@ -39,7 +39,6 @@ export class CommandProvider extends Disposable {
         this.subscriptions = [
             vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
             vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
-            vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
             vscode.commands.registerCommand(commands.copyQuery, this.copyQueryToClipboard, this),
             vscode.commands.registerCommand(
                 internalCommands.openAndRunQuery,
@@ -66,6 +65,9 @@ export class CommandProvider extends Disposable {
         query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
         query = query.trim();
         this.openQuery(query);
+        if (getConfig().disableRunner) {
+            return;
+        }
         await this.runQuery(query);
     }
 
@@ -74,7 +76,11 @@ export class CommandProvider extends Disposable {
      *
      * Run the query from the active editor. The query is expected to be a valid OData URL.
      */
+
     async runEditorQuery() {
+        if (getConfig().disableRunner) {
+            return;
+        }
         let editor = vscode.window.activeTextEditor;
         if (!editor) {
             return;
@@ -117,36 +123,6 @@ export class CommandProvider extends Disposable {
     }
 
     /**
-     * Get the metadata for the selected profile and update the profile.
-     *
-     * If no profile is selected, prompt the user to select one.
-     * If no profile is found, return an empty string.
-     */
-    async getEndpointMetadata(): Promise<string> {
-        let profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        if (!profile) {
-            await this.selectProfile();
-            profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        }
-        if (!profile) {
-            return "";
-        }
-
-        const metadata = await this.requestProfileMetadata(profile);
-        profile.metadata = metadata;
-        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        const index = profiles.findIndex((p) => p.name === profile.name);
-        if (index >= 0) {
-            profiles[index] = profile;
-        } else {
-            profiles.push(profile);
-        }
-        this.context.globalState.update(globalStates.profiles, profiles);
-        this.context.globalState.update(globalStates.selectedProfile, profile);
-        return metadata;
-    }
-
-    /**
      * Open the query in the editor.
      *
      * This is used by the chat handler to open queries the chat participant generates.
@@ -174,6 +150,12 @@ export class CommandProvider extends Disposable {
             editBuilder.replace(entireRange, query);
         });
 
+        // Set the language of the query document again after the edit; VSCode might determine
+        // the wrong language based on the edit above
+        this.queryDocument = await vscode.languages.setTextDocumentLanguage(
+            this.queryDocument,
+            "odata",
+        );
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
 
@@ -239,11 +221,6 @@ export class CommandProvider extends Disposable {
             }
         }
 
-        this.resultDocument = await vscode.languages.setTextDocumentLanguage(
-            this.resultDocument,
-            format,
-        );
-
         const editor = await vscode.window.showTextDocument(this.resultDocument, {
             preview: false,
         });
@@ -254,6 +231,13 @@ export class CommandProvider extends Disposable {
         await editor.edit((editBuilder) => {
             editBuilder.replace(entireRange, newContent);
         });
+
+        // Set the language of the result document again after the edit; VSCode might determine
+        // the wrong language based on the edit above (like JS instead of JSON)
+        this.resultDocument = await vscode.languages.setTextDocumentLanguage(
+            this.resultDocument,
+            format,
+        );
 
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
@@ -311,7 +295,12 @@ export class CommandProvider extends Disposable {
 
         try {
             const text = document.getText();
-            const combinedUrl = combineODataUrl(text);
+            let combinedUrl = combineODataUrl(text);
+            const url = new URL(combinedUrl);
+            if (!url.searchParams.has("$format") && getConfig().defaultFormat) {
+                combinedUrl += `&$format=${getConfig().defaultFormat}`;
+            }
+
             await vscode.env.clipboard.writeText(combinedUrl);
             vscode.window.showInformationMessage("Query copied to clipboard.");
             return combinedUrl;

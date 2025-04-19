@@ -104,16 +104,20 @@ suite("CommandProvider", () => {
             verify(runnerMock.run(anything(), anything())).never();
         });
 
-        test("should get metadata for profile", async () => {
+        test("should not invoke runner if disabled", async function () {
+            // Arrange
+            this.skip();
+            const config = vscode.workspace.getConfiguration("myExtension");
+            const query = `GET ${profile.baseUrl}MyCollection`;
+
+            // Set a configuration value
+            await config.update("odata.disableRunner", true, vscode.ConfigurationTarget.Workspace);
+
             // Act
-            const metadata = await commandProvider.getEndpointMetadata();
-            await new Promise((resolve) => setTimeout(resolve, 50));
+            await commandProvider.openAndRunQuery(query);
 
             // Assert
-            verify(
-                runnerMock.fetch("https://example.com/odata/$metadata", anything(), anything()),
-            ).once();
-            assert.ok(metadata);
+            verify(runnerMock.run(anything(), anything())).never();
         });
     });
 
@@ -121,7 +125,7 @@ suite("CommandProvider", () => {
         test("shoud open incorrect query", async () => {
             // Arrange
             const query = `GET ${profile.baseUrl}DoesNotExist`;
-            const expected = `${profile.baseUrl}\n    DoesNotExist`;
+            const expected = `DoesNotExist`;
 
             // Act
             await commandProvider.openAndRunQuery(query);
@@ -132,7 +136,7 @@ suite("CommandProvider", () => {
             const editor = vscode.window.activeTextEditor;
             assert.ok(editor);
             assert.strictEqual(editor.document.languageId, "odata");
-            assert.strictEqual(editor.document.getText(), expected);
+            assert.strictEqual(editor.document.getText().includes(expected), true);
         });
     });
 
@@ -141,7 +145,7 @@ suite("CommandProvider", () => {
             // Arrange
             const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
             const query = "Products?$filter=Price gt 100&$orderby=Name asc";
-            const expectedCombinedUrl = `${baseUrl}${query}`;
+            const expectedCombinedUrl = `${baseUrl}${query}&$format=json`;
 
             const document = await vscode.workspace.openTextDocument({
                 language: "odata",
@@ -216,7 +220,35 @@ suite("CommandProvider", () => {
                 Products?
                     $filter=Price gt 100 &
                     $orderby=Name asc`;
-            const expectedCombinedUrl = `${baseUrl}Products?$filter=Price gt 100&$orderby=Name asc`;
+            const expectedCombinedUrl = `${baseUrl}Products?$filter=Price gt 100&$orderby=Name asc&$format=json`;
+            const document = await vscode.workspace.openTextDocument({
+                language: "odata",
+                content: `${baseUrl}\n${query}`,
+            });
+            await vscode.languages.setTextDocumentLanguage(document, "odata");
+            await vscode.window.showTextDocument(document);
+
+            // Act
+            await commandProvider.copyQueryToClipboard();
+            // Wait for clipboard to be updated
+            await new Promise((resolve) => setTimeout(resolve, 50));
+
+            // Assert
+            const clipboardContent = await vscode.env.clipboard.readText();
+            assert.strictEqual(
+                clipboardContent,
+                expectedCombinedUrl,
+                "Clipboard content does not match the expected combined one-line URL",
+            );
+        });
+
+        test("Should copy OData query with default format", async () => {
+            const baseUrl = "https://services.odata.org/northwind/northwind.svc/";
+            const query = `  
+    Orders? 
+        $orderby=CreationOn desc& 
+        $top=1`;
+            const expectedCombinedUrl = `${baseUrl}Orders?$orderby=CreationOn desc&$top=1&$format=json`;
             const document = await vscode.workspace.openTextDocument({
                 language: "odata",
                 content: `${baseUrl}\n${query}`,

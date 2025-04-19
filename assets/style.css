@@ -2,6 +2,16 @@
   cursor: pointer;
 }
 
+#progressRing {
+  display: none;
+  vertical-align: middle; 
+  margin-left: 2em;
+}
+
+.disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
 
 #headersContainer input {
   width: 30%;
@@ -35,3 +45,62 @@
 .full-width {
   width: 100%!important;
 }
+
+#copilotAdvancedSection summary {
+  margin-top: 1em;
+  background-color: var(--vscode-editor-background);
+}
+.model-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.model-table th, .model-table td {
+  border: 1px solid var(--vscode-editorWidget-border);
+  padding: 4px 8px;
+  text-align: left;
+}
+#outputSection strong {
+  display: block;
+  margin-top: 0.5em;
+}
+
+.token-count-value {
+  font-weight: bold;
+  color: var(--vscode-editor-foreground);
+}
+
+#filteredCountInfo {
+  color: var(--vscode-editorInfo-foreground);
+}
+
+.model-table {
+  width: 50%;
+   color: var(--vscode-editor-foreground);
+}
+.model-table td.above {
+  color: var(--vscode-editorError-foreground); 
+}
+.model-table td.near {
+  color: var(--vscode-editorWarning-foreground);
+}
+
+#tokenSummary {
+  margin-bottom: 1em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+#tokenSummary .vscode-label {
+  display: inline;
+  font-weight: normal;
+  margin-right: 0.3em;
+  color: var(--vscode-editor-foreground);
+}
+
+
+.profile-form-row { display: flex; gap: 20px; }
+.profile-form-column { flex: 1; }
+.metadata-textarea { width: 100%; height: 90%; box-sizing: border-box; }
+.headers-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.hidden { display: none; }
+

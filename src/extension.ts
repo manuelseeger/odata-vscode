@@ -9,20 +9,23 @@ import {
 import { odata } from "./contracts/types";
 import { ODataDiagnosticProvider } from "./diagnostics";
 import { ODataDocumentFormatter } from "./formatting";
-import * as v2 from "./odataV2.json";
-import * as v4 from "./odataV4.json";
+import * as v2 from "./definitions/odataV2.json";
+import * as v4 from "./definitions/odataV4.json";
 import { SyntaxParser } from "./parser/syntaxparser";
 import { ProfileTreeProvider } from "./profiles";
 import { VSCodeFileReader } from "./provider";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { QueryRunner } from "./services/QueryRunner";
 import { SignatureHelpProvider } from "./signatures";
+import { Tokenizer } from "./services/Tokenizer";
+import { HoverProvider } from "./hovers";
 
 export async function activate(context: vscode.ExtensionContext) {
     const fileReader = new VSCodeFileReader();
     const syntaxParser = new SyntaxParser();
     const metadataService = new MetadataModelService();
     const queryRunner = new QueryRunner(fileReader);
+    const tokenizer = new Tokenizer();
 
     const reference: odata.Reference = {
         v2: v2 as odata.Spec,
@@ -31,13 +34,14 @@ export async function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(
         new SignatureHelpProvider(context, reference),
-        new ChatParticipantProvider(context, metadataService),
-        new ProfileTreeProvider(context),
+        new ChatParticipantProvider(context, metadataService, tokenizer),
+        new ProfileTreeProvider(tokenizer, metadataService, context),
         new CommandProvider(context, queryRunner),
         new DefaultCompletionItemProvider(context, metadataService),
         new SystemQueryCompletionItemProvider(),
         new MetadataCompletionItemProvider(metadataService, context),
         new ODataDocumentFormatter(syntaxParser),
+        new HoverProvider(metadataService, context),
     );
 
     const diagnosticsProvider = new ODataDiagnosticProvider(metadataService, context);

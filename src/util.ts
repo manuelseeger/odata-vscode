@@ -12,6 +12,7 @@ export function getMetadataUrl(baseUrl: string): string {
 
 export function getBaseUrl(url: string): string {
     // Normalize the URL by removing trailing slashes
+    url = url.trim();
     url = url.replace(/\/+$/, "");
     url = url.replace(/\/\$metadata(\?.*)?$/, "");
     const [basePart, queryPart] = url.split("?");
@@ -50,6 +51,7 @@ export function combineODataUrl(input: string): string {
         // Trim and normalize query parameters
         formattedParams = queryParams
             .split("&")
+            .map((param) => param.trim())
             .map((param) => {
                 let [key, value] = param.split("=");
                 // Handle cases where key or value might be undefined

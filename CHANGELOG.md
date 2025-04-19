@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2025-04-19
+
+### Added
+
+- Option to disable query runner
+- Progress indicator when requesting metadata from profile
+- Option to filter metadata based on XPath expressions
+- Default XPath filter for Annotations
+- Add default format when copying query to clipboard
+- Provide hover texts for EntityType and selected profile
+
+### Fixed
+
+- Model dependent token limits instead of hardcoded limits
+- Request metadata from treeview fixed
+- Trim profile endpoint URL
+- Trim trailing spaces when combining URL
+- Result document didn't always show correct language
+- Profile tree UI didn't update on metadata retrieval
+
+### Removed
+
+- Settings `odata.removeAnnotations` removed, this is now default behavior and implemented via XPath
+
 ## [0.2.0] - 2025-04-13
 
 ### Added

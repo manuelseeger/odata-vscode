@@ -32,7 +32,7 @@ In Copilot Chat, chat with participant `@odata`, example:
 
 | Name                  | Description                                                                 |
 |-----------------------|-----------------------------------------------------------------------------|
-| `odata.run`           | Send query in ActiveTextEditor to the selected profile                     |
+| `odata.run`           | Send query in active text editor to the selected profile                     |
 | `odata.copy`          | Copy the combined, single-line query to clipboard                          |
 | `odata.addProfile`    | Add a new endpoint profile. _Start here_                                   |
 | `odata.selectProfile` | Select an endpoint profile                                                 |
@@ -43,9 +43,11 @@ In Copilot Chat, chat with participant `@odata`, example:
 | Setting                        | Description                                                                                  | Default Value |
 |--------------------------------|----------------------------------------------------------------------------------------------|---------------|
 | `odata.defaultFormat`          | Set the default response format                                                              | `json`        |
-| `odata.metadata.removeAnnotations` | Removes annotations from metadata to reduce size.                                          | `false`       |
 | `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.                                     | `[]`          |
+| `odata.metadata.filterXPath`      | List of xpath expressions. Matching elements or attributes will be filtered out. | `["//edm:Annotation"]`          |
+| `odata.metadata.xpathDefaultNsPrefix`      | A prefix for the default namespace (usually on <Schema>) used in your XPath expression | `edm`          |
 | `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`).               | `true`        |
+| `odata.disableRunner`          | Disable the query runner, for example if your authentication is not supported.               | `false`       |
 
 ## Known Issues and Limitations
 
@@ -67,8 +69,8 @@ You can still use all features but the query runner. Create an endpoint profile 
 ### Metadata file too large
 
 Github Copilot has a character limit for requests. If your service metadata is above that, Copilot will refuse the request. Options:
-- If your metadata includes annotations, enable `odata.metadata.removeAnnotations` in settings to filter all annotations from metadata
 - If your metadata includes non-EDMX namespaces, maintain them in `odata.metadata.filterNs` to filter them out
+- Filter out parts of the metadata document you don't need with xpath expressions in `odata.metadata.filterXPath`
 - If you service allows filtering metadata, add your service URL with a filter, for example `http://your.service/api/$metadata?$filter=Customer`
 - Manually shorten your metadata file in profiles, for example remove entity definitions you are not working with
 

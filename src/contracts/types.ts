@@ -35,13 +35,15 @@ export interface IODataMetadataConfigurationMapEntry {
 
 export interface IODataMetadataConfiguration {
     filterNs: string[];
-    removeAnnotations: boolean;
+    filterXPath: string[];
+    xpathDefaultNsPrefix: string;
 }
 
 export interface IODataConfiguration {
     metadata: IODataMetadataConfiguration;
     defaultFormat: ODataFormat;
-    strictParser: boolean; // Added strictParser setting
+    strictParser: boolean;
+    disableRunner: boolean;
 }
 
 export namespace odata {
@@ -71,4 +73,10 @@ export namespace odata {
         v2: Spec;
         v4: Spec;
     }
+}
+
+export interface TokenClass {
+    classLabel: string;
+    characters: number[];
+    avgContribution: number;
 }

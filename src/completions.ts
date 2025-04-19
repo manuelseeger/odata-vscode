@@ -14,8 +14,8 @@ import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
 import { combineODataUrl } from "./util";
-import * as odataV2 from "./odataV2.json";
-import * as odataV4 from "./odataV4.json";
+import * as odataV2 from "./definitions/odataV2.json";
+import * as odataV4 from "./definitions/odataV4.json";
 
 export class DefaultCompletionItemProvider
     extends Disposable
