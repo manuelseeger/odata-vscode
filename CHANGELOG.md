@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.1] - unreleased
+## [0.3.0] - 2025-04-19
 
 ### Added
 
@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Option to filter metadata based on XPath expressions
 - Default XPath filter for Annotations
 - Add default format when copying query to clipboard
+- Provide hover texts for EntityType and selected profile
 
 ### Fixed
 
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Request metadata from treeview fixed
 - Trim profile endpoint URL
 - Trim trailing spaces when combining URL
+- Result document didn't always show correct language
 
 ### Removed
 
