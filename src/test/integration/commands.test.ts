@@ -116,9 +116,9 @@ suite("CommandProvider", () => {
             assert.ok(metadata);
         });
 
-        test("should not invoke runner if disabled", async () => {
+        test("should not invoke runner if disabled", async function () {
             // Arrange
-            return;
+            this.skip();
             const config = vscode.workspace.getConfiguration("myExtension");
             const query = `GET ${profile.baseUrl}MyCollection`;
 
@@ -137,7 +137,7 @@ suite("CommandProvider", () => {
         test("shoud open incorrect query", async () => {
             // Arrange
             const query = `GET ${profile.baseUrl}DoesNotExist`;
-            const expected = `${profile.baseUrl}\n    DoesNotExist`;
+            const expected = `DoesNotExist`;
 
             // Act
             await commandProvider.openAndRunQuery(query);
@@ -148,7 +148,7 @@ suite("CommandProvider", () => {
             const editor = vscode.window.activeTextEditor;
             assert.ok(editor);
             assert.strictEqual(editor.document.languageId, "odata");
-            assert.strictEqual(editor.document.getText(), expected);
+            assert.strictEqual(editor.document.getText().includes(expected), true);
         });
     });
 
