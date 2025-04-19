@@ -74,6 +74,7 @@
 }
 
 .model-table {
+  width: 50%;
    color: var(--vscode-editor-foreground);
 }
 .model-table td.above {

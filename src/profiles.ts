@@ -105,7 +105,7 @@ export class ProfileTreeProvider
         }
     }
 
-    public openProfileWebview(profile?: Profile) {
+    public async openProfileWebview(profile?: Profile) {
         if (!this.currentWebviewPanel) {
             this.currentWebviewPanel = vscode.window.createWebviewPanel(
                 "profileManager",
@@ -118,7 +118,7 @@ export class ProfileTreeProvider
         this.currentWebviewPanel.title = profile
             ? `Edit Profile: ${profile.name}`
             : "Create HTTP Profile";
-        this.currentWebviewPanel.webview.html = this._getWebViewContent(
+        this.currentWebviewPanel.webview.html = await this._getWebViewContent(
             this.currentWebviewPanel.webview,
             profile,
         );
@@ -188,11 +188,26 @@ export class ProfileTreeProvider
         }
     }
 
-    private _getWebViewContent(webview: vscode.Webview, profile?: Profile): string {
+    private async _getWebViewContent(webview: vscode.Webview, profile?: Profile): Promise<string> {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this.context.extensionUri, "assets", "main.js"),
         );
+        const nonce = getNonce();
 
+        // Initialize the profile page with token counts and model limits
+        let initialMessageScript = "";
+        if (profile && profile.metadata) {
+            const payload = await this.buildMetadataPayload(profile.metadata);
+            initialMessageScript =
+                `<script nonce="${nonce}">` +
+                `window.dispatchEvent(new MessageEvent('message',{data:{` +
+                `command:'metadataReceived',` +
+                `data:${JSON.stringify(payload.data)},` +
+                `tokenCount:${payload.tokenCount},` +
+                `filteredCount:${payload.filteredCount},` +
+                `limits:${JSON.stringify(payload.limits)}` +
+                `}}));</script>`;
+        }
         const styles = [
             "@vscode/codicons/dist/codicon.css",
             "@vscode-elements/elements-lite/components/action-button/action-button.css",
@@ -219,18 +234,14 @@ export class ProfileTreeProvider
             .map((uri) => `<link href="${uri}" rel="stylesheet" />`)
             .join("\n");
 
-        const nonce = getNonce();
-
         return `
         <!DOCTYPE html>
         <html lang="en">
           <head>
-            <meta charset="UTF-8">
-            <!--
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-            -->
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">            
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Cat Coding</title>
+            <title>${profile ? "Edit Profile" : "Create Profile"}</title>
+            <meta charset="UTF-8">
             ${linkTags}
           </head>
           <body>
@@ -366,31 +377,42 @@ export class ProfileTreeProvider
                   <div id="modelInfo">No info on Copilot models yet, retry.</div>
               </div>
             </details>
-            <script nonce="${nonce}" src="${scriptUri}" />
+            <script nonce="${nonce}" src="${scriptUri}"></script>
+            ${initialMessageScript}
           </body>
         </html>
         `;
+    }
+
+    /**
+     * Compute raw token counts and filtered token counts for a metadata string.
+     */
+    private getMetadataCounts(metadata: string) {
+        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
+        const filteredXml = this.metadataService.getFilteredMetadataXml(metadata, getConfig());
+        const filteredCount = this.tokenizer.approximateTokenCount(filteredXml);
+        return { tokenCount, filteredCount };
+    }
+
+    /**
+     * Prepare metadata payload with raw data, token counts, and model limits.
+     */
+    private async buildMetadataPayload(metadata: string) {
+        const { tokenCount, filteredCount } = this.getMetadataCounts(metadata);
+        const models = await vscode.lm.selectChatModels();
+        const limits = models.map((model) => ({
+            name: model.name,
+            maxTokens: model.maxInputTokens,
+        }));
+        return { data: metadata, tokenCount, filteredCount, limits };
     }
 
     private async sendMetadataToWebview(metadata: string) {
         if (!this.currentWebviewPanel) {
             return;
         }
-        const models = await vscode.lm.selectChatModels();
-        const limits = models.map((model) => ({
-            name: model.name,
-            maxTokens: model.maxInputTokens,
-        }));
-        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
-        const filteredMetadata = this.metadataService.getFilteredMetadataXml(metadata, getConfig());
-        const filteredCount = this.tokenizer.approximateTokenCount(filteredMetadata);
-        this.currentWebviewPanel.webview.postMessage({
-            command: "metadataReceived",
-            data: metadata,
-            tokenCount,
-            filteredCount,
-            limits,
-        });
+        const payload = await this.buildMetadataPayload(metadata);
+        this.currentWebviewPanel.webview.postMessage({ command: "metadataReceived", ...payload });
     }
 }
 
