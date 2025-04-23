@@ -8,6 +8,7 @@ import {
 } from "./odata2ts/data-model/DataTypeModel";
 import { Disposable } from "./provider";
 import * as vscode from "vscode";
+import { combineODataUrl, getBaseUrl } from "./util";
 
 export class HoverProvider extends Disposable implements vscode.HoverProvider {
     public _id: string = "HoverProvider";
@@ -51,7 +52,7 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
             return new vscode.Hover(hover, wordRange);
         }
         // default show the selected profile and URL
-        return new vscode.Hover(this.getSelectedProfileHover(profile));
+        return new vscode.Hover(this.getSelectedProfileHover(document, profile));
     }
 
     private getEntityTypeHover(member: EntitySetType): vscode.MarkdownString {
@@ -72,9 +73,14 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
         return new vscode.MarkdownString(hoverText);
     }
 
-    private getSelectedProfileHover(profile: Profile): vscode.MarkdownString {
+    private getSelectedProfileHover(
+        document: vscode.TextDocument,
+        profile: Profile,
+    ): vscode.MarkdownString {
         let hoverText = `**Selected Profile**: ${profile.name}\n\n`;
-        hoverText += `**Base URL**: ${profile.baseUrl}`;
+        hoverText += `**Base URL**: ${getBaseUrl(profile.baseUrl)}\n\n`;
+        const queryUrl = combineODataUrl(document.getText());
+        hoverText += `**Query:** [${queryUrl}](<${queryUrl}>)`;
 
         return new vscode.MarkdownString(hoverText);
     }
