@@ -68,6 +68,7 @@ export class CommandProvider extends Disposable {
         if (getConfig().disableRunner) {
             return;
         }
+        query = combineODataUrl(query);
         await this.runQuery(query);
     }
 
@@ -223,6 +224,7 @@ export class CommandProvider extends Disposable {
 
         const editor = await vscode.window.showTextDocument(this.resultDocument, {
             preview: false,
+            viewColumn: vscode.ViewColumn.Beside,
         });
         const entireRange = new vscode.Range(
             this.resultDocument.positionAt(0),
