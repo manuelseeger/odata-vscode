@@ -158,7 +158,9 @@
         "odata.metadata.filterXPath": {
           "type": "array",
           "description": "Filter out nodes matching XPath expressions in the OData metadata file",
-          "default": ["//edm:Annotation"],
+          "default": [
+            "//edm:Annotation"
+          ],
           "items": {
             "type": "string"
           }
@@ -226,8 +228,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "@odata2ts/converter-runtime": "^0.5.5",
-    "@odata2ts/odata2ts": "^0.39.1",
+    "@odata2ts/odata-core": "^0.6.0",
     "@vscode-elements/elements-lite": "^0.3.0",
     "@vscode/codicons": "^0.0.36",
     "@vscode/prompt-tsx": "^0.3.0-alpha.23",
