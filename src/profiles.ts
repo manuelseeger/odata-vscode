@@ -43,6 +43,7 @@ export class ProfileTreeProvider
             vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
             vscode.commands.registerCommand(commands.addProfile, this.openProfileWebview, this),
             vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
+            vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
             vscode.commands.registerCommand(
                 profileCommands.editProfile,
                 (profileItem: ProfileItem) => {
@@ -99,6 +100,28 @@ export class ProfileTreeProvider
             this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
         }
         this.context.globalState.update(globalStates.profiles, profiles);
+        this.refresh();
+    }
+
+    /**
+     * Prompt the user to select a profile from the list of profiles.
+     */
+    async selectProfile() {
+        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
+        if (profiles.length === 0) {
+            return;
+        }
+        const profileName = await vscode.window.showQuickPick(
+            profiles.map((p) => p.name),
+            {
+                placeHolder: "Select an endpoint",
+            },
+        );
+        if (!profileName) {
+            return;
+        }
+        const profile = profiles.find((p) => p.name === profileName);
+        this.context.globalState.update(globalStates.selectedProfile, profile);
         this.refresh();
     }
 
@@ -449,6 +472,9 @@ export class ProfileTreeProvider
         return { data: metadata, tokenCount, filteredCount, limits };
     }
 
+    /**
+     * Send metadata payload to the webview panel.
+     */
     private async sendMetadataToWebview(metadata: string) {
         if (!this.currentWebviewPanel) {
             return;
