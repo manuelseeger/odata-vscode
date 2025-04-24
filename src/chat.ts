@@ -39,7 +39,10 @@ export class ChatParticipantProvider extends Disposable {
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken,
     ) => {
-        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        // Use the internal command to get the selected profile with secrets
+        const profile = await vscode.commands.executeCommand<Profile | undefined>(
+            internalCommands.getSelectedProfileWithSecrets,
+        );
         if (!profile) {
             vscode.window.showWarningMessage("No profile selected.");
             return;

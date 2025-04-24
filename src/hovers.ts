@@ -1,4 +1,4 @@
-import { globalStates, ODataMode } from "./configuration";
+import { globalStates, ODataMode, internalCommands } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { Profile } from "./contracts/types";
 import {
@@ -29,7 +29,10 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
         const wordRange = document.getWordRangeAtPosition(position);
         const word = document.getText(wordRange);
 
-        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        // Use the internal command to get the selected profile with secrets
+        const profile = await vscode.commands.executeCommand<Profile | undefined>(
+            internalCommands.getSelectedProfileWithSecrets,
+        );
         if (!profile) {
             return;
         }

@@ -14,6 +14,7 @@ export const commands = {
 export const internalCommands = {
     openAndRunQuery: `${APP_NAME}.openAndRunQuery`,
     requestMetadata: `${APP_NAME}.requestMetadata`,
+    getSelectedProfileWithSecrets: `${APP_NAME}.getSelectedProfileWithSecrets`,
 };
 
 export const globalStates = {

@@ -110,7 +110,10 @@ export class CommandProvider extends Disposable {
      * @param query The query to show in the editor.
      */
     private async openQuery(query: string) {
-        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        // Use the internal command to get the selected profile with secrets
+        const profile = await vscode.commands.executeCommand<Profile | undefined>(
+            internalCommands.getSelectedProfileWithSecrets,
+        );
         if (!profile) {
             return;
         }
@@ -146,7 +149,10 @@ export class CommandProvider extends Disposable {
      */
     private async runQuery(query: string) {
         const config = getConfig();
-        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        // Use the internal command to get the selected profile with secrets
+        const profile = await vscode.commands.executeCommand<Profile | undefined>(
+            internalCommands.getSelectedProfileWithSecrets,
+        );
         if (!profile) {
             return;
         }

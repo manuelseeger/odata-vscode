@@ -30,8 +30,6 @@ export class ProfileTreeProvider
         new vscode.EventEmitter<ProfileItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<ProfileItem | undefined | void> =
         this._onDidChangeTreeData.event;
-
-    // Add a class-level property to store the webview panel
     private currentWebviewPanel: vscode.WebviewPanel | undefined;
 
     constructor(
@@ -63,6 +61,13 @@ export class ProfileTreeProvider
                     await this.requestProfileMetadata(profileItem.profile);
                 },
             ),
+            // Register internal command for getting selected profile with secrets
+            vscode.commands.registerCommand(
+                internalCommands.getSelectedProfileWithSecrets,
+                async () => {
+                    return await this.getSelectedProfile();
+                },
+            ),
         ];
     }
 
@@ -71,65 +76,122 @@ export class ProfileTreeProvider
         if (selectedProfile && selectedProfile.name === element.profile.name) {
             element.iconPath = new vscode.ThemeIcon("check");
         }
-
         return element;
     }
 
     getChildren(): ProfileItem[] {
-        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        return profiles.map((profile) => new ProfileItem(profile));
+        const profiles: Profile[] = this.context.globalState.get<Profile[]>(
+            globalStates.profiles,
+            [],
+        );
+        return profiles.map((profile: Profile) => new ProfileItem(profile));
     }
-    addProfile(profile: Profile) {
-        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        profiles.push(profile);
-        this.context.globalState.update(globalStates.profiles, profiles);
-        this.refresh();
-    }
+
     refresh() {
         this._onDidChangeTreeData.fire();
     }
 
-    deleteProfile(profile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        profiles = profiles.filter((p) => p.name !== profile.name);
-        if (profiles.length === 0) {
-            this.context.globalState.update(globalStates.selectedProfile, undefined);
-        } else if (
-            this.context.globalState.get<Profile>(globalStates.selectedProfile)?.name ===
-            profile.name
-        ) {
-            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
-        }
-        this.context.globalState.update(globalStates.profiles, profiles);
-        this.refresh();
+    // Helper: get the key for secrets storage
+    private getSecretKey(profileName: string): string {
+        return `${APP_NAME}.profile.secret.${profileName}`;
     }
 
-    private saveProfile(newProfile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        const index = profiles.findIndex((p) => p.name === newProfile.name);
-        if (index >= 0) {
-            profiles[index] = newProfile;
-        } else {
-            profiles.push(newProfile);
+    // Helper: extract secrets from a profile
+    private extractSecrets(profile: Profile): Record<string, string | undefined> {
+        const { auth } = profile;
+        return {
+            password: auth.password,
+            token: auth.token,
+            passphrase: auth.passphrase,
+        };
+    }
+
+    // Helper: remove secrets from a profile (for globalState)
+    private stripSecrets(profile: Profile): Profile {
+        const { auth } = profile;
+        return {
+            ...profile,
+            auth: {
+                ...auth,
+                password: undefined,
+                token: undefined,
+                passphrase: undefined,
+            },
+        };
+    }
+
+    // Helper: save secrets to context.secrets
+    private async saveSecrets(profile: Profile) {
+        const key = this.getSecretKey(profile.name);
+        const secrets = this.extractSecrets(profile);
+        await this.context.secrets.store(key, JSON.stringify(secrets));
+    }
+
+    // Helper: load secrets from context.secrets and merge into profile
+    private async loadSecrets(profile: Profile): Promise<Profile> {
+        const key = this.getSecretKey(profile.name);
+        const secretsRaw = await this.context.secrets.get(key);
+        if (!secretsRaw) {
+            return profile;
         }
+        let secrets: Record<string, string | undefined> = {};
+        try {
+            secrets = JSON.parse(secretsRaw);
+        } catch {}
+        return {
+            ...profile,
+            auth: {
+                ...profile.auth,
+                ...secrets,
+            },
+        };
+    }
 
+    // Helper: save profile (non-secrets to globalState, secrets to secrets)
+    private async saveProfile(newProfile: Profile) {
+        let profiles: Profile[] = this.context.globalState.get<Profile[]>(
+            globalStates.profiles,
+            [],
+        );
+        const index = profiles.findIndex((p: Profile) => p.name === newProfile.name);
+        const profileNoSecrets = this.stripSecrets(newProfile);
+        if (index >= 0) {
+            profiles[index] = profileNoSecrets;
+        } else {
+            profiles.push(profileNoSecrets);
+        }
         this.context.globalState.update(globalStates.profiles, profiles);
-
+        await this.saveSecrets(newProfile);
         if (profiles.length === 1) {
             this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
         }
+    }
+
+    async getSelectedProfile(): Promise<Profile | undefined> {
+        const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        if (!selected) {
+            return undefined;
+        }
+        return this.loadSecrets(selected);
+    }
+
+    setSelectedProfile(profile: Profile) {
+        this.context.globalState.update(globalStates.selectedProfile, this.stripSecrets(profile));
     }
 
     /**
      * Prompt the user to select a profile from the list of profiles.
      */
     async selectProfile() {
-        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
+        const profiles: Profile[] = this.context.globalState.get<Profile[]>(
+            globalStates.profiles,
+            [],
+        );
         if (profiles.length === 0) {
             return;
         }
         const profileName = await vscode.window.showQuickPick(
-            profiles.map((p) => p.name),
+            profiles.map((p: Profile) => p.name),
             {
                 placeHolder: "Select an endpoint",
             },
@@ -137,9 +199,11 @@ export class ProfileTreeProvider
         if (!profileName) {
             return;
         }
-        const profile = profiles.find((p) => p.name === profileName);
-        this.context.globalState.update(globalStates.selectedProfile, profile);
-        this.refresh();
+        const profile = profiles.find((p: Profile) => p.name === profileName);
+        if (profile) {
+            this.setSelectedProfile(profile);
+            this.refresh();
+        }
     }
 
     /**
@@ -149,25 +213,24 @@ export class ProfileTreeProvider
      * If no profile is found, return an empty string.
      */
     async getEndpointMetadata() {
-        let profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        if (!profile) {
+        let selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        if (!selected) {
             await vscode.commands.executeCommand<string>(commands.selectProfile);
-            profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+            selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         }
-        if (!profile) {
+        if (!selected) {
             vscode.window.showErrorMessage("No profile selected or found.");
             return;
         }
-
+        const profile = await this.loadSecrets(selected);
         const metadata = await this.requestProfileMetadata(profile);
         if (!metadata) {
             vscode.window.showErrorMessage("No metadata found for the selected profile.");
             return;
         }
         profile.metadata = metadata;
-
-        this.saveProfile(profile);
-        this.context.globalState.update(globalStates.selectedProfile, profile);
+        await this.saveProfile(profile);
+        this.setSelectedProfile(profile);
         vscode.window.showInformationMessage(
             `Metadata updated successfully for profile ${profile.name}.`,
         );
@@ -176,13 +239,14 @@ export class ProfileTreeProvider
     }
 
     async requestProfileMetadata(profile: Profile): Promise<string | undefined> {
+        const fullProfile = await this.loadSecrets(profile);
         const metadata = await vscode.commands.executeCommand<string>(
             internalCommands.requestMetadata,
-            profile,
+            fullProfile,
         );
         if (metadata) {
-            profile.metadata = metadata;
-            this.saveProfile(profile);
+            fullProfile.metadata = metadata;
+            await this.saveProfile(fullProfile);
             return metadata;
         }
     }
@@ -224,7 +288,6 @@ export class ProfileTreeProvider
                 { enableScripts: true },
             );
         }
-
         this.currentWebviewPanel.title = profile
             ? `Edit Profile: ${profile.name}`
             : "Create HTTP Profile";
@@ -233,17 +296,12 @@ export class ProfileTreeProvider
             profile,
         );
         this.currentWebviewPanel.reveal(vscode.ViewColumn.One);
-
-        // Send profile data to webview whenever a profile is opened/changed
-        await this.sendProfileToWebview(profile);
-
-        // Handle all webview messages
+        await this.sendProfileToWebview(profile ? await this.loadSecrets(profile) : undefined);
         this.currentWebviewPanel.webview.onDidReceiveMessage(
             async (message) => {
                 if (message.command === "saveProfile") {
                     const newProfile: Profile = parseProfile(message.data);
-                    this.saveProfile(newProfile);
-                    // Update token counts and model info after saving (e.g., metadata edit)
+                    await this.saveProfile(newProfile);
                     if (newProfile.metadata) {
                         await this.sendMetadataToWebview(newProfile.metadata);
                     }
@@ -251,7 +309,6 @@ export class ProfileTreeProvider
                 } else if (message.command === "requestMetadata") {
                     const newProfile = parseProfile(message.data);
                     const metadata = await this.requestProfileMetadata(newProfile);
-
                     if (metadata) {
                         await this.sendMetadataToWebview(metadata);
                     }
@@ -272,15 +329,14 @@ export class ProfileTreeProvider
                         });
                     }
                 } else if (message.command === "webviewLoaded") {
-                    // Initial load of the webview, send the profile data
-                    await this.sendProfileToWebview(profile);
+                    await this.sendProfileToWebview(
+                        profile ? await this.loadSecrets(profile) : undefined,
+                    );
                 }
             },
             undefined,
             this.context.subscriptions,
         );
-
-        // Handle panel disposal
         this.currentWebviewPanel.onDidDispose(() => {
             this.currentWebviewPanel = undefined;
         });
@@ -340,6 +396,27 @@ export class ProfileTreeProvider
         const filteredXml = this.metadataService.getFilteredMetadataXml(metadata, getConfig());
         const filteredCount = this.tokenizer.approximateTokenCount(filteredXml);
         return { tokenCount, filteredCount };
+    }
+
+    async deleteProfile(profile: Profile) {
+        let profiles: Profile[] = this.context.globalState.get<Profile[]>(
+            globalStates.profiles,
+            [],
+        );
+        profiles = profiles.filter((p: Profile) => p.name !== profile.name);
+        if (profiles.length === 0) {
+            this.context.globalState.update(globalStates.selectedProfile, undefined);
+        } else if (
+            this.context.globalState.get<Profile>(globalStates.selectedProfile)?.name ===
+            profile.name
+        ) {
+            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
+        }
+        this.context.globalState.update(globalStates.profiles, profiles);
+        // Remove secrets from context.secrets
+        const key = this.getSecretKey(profile.name);
+        await this.context.secrets.delete(key);
+        this.refresh();
     }
 }
 

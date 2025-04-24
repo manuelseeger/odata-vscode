@@ -121,6 +121,18 @@ export async function setupTests(
         }),
     );
 
+    const secretsStore: Record<string, string | undefined> = {};
+    const secretsMock = {
+        get: async (key: string) => secretsStore[key],
+        store: async (key: string, value: string) => {
+            secretsStore[key] = value;
+        },
+        delete: async (key: string) => {
+            delete secretsStore[key];
+        },
+    };
+    when((mockContext as any).secrets).thenReturn(secretsMock);
+
     return {
         profile,
         context: instance(mockContext),
