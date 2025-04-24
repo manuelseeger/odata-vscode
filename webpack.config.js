@@ -31,16 +31,7 @@ const extensionConfig = {
     module: {
         rules: [
             {
-                test: /\.tsx$/,
-                exclude: /node_modules/,
-                use: [
-                    {
-                        loader: "ts-loader",
-                    },
-                ],
-            },
-            {
-                test: /\.ts$/,
+                test: /\.tsx?$/,
                 exclude: /node_modules/,
                 use: [
                     {
@@ -57,20 +48,7 @@ const extensionConfig = {
     plugins: [
         new CopyPlugin({
             patterns: [
-                {
-                    from: path.resolve(__dirname, "node_modules/@vscode/codicons/dist"),
-                    to: path.resolve(__dirname, "dist/modules/@vscode/codicons/dist"),
-                },
-                {
-                    from: path.resolve(
-                        __dirname,
-                        "node_modules/@vscode-elements/elements-lite/components",
-                    ),
-                    to: path.resolve(
-                        __dirname,
-                        "dist/modules/@vscode-elements/elements-lite/components",
-                    ),
-                },
+                
                 {
                     from: path.resolve(__dirname, "src/definitions/odataV2.json"),
                 },
@@ -87,14 +65,13 @@ const extensionConfig = {
 
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
-// Add separate webviewConfig for bundling React UI into assets
+// Add separate webviewConfig for bundling frontend assets
 /** @type WebpackConfig */
 const webviewConfig = {
     target: "web",
     mode: "none",
     entry: {
         styles: "./src/webview/styles.ts",
-        main: "./src/webview/main.ts",
     },
     output: {
         path: path.resolve(__dirname, "dist/webview"),

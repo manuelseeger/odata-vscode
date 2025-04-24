@@ -103,6 +103,22 @@ export class ProfileTreeProvider
         this.refresh();
     }
 
+    private saveProfile(newProfile: Profile) {
+        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
+        const index = profiles.findIndex((p) => p.name === newProfile.name);
+        if (index >= 0) {
+            profiles[index] = newProfile;
+        } else {
+            profiles.push(newProfile);
+        }
+
+        this.context.globalState.update(globalStates.profiles, profiles);
+
+        if (profiles.length === 1) {
+            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
+        }
+    }
+
     /**
      * Prompt the user to select a profile from the list of profiles.
      */
@@ -170,109 +186,12 @@ export class ProfileTreeProvider
         }
     }
 
-    public async openProfileWebview(profile?: Profile) {
-        if (!this.currentWebviewPanel) {
-            this.currentWebviewPanel = vscode.window.createWebviewPanel(
-                "profileManager",
-                profile ? `Edit Profile: ${profile.name}` : "Create HTTP Profile",
-                vscode.ViewColumn.One,
-                { enableScripts: true },
-            );
-        }
-
-        this.currentWebviewPanel.title = profile
-            ? `Edit Profile: ${profile.name}`
-            : "Create HTTP Profile";
-        this.currentWebviewPanel.webview.html = await this._getWebViewContent(
-            this.currentWebviewPanel.webview,
-            profile,
-        );
-        this.currentWebviewPanel.reveal(vscode.ViewColumn.One);
-
-        this.currentWebviewPanel.webview.onDidReceiveMessage(
-            async (message) => {
-                if (message.command === "saveProfile") {
-                    const newProfile: Profile = parseProfile(message.data);
-                    this.saveProfile(newProfile);
-                    // Update token counts and model info after saving (e.g., metadata edit)
-                    if (newProfile.metadata) {
-                        await this.sendMetadataToWebview(newProfile.metadata);
-                    }
-                    this.refresh();
-                } else if (message.command === "requestMetadata") {
-                    const newProfile = parseProfile(message.data);
-                    const metadata = await this.requestProfileMetadata(newProfile);
-
-                    if (metadata) {
-                        await this.sendMetadataToWebview(metadata);
-                    }
-                    this.refresh();
-                } else if (message.command === "openFileDialog") {
-                    const type = message.inputName;
-                    const fileUri = await vscode.window.showOpenDialog({
-                        canSelectFiles: true,
-                        canSelectFolders: false,
-                        canSelectMany: false,
-                        filters: getFiltersForType(type),
-                    });
-                    if (fileUri && fileUri.length > 0) {
-                        this.currentWebviewPanel!.webview.postMessage({
-                            command: "fileSelected",
-                            inputName: type,
-                            filePath: fileUri[0].path,
-                        });
-                    }
-                }
-            },
-            undefined,
-            this.context.subscriptions,
-        );
-        // If editing an existing profile with metadata, send model info on load
-        if (profile && profile.metadata) {
-            this.sendMetadataToWebview(profile.metadata);
-        }
-        // Handle panel disposal
-        this.currentWebviewPanel.onDidDispose(() => {
-            this.currentWebviewPanel = undefined;
-        });
-    }
-
-    private saveProfile(newProfile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        const index = profiles.findIndex((p) => p.name === newProfile.name);
-        if (index >= 0) {
-            profiles[index] = newProfile;
-        } else {
-            profiles.push(newProfile);
-        }
-
-        this.context.globalState.update(globalStates.profiles, profiles);
-
-        if (profiles.length === 1) {
-            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
-        }
-    }
-
     private async _getWebViewContent(webview: vscode.Webview, profile?: Profile): Promise<string> {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this.context.extensionUri, "assets", "main.js"),
         );
-        const nonce = getNonce();
 
-        // Initialize the profile page with token counts and model limits
-        let initialMessageScript = "";
-        if (profile && profile.metadata) {
-            const payload = await this.buildMetadataPayload(profile.metadata);
-            initialMessageScript =
-                `<script nonce="${nonce}">` +
-                `window.dispatchEvent(new MessageEvent('message',{data:{` +
-                `command:'metadataReceived',` +
-                `data:${JSON.stringify(payload.data)},` +
-                `tokenCount:${payload.tokenCount},` +
-                `filteredCount:${payload.filteredCount},` +
-                `limits:${JSON.stringify(payload.limits)}` +
-                `}}));</script>`;
-        }
+        // No inline script, all initialization will be done via postMessage
         const stylesUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "webview.bundle.css"),
         );
@@ -281,7 +200,7 @@ export class ProfileTreeProvider
         <!DOCTYPE html>
         <html lang="en">
           <head>
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">            
+            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src ${webview.cspSource};">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${profile ? "Edit Profile" : "Create Profile"}</title>
             <meta charset="UTF-8">
@@ -362,7 +281,7 @@ export class ProfileTreeProvider
                                           `<div>
                              <input type="text" class="headerKey vscode-textfield" placeholder="Header Name" value="${key}"/>
                              <input type="text" class="headerValue vscode-textfield" placeholder="Header Value" value="${profile.headers[key]}"/>
-                             <div class="icon" onclick="this.parentElement.remove();"><i class="codicon codicon-trash"></i></div>
+                             <div class="icon"><i class="codicon codicon-trash"></i></div>
                     </div>`,
                                   )
                                   .join("")
@@ -420,26 +339,91 @@ export class ProfileTreeProvider
                   <div id="modelInfo">No info on Copilot models yet, retry.</div>
               </div>
             </details>
-            <script nonce="${nonce}" src="${scriptUri}"></script>
-            ${initialMessageScript}
+            <script src="${scriptUri}"></script>
           </body>
         </html>
         `;
     }
 
-    /**
-     * Compute raw token counts and filtered token counts for a metadata string.
-     */
-    private getMetadataCounts(metadata: string) {
-        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
-        const filteredXml = this.metadataService.getFilteredMetadataXml(metadata, getConfig());
-        const filteredCount = this.tokenizer.approximateTokenCount(filteredXml);
-        return { tokenCount, filteredCount };
+    public async openProfileWebview(profile?: Profile) {
+        if (!this.currentWebviewPanel) {
+            this.currentWebviewPanel = vscode.window.createWebviewPanel(
+                "profileManager",
+                profile ? `Edit Profile: ${profile.name}` : "Create HTTP Profile",
+                vscode.ViewColumn.One,
+                { enableScripts: true },
+            );
+        }
+
+        this.currentWebviewPanel.title = profile
+            ? `Edit Profile: ${profile.name}`
+            : "Create HTTP Profile";
+        this.currentWebviewPanel.webview.html = await this._getWebViewContent(
+            this.currentWebviewPanel.webview,
+            profile,
+        );
+        this.currentWebviewPanel.reveal(vscode.ViewColumn.One);
+
+        // Send initial metadata/model info after webview loads
+        this.currentWebviewPanel.webview.onDidReceiveMessage(
+            async (message) => {
+                if (message.command === "saveProfile") {
+                    const newProfile: Profile = parseProfile(message.data);
+                    this.saveProfile(newProfile);
+                    // Update token counts and model info after saving (e.g., metadata edit)
+                    if (newProfile.metadata) {
+                        await this.sendMetadataToWebview(newProfile.metadata);
+                    }
+                    this.refresh();
+                } else if (message.command === "requestMetadata") {
+                    const newProfile = parseProfile(message.data);
+                    const metadata = await this.requestProfileMetadata(newProfile);
+
+                    if (metadata) {
+                        await this.sendMetadataToWebview(metadata);
+                    }
+                    this.refresh();
+                } else if (message.command === "openFileDialog") {
+                    const type = message.inputName;
+                    const fileUri = await vscode.window.showOpenDialog({
+                        canSelectFiles: true,
+                        canSelectFolders: false,
+                        canSelectMany: false,
+                        filters: getFiltersForType(type),
+                    });
+                    if (fileUri && fileUri.length > 0) {
+                        this.currentWebviewPanel!.webview.postMessage({
+                            command: "fileSelected",
+                            inputName: type,
+                            filePath: fileUri[0].path,
+                        });
+                    }
+                }
+            },
+            undefined,
+            this.context.subscriptions,
+        );
+
+        // Send initial metadata/model info after webview is loaded
+        this.currentWebviewPanel.webview.onDidReceiveMessage(
+            (message) => {
+                if (message.command === "webviewLoaded" && profile && profile.metadata) {
+                    this.sendMetadataToWebview(profile.metadata);
+                }
+            },
+            undefined,
+            this.context.subscriptions,
+        );
+
+        // Notify webview that it should request initial data
+        this.currentWebviewPanel.webview.postMessage({ command: "webviewLoaded" });
+
+        // Handle panel disposal
+        this.currentWebviewPanel.onDidDispose(() => {
+            this.currentWebviewPanel = undefined;
+        });
     }
 
-    /**
-     * Prepare metadata payload with raw data, token counts, and model limits.
-     */
     private async buildMetadataPayload(metadata: string) {
         const { tokenCount, filteredCount } = this.getMetadataCounts(metadata);
         const models = await vscode.lm.selectChatModels();
@@ -460,15 +444,16 @@ export class ProfileTreeProvider
         const payload = await this.buildMetadataPayload(metadata);
         this.currentWebviewPanel.webview.postMessage({ command: "metadataReceived", ...payload });
     }
-}
 
-function getNonce() {
-    let text = "";
-    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    /**
+     * Compute raw token counts and filtered token counts for a metadata string.
+     */
+    private getMetadataCounts(metadata: string) {
+        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
+        const filteredXml = this.metadataService.getFilteredMetadataXml(metadata, getConfig());
+        const filteredCount = this.tokenizer.approximateTokenCount(filteredXml);
+        return { tokenCount, filteredCount };
     }
-    return text;
 }
 
 function getFiltersForType(type: string): { [name: string]: string[] } {
