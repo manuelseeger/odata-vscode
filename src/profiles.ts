@@ -273,31 +273,9 @@ export class ProfileTreeProvider
                 `limits:${JSON.stringify(payload.limits)}` +
                 `}}));</script>`;
         }
-        const styles = [
-            "@vscode/codicons/dist/codicon.css",
-            "@vscode-elements/elements-lite/components/action-button/action-button.css",
-            "@vscode-elements/elements-lite/components/label/label.css",
-            "@vscode-elements/elements-lite/components/button/button.css",
-            "@vscode-elements/elements-lite/components/textfield/textfield.css",
-            "@vscode-elements/elements-lite/components/textarea/textarea.css",
-            "@vscode-elements/elements-lite/components/select/select.css",
-            "@vscode-elements/elements-lite/components/divider/divider.css",
-            "@vscode-elements/elements-lite/components/progress-ring/progress-ring.css",
-            "@vscode-elements/elements-lite/components/collapsible/collapsible.css",
-        ];
-        const stylesUriList = styles.map((style) =>
-            webview.asWebviewUri(
-                vscode.Uri.file(path.join(this.context.extensionPath, "dist", "modules", style)),
-            ),
+        const stylesUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "webview.bundle.css"),
         );
-        stylesUriList.push(
-            webview.asWebviewUri(
-                vscode.Uri.joinPath(this.context.extensionUri, "assets", "style.css"),
-            ),
-        );
-        const linkTags = stylesUriList
-            .map((uri) => `<link href="${uri}" rel="stylesheet" />`)
-            .join("\n");
 
         return `
         <!DOCTYPE html>
@@ -307,7 +285,7 @@ export class ProfileTreeProvider
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>${profile ? "Edit Profile" : "Create Profile"}</title>
             <meta charset="UTF-8">
-            ${linkTags}
+            <link href="${stylesUri}" rel="stylesheet" />
           </head>
           <body>
             <h1>${profile ? "Edit Profile" : "Create Profile"}</h1>

@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Click to open query in mouse hover
 - Add `odata.openResultInNewPane` setting to control if query results open in a new pane (new default) or the active pane
 
+### Fixed
+
+- Profile UI not updating after new profile selection
+
 ## [0.3.0] - 2025-04-19
 
 ### Added
