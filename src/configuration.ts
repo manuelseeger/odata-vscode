@@ -29,6 +29,7 @@ export function getConfig(): IODataConfiguration {
         defaultFormat: extensionSettings.get("defaultFormat") as ODataFormat,
         strictParser: extensionSettings.get("strictParser", true),
         disableRunner: extensionSettings.get("disableRunner", false),
+        openResultInNewPane: extensionSettings.get("openResultInNewPane", true),
     };
     return config;
 }

@@ -2,7 +2,7 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Language and Query Runner",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "manuelseeger",
   "repository": {
     "type": "git",
@@ -179,6 +179,11 @@
           "type": "boolean",
           "description": "Disable the OData query runner.",
           "default": false
+        },
+        "odata.openResultInNewPane": {
+          "type": "boolean",
+          "description": "Open result document in new pane when running queries.",
+          "default": true
         }
       }
     }

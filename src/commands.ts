@@ -38,7 +38,7 @@ export class CommandProvider extends Disposable {
     private registerCommands() {
         this.subscriptions = [
             vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
-            vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
+
             vscode.commands.registerCommand(commands.copyQuery, this.copyQueryToClipboard, this),
             vscode.commands.registerCommand(
                 internalCommands.openAndRunQuery,
@@ -103,27 +103,6 @@ export class CommandProvider extends Disposable {
     }
 
     /**
-     * Prompt the user to select a profile from the list of profiles.
-     */
-    async selectProfile() {
-        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        if (profiles.length === 0) {
-            return;
-        }
-        const profileName = await vscode.window.showQuickPick(
-            profiles.map((p) => p.name),
-            {
-                placeHolder: "Select an endpoint",
-            },
-        );
-        if (!profileName) {
-            return;
-        }
-        const profile = profiles.find((p) => p.name === profileName);
-        this.context.globalState.update(globalStates.selectedProfile, profile);
-    }
-
-    /**
      * Open the query in the editor.
      *
      * This is used by the chat handler to open queries the chat participant generates.
@@ -166,12 +145,11 @@ export class CommandProvider extends Disposable {
      * @param query The query to run.
      */
     private async runQuery(query: string) {
+        const config = getConfig();
         const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (!profile) {
             return;
         }
-
-        const defaultFormat = getConfig().defaultFormat;
 
         let url: URL;
         try {
@@ -182,7 +160,7 @@ export class CommandProvider extends Disposable {
         }
 
         if (!query.endsWith("$count") && !url.searchParams.has("$format")) {
-            url.searchParams.append("$format", defaultFormat);
+            url.searchParams.append("$format", config.defaultFormat);
         }
 
         const res = await this.runner.run(url.href, profile);
@@ -222,10 +200,11 @@ export class CommandProvider extends Disposable {
             }
         }
 
-        const editor = await vscode.window.showTextDocument(this.resultDocument, {
-            preview: false,
-            viewColumn: vscode.ViewColumn.Beside,
-        });
+        const showOptions: vscode.TextDocumentShowOptions = { preview: false };
+        if (config.openResultInNewPane) {
+            showOptions.viewColumn = vscode.ViewColumn.Beside;
+        }
+        const editor = await vscode.window.showTextDocument(this.resultDocument, showOptions);
         const entireRange = new vscode.Range(
             this.resultDocument.positionAt(0),
             this.resultDocument.positionAt(this.resultDocument.getText().length),
@@ -284,6 +263,7 @@ export class CommandProvider extends Disposable {
      */
     async copyQueryToClipboard(): Promise<string | undefined> {
         const editor = vscode.window.activeTextEditor;
+        const config = getConfig();
         if (!editor) {
             vscode.window.showInformationMessage("No active editor found.");
             return;
@@ -299,8 +279,8 @@ export class CommandProvider extends Disposable {
             const text = document.getText();
             let combinedUrl = combineODataUrl(text);
             const url = new URL(combinedUrl);
-            if (!url.searchParams.has("$format") && getConfig().defaultFormat) {
-                combinedUrl += `&$format=${getConfig().defaultFormat}`;
+            if (!url.searchParams.has("$format") && config.defaultFormat) {
+                combinedUrl += `&$format=${config.defaultFormat}`;
             }
 
             await vscode.env.clipboard.writeText(combinedUrl);

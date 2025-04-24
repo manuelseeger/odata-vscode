@@ -39,15 +39,15 @@ In Copilot Chat, chat with participant `@odata`, example:
 | `odata.getMetadata`   | Download the metadata for the selected profile. _Use this to test if your endpoint authentication works_ |
 
 ## Settings
-
 | Setting                        | Description                                                                                  | Default Value |
 |--------------------------------|----------------------------------------------------------------------------------------------|---------------|
 | `odata.defaultFormat`          | Set the default response format                                                              | `json`        |
 | `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.                                     | `[]`          |
-| `odata.metadata.filterXPath`      | List of xpath expressions. Matching elements or attributes will be filtered out. | `["//edm:Annotation"]`          |
-| `odata.metadata.xpathDefaultNsPrefix`      | A prefix for the default namespace (usually on <Schema>) used in your XPath expression | `edm`          |
+| `odata.metadata.filterXPath`   | List of xpath expressions. Matching elements or attributes will be filtered out.             | `["//edm:Annotation"]` |
+| `odata.metadata.xpathDefaultNsPrefix` | A prefix for the default namespace (usually on &lt;Schema&gt;) used in your XPath expression | `edm`          |
 | `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`).               | `true`        |
 | `odata.disableRunner`          | Disable the query runner, for example if your authentication is not supported.               | `false`       |
+| `odata.openResultInNewPane`    | Open result document in new pane when running queries.                              | `true`        |
 
 ## Known Issues and Limitations
 

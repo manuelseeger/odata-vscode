@@ -106,12 +106,10 @@ suite("CommandProvider", () => {
 
         test("should not invoke runner if disabled", async function () {
             // Arrange
-            this.skip();
-            const config = vscode.workspace.getConfiguration("myExtension");
-            const query = `GET ${profile.baseUrl}MyCollection`;
+            const config = vscode.workspace.getConfiguration("odata");
+            await config.update("disableRunner", true, vscode.ConfigurationTarget.Workspace);
 
-            // Set a configuration value
-            await config.update("odata.disableRunner", true, vscode.ConfigurationTarget.Workspace);
+            const query = `GET ${profile.baseUrl}MyCollection`;
 
             // Act
             await commandProvider.openAndRunQuery(query);
@@ -119,11 +117,70 @@ suite("CommandProvider", () => {
             // Assert
             verify(runnerMock.run(anything(), anything())).never();
         });
+
+        suite("Result view pane configuration", () => {
+            test("should open result in new pane when setting is true", async () => {
+                // Arrange: set setting to open in new pane
+                const config = vscode.workspace.getConfiguration("odata");
+                await config.update(
+                    "openResultInNewPane",
+                    true,
+                    vscode.ConfigurationTarget.Workspace,
+                );
+                const document = await vscode.workspace.openTextDocument({
+                    content: `${profile.baseUrl}Orders?$select=OrderID,OrderDate`,
+                    language: "odata",
+                });
+                await vscode.window.showTextDocument(document, {
+                    preview: false,
+                });
+                await new Promise((resolve) => setTimeout(resolve, 50));
+
+                // Act
+                await commandProvider.runEditorQuery();
+                await new Promise((resolve) => setTimeout(resolve, 50));
+
+                // Assert: active editor should be in beside viewColumn
+                const active = vscode.window.activeTextEditor;
+                assert.ok(active);
+                assert.strictEqual(active.viewColumn, vscode.ViewColumn.Two);
+            });
+
+            test("should open result in same pane when setting is false", async () => {
+                // Arrange: set setting to open in same pane
+                const config = vscode.workspace.getConfiguration("odata");
+                await config.update(
+                    "openResultInNewPane",
+                    false,
+                    vscode.ConfigurationTarget.Workspace,
+                );
+                const document = await vscode.workspace.openTextDocument({
+                    content: `${profile.baseUrl}Orders?$select=OrderID,OrderDate`,
+                    language: "odata",
+                });
+                const editor = await vscode.window.showTextDocument(document, {
+                    preview: false,
+                });
+                const initialCol = editor.viewColumn;
+
+                // Act
+                await commandProvider.runEditorQuery();
+                await new Promise((resolve) => setTimeout(resolve, 50));
+
+                // Assert: active editor should remain in initial viewColumn
+                const active = vscode.window.activeTextEditor;
+                assert.ok(active);
+                assert.strictEqual(active.viewColumn, initialCol);
+            });
+        });
     });
 
     suite("Chat invoked commands", () => {
         test("shoud open incorrect query", async () => {
             // Arrange
+            const config = vscode.workspace.getConfiguration("odata");
+            await config.update("disableRunner", true, vscode.ConfigurationTarget.Workspace);
+
             const query = `GET ${profile.baseUrl}DoesNotExist`;
             const expected = `DoesNotExist`;
 

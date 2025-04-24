@@ -89,7 +89,7 @@ suite("MetadataModelService", () => {
 
     suite("filterMetadataXml", () => {
         test("should filter namespace from XML", () => {
-            const config = {
+            const config: IODataConfiguration = {
                 metadata: {
                     filterNs: ["http://docs.oasis-open.org/odata/ns/edm"],
                     filterXPath: [],
@@ -98,6 +98,7 @@ suite("MetadataModelService", () => {
                 defaultFormat: "json",
                 strictParser: true,
                 disableRunner: false,
+                openResultInNewPane: false,
             } as IODataConfiguration;
 
             const result = service.getFilteredMetadataXml(metadataString, config);
@@ -118,6 +119,7 @@ suite("MetadataModelService", () => {
                 defaultFormat: "json",
                 strictParser: true,
                 disableRunner: false,
+                openResultInNewPane: false,
             } as IODataConfiguration;
 
             assert.throws(() => {
@@ -135,6 +137,7 @@ suite("MetadataModelService", () => {
                 defaultFormat: "json",
                 strictParser: true,
                 disableRunner: false,
+                openResultInNewPane: false,
             } as IODataConfiguration;
 
             const result = service.getFilteredMetadataXml(metadataString, config);
@@ -162,6 +165,7 @@ suite("MetadataModelService", () => {
                 defaultFormat: "json",
                 strictParser: true,
                 disableRunner: false,
+                openResultInNewPane: false,
             } as IODataConfiguration;
 
             const result = service.getFilteredMetadataXml(metadataString, config);
@@ -190,6 +194,7 @@ suite("MetadataModelService", () => {
                 defaultFormat: "json",
                 strictParser: true,
                 disableRunner: false,
+                openResultInNewPane: false,
             } as IODataConfiguration;
 
             const result = service.getFilteredMetadataXml(largeXml, config);

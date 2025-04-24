@@ -44,6 +44,7 @@ export interface IODataConfiguration {
     defaultFormat: ODataFormat;
     strictParser: boolean;
     disableRunner: boolean;
+    openResultInNewPane: boolean;
 }
 
 export namespace odata {
