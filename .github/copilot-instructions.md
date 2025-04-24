@@ -1,6 +1,6 @@
 Development: 
 - This is a VSCode extension which provides programmatic language features for OData queries
-- Webview frontend code goes into ./assets/main.js and ./assets/style.css
+- Webview frontend code goes into ./src/webview
 - Make sure that ./src/contracts does not depend on the VSCode API
 
 Testing: 

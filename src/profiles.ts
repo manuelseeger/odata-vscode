@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import * as path from "path";
+import * as fs from "fs";
 
 import { Disposable } from "./provider";
 import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
@@ -188,161 +189,30 @@ export class ProfileTreeProvider
 
     private async _getWebViewContent(webview: vscode.Webview, profile?: Profile): Promise<string> {
         const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, "assets", "main.js"),
+            vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "main.js"),
         );
-
-        // No inline script, all initialization will be done via postMessage
         const stylesUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "webview.bundle.css"),
         );
+        const htmlPath = path.join(
+            this.context.extensionPath,
+            "src",
+            "webview",
+            "profileForm.html",
+        );
+        let html = fs.readFileSync(htmlPath, "utf8");
 
-        return `
-        <!DOCTYPE html>
-        <html lang="en">
-          <head>
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src ${webview.cspSource};">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${profile ? "Edit Profile" : "Create Profile"}</title>
-            <meta charset="UTF-8">
-            <link href="${stylesUri}" rel="stylesheet" />
-          </head>
-          <body>
-            <h1>${profile ? "Edit Profile" : "Create Profile"}</h1>
-            <form id="profileForm">
-              <div class="profile-form-row">
-                <div class="profile-form-column">
-                  <label for="name" class="vscode-label">Name</label>
-                  <input type="text" id="name" name="name" value="${profile ? profile.name : ""}" required class="vscode-textfield" /><br/><br/>
-                  
-                  <label for="baseUrl" class="vscode-label">Service URL</label>
-                  <p>Either provide the full URL of your $metadata file or the path where the $metadata file resides.</p>
-                  <input type="text" id="baseUrl" name="baseUrl" value="${profile ? profile.baseUrl : ""}" required  class="vscode-textfield full-width"/>
-                  <br/>
-                  <br/>
-                  <hr class="vscode-divider""/>
-                  
-                  <label for="authKind" class="vscode-label">Auth Type</label>
-                  <select id="authKind" name="authKind" class="vscode-select">
-                    <option value="none" ${profile && profile.auth.kind === "none" ? "selected" : ""}>None</option>
-                    <option value="basic" ${profile && profile.auth.kind === "basic" ? "selected" : ""}>Basic</option>
-                    <option value="bearer" ${profile && profile.auth.kind === "bearer" ? "selected" : ""}>Bearer</option>
-                    <option value="cliencert" ${profile && profile.auth.kind === "cliencert" ? "selected" : ""}>Client Cert</option>
-                  </select><br/><br/>
-
-                  <div id="basicFields" class="hidden">
-                    <label for="username" class="vscode-label">Username</label>
-                    <input type="text" id="username" name="username" class="vscode-textfield" value="${profile && profile.auth.username ? profile.auth.username : ""}"/><br/><br/>
-                    <label for="password" class="vscode-label">Password</label>
-                    <input type="password" id="password" name="password" class="vscode-textfield" value="${profile && profile.auth.password ? profile.auth.password : ""}"/><br/><br/>
-                  </div>
-                  <div id="bearerFields" class="hidden">
-                    <label for="token" class="vscode-label">Token</label>
-                    <input type="text" id="token" name="token" class="vscode-textfield" value="${profile && profile.auth.token ? profile.auth.token : ""}"/><br/><br/>
-                  </div>
-                  <div id="clientCertFields" class="hidden">
-                    <label for="cert" class="vscode-label">Certificate</label>
-                    <div>
-                        <input type="input" id="cert" name="cert" class="vscode-textfield" value="${profile && profile.auth.cert ? profile.auth.cert.path : ""}"/>
-                        <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
-                    </div>
-                    <br/><br/>
-                    <label for="key" class="vscode-label">Key</label>
-                    <div>
-                        <input type="input" id="key" name="key" class="vscode-textfield"  value="${profile && profile.auth.key ? profile.auth.key.path : ""}"/>
-                        <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
-                    </div>
-                  <br/>
-                  <br/>
-                  <hr class="vscode-divider""/>
-                  
-                    <label for="pfx" class="vscode-label">PFX</label>
-                    <div >
-                        <input type="text" id="pfx" name="pfx" class="vscode-textfield"  value="${profile && profile.auth.pfx ? profile.auth.pfx.path : ""}"/>
-                        <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
-                    </div>
-                    <br/><br/>
-                    <label for="passphrase" class="vscode-label">Passphrase</label>
-                    <input type="password" id="passphrase" name="passphrase" class="vscode-textfield" value="${profile && profile.auth.passphrase ? profile.auth.passphrase : ""}"/>
-                  </div>
-                  <br/>
-                  <br/>
-                  <hr class="vscode-divider""/>
-                
-                  <div class="headers-header">
-                    <label class="vscode-label">Headers</label>
-                    <div class="icon" id="addHeaderButton"><i class="codicon codicon-add"></i></div>
-                  </div>
-                  <div id="headersContainer">
-                    ${
-                        profile && profile.headers
-                            ? Object.keys(profile.headers)
-                                  .map(
-                                      (key) =>
-                                          `<div>
-                             <input type="text" class="headerKey vscode-textfield" placeholder="Header Name" value="${key}"/>
-                             <input type="text" class="headerValue vscode-textfield" placeholder="Header Value" value="${profile.headers[key]}"/>
-                             <div class="icon"><i class="codicon codicon-trash"></i></div>
-                    </div>`,
-                                  )
-                                  .join("")
-                            : ""
-                    }
-                  </div>
-                  <br/><br/>
-                  
-                  <button id="requestMetadataButton" type="button" class="vscode-button" ${getConfig().disableRunner ? "disabled" : ""}>Request Metadata</button>
-                  
-                  <svg id="progressRing" class="vscode-progress-ring" part="vscode-progress-ring" viewBox="0 0 16 16">
-                    <circle
-                        class="background"
-                        part="background"
-                        cx="8px"
-                        cy="8px"
-                        r="7px"
-                    ></circle>
-                    <circle
-                        class="indicator"
-                        part="indicator"
-                        cx="8px"
-                        cy="8px"
-                        r="7px"
-                    ></circle>
-                  </svg>
-
-                </div> <!-- end of left flex: 1 -->
-                <!-- Add metadata textarea as second flex column -->
-                <div class="profile-form-column">
-                  <label for="metadata" class="vscode-label">Metadata:</label>
-                  <textarea id="metadata" name="metadata" class="vscode-textarea metadata-textarea">${profile && profile.metadata ? profile.metadata : ""}</textarea>
-                </div>
-              </div> <!-- end of flex row -->
-
-            </form>
-            <br/><br/>
-            <hr class="vscode-divider""/>
-            
-            <label class="vscode-label">Metadata size</label>
-            <div id="tokenSummary" class="token-count">
-              
-              <span class="vscode-label">Tokens:</span>
-              <span id="tokenCountInfo" class="token-count-value"></span>
-              <span class="vscode-label">Tokens (filtered):</span>
-              <span id="filteredCountInfo" class="token-count-value"></span>
-            </div>
-            <p>Make sure the metadata fits into the Github Copilot input token limit. Use filtering in Settings to reduce size.</p>
-            <details id="copilotAdvancedSection" class="vscode-collapsible">
-              <summary>
-                <i class="codicon codicon-chevron-right icon-arrow"></i>
-                <h2 class="title">Github Copilot Models<span class="description">Github Copilot models and max input tokens</span></h2>
-              </summary>
-              <div>    
-                  <div id="modelInfo">No info on Copilot models yet, retry.</div>
-              </div>
-            </details>
-            <script src="${scriptUri}"></script>
-          </body>
-        </html>
-        `;
+        html = html.replace(
+            '<link id="vscode-stylesheet" rel="stylesheet" />',
+            `<link href="${stylesUri}" rel="stylesheet" />`,
+        );
+        html = html.replace(
+            '<script id="vscode-script"></script>',
+            `<script src="${scriptUri}"></script>`,
+        );
+        // Set CSP source
+        html = html.replace(/\{\{cspSource\}\}/g, webview.cspSource);
+        return html;
     }
 
     public async openProfileWebview(profile?: Profile) {
@@ -364,7 +234,10 @@ export class ProfileTreeProvider
         );
         this.currentWebviewPanel.reveal(vscode.ViewColumn.One);
 
-        // Send initial metadata/model info after webview loads
+        // Send profile data to webview whenever a profile is opened/changed
+        await this.sendProfileToWebview(profile);
+
+        // Handle all webview messages
         this.currentWebviewPanel.webview.onDidReceiveMessage(
             async (message) => {
                 if (message.command === "saveProfile") {
@@ -398,29 +271,43 @@ export class ProfileTreeProvider
                             filePath: fileUri[0].path,
                         });
                     }
+                } else if (message.command === "webviewLoaded") {
+                    // Initial load of the webview, send the profile data
+                    await this.sendProfileToWebview(profile);
                 }
             },
             undefined,
             this.context.subscriptions,
         );
-
-        // Send initial metadata/model info after webview is loaded
-        this.currentWebviewPanel.webview.onDidReceiveMessage(
-            (message) => {
-                if (message.command === "webviewLoaded" && profile && profile.metadata) {
-                    this.sendMetadataToWebview(profile.metadata);
-                }
-            },
-            undefined,
-            this.context.subscriptions,
-        );
-
-        // Notify webview that it should request initial data
-        this.currentWebviewPanel.webview.postMessage({ command: "webviewLoaded" });
 
         // Handle panel disposal
         this.currentWebviewPanel.onDidDispose(() => {
             this.currentWebviewPanel = undefined;
+        });
+    }
+
+    /**
+     * Send profile data (including token/model info) to the webview panel.
+     */
+    private async sendProfileToWebview(profile?: Profile) {
+        if (!this.currentWebviewPanel) {
+            return;
+        }
+        let tokenCount, filteredCount, limits, metadata;
+        if (profile && profile.metadata) {
+            const payload = await this.buildMetadataPayload(profile.metadata);
+            tokenCount = payload.tokenCount;
+            filteredCount = payload.filteredCount;
+            limits = payload.limits;
+            metadata = profile.metadata;
+        }
+        this.currentWebviewPanel.webview.postMessage({
+            command: "initProfile",
+            profile,
+            tokenCount,
+            filteredCount,
+            limits,
+            metadata,
         });
     }
 

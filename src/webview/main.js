@@ -60,34 +60,35 @@
                 input.addEventListener('change', autoSaveProfile);
             });
         }
-
-        // Auth fields logic
-        const authKindSelect = document.getElementById('authKind');
-        const basicFields = document.getElementById('basicFields');
-        const bearerFields = document.getElementById('bearerFields');
-        const clientCertFields = document.getElementById('clientCertFields');
-        function updateAuthFields() {
-          const kind = authKindSelect.value;
-          basicFields.style.display = kind === 'basic' ? 'block' : 'none';
-          bearerFields.style.display = kind === 'bearer' ? 'block' : 'none';
-          clientCertFields.style.display = kind === 'cliencert' ? 'block' : 'none';
-        }
-        if (authKindSelect) {
-            authKindSelect.addEventListener('change', updateAuthFields);
-            updateAuthFields();
-        }
-
-        // Add file selection handlers
-        if (clientCertFields) {
-            const fileIcons = clientCertFields.querySelectorAll('.codicon.codicon-symbol-file');
-            fileIcons.forEach(icon => {
-                icon.addEventListener('click', () => {
-                    const inputEl = icon.parentElement.parentElement.querySelector('input');
-                    vscode.postMessage({ command: 'openFileDialog', inputName: inputEl.name });
-                });
-            });
-        }
     });
+
+    // Auth fields logic (move to top-level scope)
+    const authKindSelect = document.getElementById('authKind');
+    const basicFields = document.getElementById('basicFields');
+    const bearerFields = document.getElementById('bearerFields');
+    const clientCertFields = document.getElementById('clientCertFields');
+    function updateAuthFields() {
+      if (!authKindSelect || !basicFields || !bearerFields || !clientCertFields) return;
+      const kind = authKindSelect.value;
+      basicFields.style.display = kind === 'basic' ? 'block' : 'none';
+      bearerFields.style.display = kind === 'bearer' ? 'block' : 'none';
+      clientCertFields.style.display = kind === 'cliencert' ? 'block' : 'none';
+    }
+    if (authKindSelect) {
+        authKindSelect.addEventListener('change', updateAuthFields);
+        updateAuthFields();
+    }
+
+    // Add file selection handlers
+    if (clientCertFields) {
+        const fileIcons = clientCertFields.querySelectorAll('.codicon.codicon-symbol-file');
+        fileIcons.forEach(icon => {
+            icon.addEventListener('click', () => {
+                const inputEl = icon.parentElement.parentElement.querySelector('input');
+                vscode.postMessage({ command: 'openFileDialog', inputName: inputEl.name });
+            });
+        });
+    }
 
     // Listen for messages from the extension host
     window.addEventListener('message', (event) => {
@@ -102,6 +103,53 @@
             const inputEl = document.querySelector(`input[name="${inputName}"]`);
             if (inputEl) {
                 inputEl.value = message.filePath;
+            }
+        } else if (message.command === 'initProfile') {
+            const profile = message.profile || {};
+            // Set form title
+            document.getElementById('formTitle').textContent = profile.name ? 'Edit Profile' : 'Create Profile';
+            // Set fields
+            document.getElementById('name').value = profile.name || '';
+            document.getElementById('baseUrl').value = profile.baseUrl || '';
+            document.getElementById('metadata').value = profile.metadata || '';
+            // Auth
+            if (profile.auth) {
+                document.getElementById('authKind').value = profile.auth.kind || 'none';
+                if (profile.auth.kind === 'basic') {
+                    document.getElementById('username').value = profile.auth.username || '';
+                    document.getElementById('password').value = profile.auth.password || '';
+                } else if (profile.auth.kind === 'bearer') {
+                    document.getElementById('token').value = profile.auth.token || '';
+                } else if (profile.auth.kind === 'cliencert') {
+                    document.getElementById('cert').value = (profile.auth.cert && profile.auth.cert.path) || '';
+                    document.getElementById('key').value = (profile.auth.key && profile.auth.key.path) || '';
+                    document.getElementById('pfx').value = (profile.auth.pfx && profile.auth.pfx.path) || '';
+                    document.getElementById('passphrase').value = profile.auth.passphrase || '';
+                }
+                // Update auth fields visibility after setting value
+                updateAuthFields();
+            }
+            // Headers
+            const headersContainer = document.getElementById('headersContainer');
+            headersContainer.innerHTML = '';
+            if (profile.headers) {
+                Object.keys(profile.headers).forEach(key => {
+                    const row = document.createElement('div');
+                    row.innerHTML = `
+                        <input type="text" class="headerKey vscode-textfield" placeholder="Header Name" value="${key}"/>
+                        <input type="text" class="headerValue vscode-textfield" placeholder="Header Value" value="${profile.headers[key]}"/>
+                        <div class="icon"><i class="codicon codicon-trash"></i></div>
+                    `;
+                    const inputs = row.querySelectorAll('input');
+                    inputs.forEach(input => {
+                        input.addEventListener('change', autoSaveProfile);
+                    });
+                    headersContainer.appendChild(row);
+                });
+            }
+            // If token/model info is present, update UI immediately
+            if (message.tokenCount !== undefined && message.filteredCount !== undefined && message.limits) {
+                updateTokenCountUI(message.limits, message.tokenCount, message.filteredCount);
             }
         }
     });

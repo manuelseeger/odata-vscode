@@ -72,10 +72,11 @@ const webviewConfig = {
     mode: "none",
     entry: {
         styles: "./src/webview/styles.ts",
+        main: "./src/webview/main.js"
     },
     output: {
         path: path.resolve(__dirname, "dist/webview"),
-        filename: "index.js",
+        filename: "[name].js",
     },
     resolve: {
         extensions: [".tsx", ".ts", ".js"],

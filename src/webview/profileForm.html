@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src {{cspSource}}; style-src {{cspSource}}; script-src {{cspSource}};">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile</title>
+    <meta charset="UTF-8">
+    <link id="vscode-stylesheet" rel="stylesheet" />
+  </head>
+  <body>
+    <h1 id="formTitle">Profile</h1>
+    <form id="profileForm">
+      <div class="profile-form-row">
+        <div class="profile-form-column">
+          <label for="name" class="vscode-label">Name</label>
+          <input type="text" id="name" name="name" required class="vscode-textfield" /><br/><br/>
+          <label for="baseUrl" class="vscode-label">Service URL</label>
+          <p>Either provide the full URL of your $metadata file or the path where the $metadata file resides.</p>
+          <input type="text" id="baseUrl" name="baseUrl" required class="vscode-textfield full-width"/>
+          <br/>
+          <br/>
+          <hr class="vscode-divider"/>
+          <label for="authKind" class="vscode-label">Auth Type</label>
+          <select id="authKind" name="authKind" class="vscode-select">
+            <option value="none">None</option>
+            <option value="basic">Basic</option>
+            <option value="bearer">Bearer</option>
+            <option value="cliencert">Client Cert</option>
+          </select><br/><br/>
+          <div id="basicFields">
+            <label for="username" class="vscode-label">Username</label>
+            <input type="text" id="username" name="username" class="vscode-textfield"/><br/><br/>
+            <label for="password" class="vscode-label">Password</label>
+            <input type="password" id="password" name="password" class="vscode-textfield"/><br/><br/>
+          </div>
+          <div id="bearerFields">
+            <label for="token" class="vscode-label">Token</label>
+            <input type="text" id="token" name="token" class="vscode-textfield"/><br/><br/>
+          </div>
+          <div id="clientCertFields">
+            <label for="cert" class="vscode-label">Certificate</label>
+            <div>
+                <input type="input" id="cert" name="cert" class="vscode-textfield"/>
+                <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
+            </div>
+            <br/><br/>
+            <label for="key" class="vscode-label">Key</label>
+            <div>
+                <input type="input" id="key" name="key" class="vscode-textfield"/>
+                <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
+            </div>
+          <br/>
+          <br/>
+          <hr class="vscode-divider"/>
+            <label for="pfx" class="vscode-label">PFX</label>
+            <div >
+                <input type="text" id="pfx" name="pfx" class="vscode-textfield"/>
+                <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
+            </div>
+            <br/><br/>
+            <label for="passphrase" class="vscode-label">Passphrase</label>
+            <input type="password" id="passphrase" name="passphrase" class="vscode-textfield"/>
+          </div>
+          <br/>
+          <br/>
+          <hr class="vscode-divider"/>
+          <div class="headers-header">
+            <label class="vscode-label">Headers</label>
+            <div class="icon" id="addHeaderButton"><i class="codicon codicon-add"></i></div>
+          </div>
+          <div id="headersContainer"></div>
+          <br/><br/>
+          <button id="requestMetadataButton" type="button" class="vscode-button">Request Metadata</button>
+          <svg id="progressRing" class="vscode-progress-ring" part="vscode-progress-ring" viewBox="0 0 16 16">
+            <circle class="background" part="background" cx="8px" cy="8px" r="7px"></circle>
+            <circle class="indicator" part="indicator" cx="8px" cy="8px" r="7px"></circle>
+          </svg>
+        </div>
+        <div class="profile-form-column">
+          <label for="metadata" class="vscode-label">Metadata:</label>
+          <textarea id="metadata" name="metadata" class="vscode-textarea metadata-textarea"></textarea>
+        </div>
+      </div>
+    </form>
+    <br/><br/>
+    <hr class="vscode-divider"/>
+    <label class="vscode-label">Metadata size</label>
+    <div id="tokenSummary" class="token-count">
+      <span class="vscode-label">Tokens:</span>
+      <span id="tokenCountInfo" class="token-count-value"></span>
+      <span class="vscode-label">Tokens (filtered):</span>
+      <span id="filteredCountInfo" class="token-count-value"></span>
+    </div>
+    <p>Make sure the metadata fits into the Github Copilot input token limit. Use filtering in Settings to reduce size.</p>
+    <details id="copilotAdvancedSection" class="vscode-collapsible">
+      <summary>
+        <i class="codicon codicon-chevron-right icon-arrow"></i>
+        <h2 class="title">Github Copilot Models<span class="description">Github Copilot models and max input tokens</span></h2>
+      </summary>
+      <div>    
+          <div id="modelInfo">No info on Copilot models yet, retry.</div>
+      </div>
+    </details>
+    <script id="vscode-script"></script>
+  </body>
+</html>
