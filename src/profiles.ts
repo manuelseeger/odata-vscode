@@ -1,11 +1,12 @@
-import * as vscode from "vscode";
+import * as fs from "fs";
 import * as path from "path";
+import * as vscode from "vscode";
 
-import { Disposable } from "./provider";
 import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
-import { Profile, IProfileAuthentication, AuthKind } from "./contracts/types";
-import { ITokenizer } from "./contracts/ITokenizer";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
+import { ITokenizer } from "./contracts/ITokenizer";
+import { AuthKind, IProfileAuthentication, Profile } from "./contracts/types";
+import { Disposable } from "./provider";
 
 const profileCommands = {
     deleteProfile: `${APP_NAME}.deleteProfile`,
@@ -29,8 +30,6 @@ export class ProfileTreeProvider
         new vscode.EventEmitter<ProfileItem | undefined | void>();
     readonly onDidChangeTreeData: vscode.Event<ProfileItem | undefined | void> =
         this._onDidChangeTreeData.event;
-
-    // Add a class-level property to store the webview panel
     private currentWebviewPanel: vscode.WebviewPanel | undefined;
 
     constructor(
@@ -43,6 +42,7 @@ export class ProfileTreeProvider
             vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
             vscode.commands.registerCommand(commands.addProfile, this.openProfileWebview, this),
             vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
+            vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
             vscode.commands.registerCommand(
                 profileCommands.editProfile,
                 (profileItem: ProfileItem) => {
@@ -61,73 +61,203 @@ export class ProfileTreeProvider
                     await this.requestProfileMetadata(profileItem.profile);
                 },
             ),
+            // Register internal command for getting selected profile with secrets
+            vscode.commands.registerCommand(
+                internalCommands.getSelectedProfileWithSecrets,
+                async () => {
+                    return await this.getSelectedProfile();
+                },
+            ),
         ];
     }
 
+    /**
+     * Returns the TreeItem representation for a given ProfileItem.
+     * Adds a check icon if the profile is currently selected.
+     */
     getTreeItem(element: ProfileItem): vscode.TreeItem {
         const selectedProfile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (selectedProfile && selectedProfile.name === element.profile.name) {
             element.iconPath = new vscode.ThemeIcon("check");
         }
-
         return element;
     }
 
+    /**
+     * Returns the list of ProfileItems to display in the tree view.
+     */
     getChildren(): ProfileItem[] {
-        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        return profiles.map((profile) => new ProfileItem(profile));
+        const profiles: Profile[] = this.context.globalState.get<Profile[]>(
+            globalStates.profiles,
+            [],
+        );
+        return profiles.map((profile: Profile) => new ProfileItem(profile));
     }
-    addProfile(profile: Profile) {
-        const profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        profiles.push(profile);
-        this.context.globalState.update(globalStates.profiles, profiles);
-        this.refresh();
-    }
+
+    /**
+     * Refreshes the tree view by firing the change event.
+     */
     refresh() {
         this._onDidChangeTreeData.fire();
     }
 
-    deleteProfile(profile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        profiles = profiles.filter((p) => p.name !== profile.name);
-        if (profiles.length === 0) {
-            this.context.globalState.update(globalStates.selectedProfile, undefined);
-        } else if (
-            this.context.globalState.get<Profile>(globalStates.selectedProfile)?.name ===
-            profile.name
-        ) {
-            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
+    /**
+     * Helper: get the key for secrets storage for a given profile name.
+     */
+    private getSecretKey(profileName: string): string {
+        return `${APP_NAME}.profile.secret.${profileName}`;
+    }
+
+    /**
+     * Helper: extract secrets from a profile's authentication object.
+     */
+    private extractSecrets(profile: Profile): Record<string, string | undefined> {
+        const { auth } = profile;
+        return {
+            password: auth.password,
+            token: auth.token,
+            passphrase: auth.passphrase,
+        };
+    }
+
+    /**
+     * Helper: remove secrets from a profile (for storing in globalState).
+     */
+    private stripSecrets(profile: Profile): Profile {
+        const { auth } = profile;
+        return {
+            ...profile,
+            auth: {
+                ...auth,
+                password: undefined,
+                token: undefined,
+                passphrase: undefined,
+            },
+        };
+    }
+
+    /**
+     * Helper: save secrets to context.secrets for a profile.
+     */
+    private async saveSecrets(profile: Profile) {
+        const key = this.getSecretKey(profile.name);
+        const secrets = this.extractSecrets(profile);
+        await this.context.secrets.store(key, JSON.stringify(secrets));
+    }
+
+    /**
+     * Helper: load secrets from context.secrets and merge into the profile.
+     */
+    private async loadSecrets(profile: Profile): Promise<Profile> {
+        const key = this.getSecretKey(profile.name);
+        const secretsRaw = await this.context.secrets.get(key);
+        if (!secretsRaw) {
+            return profile;
+        }
+        let secrets: Record<string, string | undefined> = {};
+        try {
+            secrets = JSON.parse(secretsRaw);
+        } catch {}
+        return {
+            ...profile,
+            auth: {
+                ...profile.auth,
+                ...secrets,
+            },
+        };
+    }
+
+    /**
+     * Helper: save profile (non-secrets to globalState, secrets to secrets storage).
+     */
+    private async saveProfile(newProfile: Profile) {
+        let profiles: Profile[] = this.context.globalState.get<Profile[]>(
+            globalStates.profiles,
+            [],
+        );
+        const index = profiles.findIndex((p: Profile) => p.name === newProfile.name);
+        const profileNoSecrets = this.stripSecrets(newProfile);
+        if (index >= 0) {
+            profiles[index] = profileNoSecrets;
+        } else {
+            profiles.push(profileNoSecrets);
         }
         this.context.globalState.update(globalStates.profiles, profiles);
-        this.refresh();
+        await this.saveSecrets(newProfile);
+        if (profiles.length === 1) {
+            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
+        }
+    }
+
+    /**
+     * Returns the currently selected profile with secrets loaded, or undefined if none is selected.
+     */
+    async getSelectedProfile(): Promise<Profile | undefined> {
+        const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        if (!selected) {
+            return undefined;
+        }
+        return this.loadSecrets(selected);
+    }
+
+    /**
+     * Sets the selected profile in globalState (without secrets).
+     */
+    setSelectedProfile(profile: Profile) {
+        this.context.globalState.update(globalStates.selectedProfile, this.stripSecrets(profile));
+    }
+
+    /**
+     * Prompt the user to select a profile from the list of profiles.
+     */
+    async selectProfile() {
+        const profiles: Profile[] = this.context.globalState.get<Profile[]>(
+            globalStates.profiles,
+            [],
+        );
+        if (profiles.length === 0) {
+            return;
+        }
+        const profileName = await vscode.window.showQuickPick(
+            profiles.map((p: Profile) => p.name),
+            {
+                placeHolder: "Select an endpoint",
+            },
+        );
+        if (!profileName) {
+            return;
+        }
+        const profile = profiles.find((p: Profile) => p.name === profileName);
+        if (profile) {
+            this.setSelectedProfile(profile);
+            this.refresh();
+        }
     }
 
     /**
      * Get the metadata for the selected profile and update the profile.
-     *
      * If no profile is selected, prompt the user to select one.
-     * If no profile is found, return an empty string.
+     * If no profile is found, show an error message.
      */
     async getEndpointMetadata() {
-        let profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        if (!profile) {
+        let selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        if (!selected) {
             await vscode.commands.executeCommand<string>(commands.selectProfile);
-            profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+            selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         }
-        if (!profile) {
+        if (!selected) {
             vscode.window.showErrorMessage("No profile selected or found.");
             return;
         }
-
+        const profile = await this.loadSecrets(selected);
         const metadata = await this.requestProfileMetadata(profile);
         if (!metadata) {
             vscode.window.showErrorMessage("No metadata found for the selected profile.");
             return;
         }
         profile.metadata = metadata;
-
-        this.saveProfile(profile);
-        this.context.globalState.update(globalStates.selectedProfile, profile);
+        await this.saveProfile(profile);
+        this.setSelectedProfile(profile);
         vscode.window.showInformationMessage(
             `Metadata updated successfully for profile ${profile.name}.`,
         );
@@ -135,18 +265,60 @@ export class ProfileTreeProvider
         this.refresh();
     }
 
+    /**
+     * Requests metadata for the given profile and saves it if found.
+     * Returns the metadata string if successful.
+     */
     async requestProfileMetadata(profile: Profile): Promise<string | undefined> {
+        const fullProfile = await this.loadSecrets(profile);
         const metadata = await vscode.commands.executeCommand<string>(
             internalCommands.requestMetadata,
-            profile,
+            fullProfile,
         );
         if (metadata) {
-            profile.metadata = metadata;
-            this.saveProfile(profile);
+            fullProfile.metadata = metadata;
+            await this.saveProfile(fullProfile);
             return metadata;
         }
     }
 
+    /**
+     * Loads and returns the HTML content for the profile webview panel.
+     */
+    private async _getWebViewContent(webview: vscode.Webview, profile?: Profile): Promise<string> {
+        const scriptUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "main.js"),
+        );
+        const stylesUri = webview.asWebviewUri(
+            vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "webview.bundle.css"),
+        );
+        // Use VS Code API to read HTML from dist/webview/profileForm.html
+        const htmlUri = vscode.Uri.joinPath(
+            this.context.extensionUri,
+            "dist",
+            "webview",
+            "profileForm.html",
+        );
+        const htmlBytes = await vscode.workspace.fs.readFile(htmlUri);
+        let html = Buffer.from(htmlBytes).toString("utf8");
+
+        html = html.replace(
+            '<link id="vscode-stylesheet" rel="stylesheet" />',
+            `<link href="${stylesUri}" rel="stylesheet" />`,
+        );
+        html = html.replace(
+            '<script id="vscode-script"></script>',
+            `<script src="${scriptUri}"></script>`,
+        );
+        // Set CSP source
+        html = html.replace(/\{\{cspSource\}\}/g, webview.cspSource);
+        return html;
+    }
+
+    /**
+     * Opens the profile webview panel for creating or editing a profile.
+     * Handles webview messages for saving, requesting metadata, and file dialogs.
+     */
     public async openProfileWebview(profile?: Profile) {
         if (!this.currentWebviewPanel) {
             this.currentWebviewPanel = vscode.window.createWebviewPanel(
@@ -156,7 +328,6 @@ export class ProfileTreeProvider
                 { enableScripts: true },
             );
         }
-
         this.currentWebviewPanel.title = profile
             ? `Edit Profile: ${profile.name}`
             : "Create HTTP Profile";
@@ -165,13 +336,12 @@ export class ProfileTreeProvider
             profile,
         );
         this.currentWebviewPanel.reveal(vscode.ViewColumn.One);
-
+        await this.sendProfileToWebview(profile ? await this.loadSecrets(profile) : undefined);
         this.currentWebviewPanel.webview.onDidReceiveMessage(
             async (message) => {
                 if (message.command === "saveProfile") {
                     const newProfile: Profile = parseProfile(message.data);
-                    this.saveProfile(newProfile);
-                    // Update token counts and model info after saving (e.g., metadata edit)
+                    await this.saveProfile(newProfile);
                     if (newProfile.metadata) {
                         await this.sendMetadataToWebview(newProfile.metadata);
                     }
@@ -179,7 +349,6 @@ export class ProfileTreeProvider
                 } else if (message.command === "requestMetadata") {
                     const newProfile = parseProfile(message.data);
                     const metadata = await this.requestProfileMetadata(newProfile);
-
                     if (metadata) {
                         await this.sendMetadataToWebview(metadata);
                     }
@@ -199,231 +368,67 @@ export class ProfileTreeProvider
                             filePath: fileUri[0].path,
                         });
                     }
+                } else if (message.command === "webviewLoaded") {
+                    await this.sendProfileToWebview(
+                        profile ? await this.loadSecrets(profile) : undefined,
+                    );
                 }
             },
             undefined,
             this.context.subscriptions,
         );
-        // If editing an existing profile with metadata, send model info on load
-        if (profile && profile.metadata) {
-            this.sendMetadataToWebview(profile.metadata);
-        }
-        // Handle panel disposal
         this.currentWebviewPanel.onDidDispose(() => {
             this.currentWebviewPanel = undefined;
         });
     }
 
-    private saveProfile(newProfile: Profile) {
-        let profiles = this.context.globalState.get<Profile[]>(globalStates.profiles, []);
-        const index = profiles.findIndex((p) => p.name === newProfile.name);
-        if (index >= 0) {
-            profiles[index] = newProfile;
-        } else {
-            profiles.push(newProfile);
+    /**
+     * Send profile data (including token/model info) to the webview panel.
+     */
+    private async sendProfileToWebview(profile?: Profile) {
+        if (!this.currentWebviewPanel) {
+            return;
         }
-
-        this.context.globalState.update(globalStates.profiles, profiles);
-
-        if (profiles.length === 1) {
-            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
-        }
-    }
-
-    private async _getWebViewContent(webview: vscode.Webview, profile?: Profile): Promise<string> {
-        const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, "assets", "main.js"),
-        );
-        const nonce = getNonce();
-
-        // Initialize the profile page with token counts and model limits
-        let initialMessageScript = "";
+        let tokenCount, filteredCount, limits, metadata;
         if (profile && profile.metadata) {
             const payload = await this.buildMetadataPayload(profile.metadata);
-            initialMessageScript =
-                `<script nonce="${nonce}">` +
-                `window.dispatchEvent(new MessageEvent('message',{data:{` +
-                `command:'metadataReceived',` +
-                `data:${JSON.stringify(payload.data)},` +
-                `tokenCount:${payload.tokenCount},` +
-                `filteredCount:${payload.filteredCount},` +
-                `limits:${JSON.stringify(payload.limits)}` +
-                `}}));</script>`;
+            tokenCount = payload.tokenCount;
+            filteredCount = payload.filteredCount;
+            limits = payload.limits;
+            metadata = profile.metadata;
         }
-        const styles = [
-            "@vscode/codicons/dist/codicon.css",
-            "@vscode-elements/elements-lite/components/action-button/action-button.css",
-            "@vscode-elements/elements-lite/components/label/label.css",
-            "@vscode-elements/elements-lite/components/button/button.css",
-            "@vscode-elements/elements-lite/components/textfield/textfield.css",
-            "@vscode-elements/elements-lite/components/textarea/textarea.css",
-            "@vscode-elements/elements-lite/components/select/select.css",
-            "@vscode-elements/elements-lite/components/divider/divider.css",
-            "@vscode-elements/elements-lite/components/progress-ring/progress-ring.css",
-            "@vscode-elements/elements-lite/components/collapsible/collapsible.css",
-        ];
-        const stylesUriList = styles.map((style) =>
-            webview.asWebviewUri(
-                vscode.Uri.file(path.join(this.context.extensionPath, "dist", "modules", style)),
-            ),
-        );
-        stylesUriList.push(
-            webview.asWebviewUri(
-                vscode.Uri.joinPath(this.context.extensionUri, "assets", "style.css"),
-            ),
-        );
-        const linkTags = stylesUriList
-            .map((uri) => `<link href="${uri}" rel="stylesheet" />`)
-            .join("\n");
+        this.currentWebviewPanel.webview.postMessage({
+            command: "initProfile",
+            profile,
+            tokenCount,
+            filteredCount,
+            limits,
+            metadata,
+        });
+    }
 
-        return `
-        <!DOCTYPE html>
-        <html lang="en">
-          <head>
-            <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src ${webview.cspSource}; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">            
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${profile ? "Edit Profile" : "Create Profile"}</title>
-            <meta charset="UTF-8">
-            ${linkTags}
-          </head>
-          <body>
-            <h1>${profile ? "Edit Profile" : "Create Profile"}</h1>
-            <form id="profileForm">
-              <div class="profile-form-row">
-                <div class="profile-form-column">
-                  <label for="name" class="vscode-label">Name</label>
-                  <input type="text" id="name" name="name" value="${profile ? profile.name : ""}" required class="vscode-textfield" /><br/><br/>
-                  
-                  <label for="baseUrl" class="vscode-label">Service URL</label>
-                  <p>Either provide the full URL of your $metadata file or the path where the $metadata file resides.</p>
-                  <input type="text" id="baseUrl" name="baseUrl" value="${profile ? profile.baseUrl : ""}" required  class="vscode-textfield full-width"/>
-                  <br/>
-                  <br/>
-                  <hr class="vscode-divider""/>
-                  
-                  <label for="authKind" class="vscode-label">Auth Type</label>
-                  <select id="authKind" name="authKind" class="vscode-select">
-                    <option value="none" ${profile && profile.auth.kind === "none" ? "selected" : ""}>None</option>
-                    <option value="basic" ${profile && profile.auth.kind === "basic" ? "selected" : ""}>Basic</option>
-                    <option value="bearer" ${profile && profile.auth.kind === "bearer" ? "selected" : ""}>Bearer</option>
-                    <option value="cliencert" ${profile && profile.auth.kind === "cliencert" ? "selected" : ""}>Client Cert</option>
-                  </select><br/><br/>
+    /**
+     * Builds a metadata payload with token counts and model limits for the webview.
+     */
+    private async buildMetadataPayload(metadata: string) {
+        const { tokenCount, filteredCount } = this.getMetadataCounts(metadata);
+        const models = await vscode.lm.selectChatModels();
+        const limits = models.map((model) => ({
+            name: model.name,
+            maxTokens: model.maxInputTokens,
+        }));
+        return { data: metadata, tokenCount, filteredCount, limits };
+    }
 
-                  <div id="basicFields" class="hidden">
-                    <label for="username" class="vscode-label">Username</label>
-                    <input type="text" id="username" name="username" class="vscode-textfield" value="${profile && profile.auth.username ? profile.auth.username : ""}"/><br/><br/>
-                    <label for="password" class="vscode-label">Password</label>
-                    <input type="password" id="password" name="password" class="vscode-textfield" value="${profile && profile.auth.password ? profile.auth.password : ""}"/><br/><br/>
-                  </div>
-                  <div id="bearerFields" class="hidden">
-                    <label for="token" class="vscode-label">Token</label>
-                    <input type="text" id="token" name="token" class="vscode-textfield" value="${profile && profile.auth.token ? profile.auth.token : ""}"/><br/><br/>
-                  </div>
-                  <div id="clientCertFields" class="hidden">
-                    <label for="cert" class="vscode-label">Certificate</label>
-                    <div>
-                        <input type="input" id="cert" name="cert" class="vscode-textfield" value="${profile && profile.auth.cert ? profile.auth.cert.path : ""}"/>
-                        <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
-                    </div>
-                    <br/><br/>
-                    <label for="key" class="vscode-label">Key</label>
-                    <div>
-                        <input type="input" id="key" name="key" class="vscode-textfield"  value="${profile && profile.auth.key ? profile.auth.key.path : ""}"/>
-                        <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
-                    </div>
-                  <br/>
-                  <br/>
-                  <hr class="vscode-divider""/>
-                  
-                    <label for="pfx" class="vscode-label">PFX</label>
-                    <div >
-                        <input type="text" id="pfx" name="pfx" class="vscode-textfield"  value="${profile && profile.auth.pfx ? profile.auth.pfx.path : ""}"/>
-                        <div  class="icon"><i class="codicon codicon-symbol-file"></i></div>
-                    </div>
-                    <br/><br/>
-                    <label for="passphrase" class="vscode-label">Passphrase</label>
-                    <input type="password" id="passphrase" name="passphrase" class="vscode-textfield" value="${profile && profile.auth.passphrase ? profile.auth.passphrase : ""}"/>
-                  </div>
-                  <br/>
-                  <br/>
-                  <hr class="vscode-divider""/>
-                
-                  <div class="headers-header">
-                    <label class="vscode-label">Headers</label>
-                    <div class="icon" id="addHeaderButton"><i class="codicon codicon-add"></i></div>
-                  </div>
-                  <div id="headersContainer">
-                    ${
-                        profile && profile.headers
-                            ? Object.keys(profile.headers)
-                                  .map(
-                                      (key) =>
-                                          `<div>
-                             <input type="text" class="headerKey vscode-textfield" placeholder="Header Name" value="${key}"/>
-                             <input type="text" class="headerValue vscode-textfield" placeholder="Header Value" value="${profile.headers[key]}"/>
-                             <div class="icon" onclick="this.parentElement.remove();"><i class="codicon codicon-trash"></i></div>
-                    </div>`,
-                                  )
-                                  .join("")
-                            : ""
-                    }
-                  </div>
-                  <br/><br/>
-                  
-                  <button id="requestMetadataButton" type="button" class="vscode-button" ${getConfig().disableRunner ? "disabled" : ""}>Request Metadata</button>
-                  
-                  <svg id="progressRing" class="vscode-progress-ring" part="vscode-progress-ring" viewBox="0 0 16 16">
-                    <circle
-                        class="background"
-                        part="background"
-                        cx="8px"
-                        cy="8px"
-                        r="7px"
-                    ></circle>
-                    <circle
-                        class="indicator"
-                        part="indicator"
-                        cx="8px"
-                        cy="8px"
-                        r="7px"
-                    ></circle>
-                  </svg>
-
-                </div> <!-- end of left flex: 1 -->
-                <!-- Add metadata textarea as second flex column -->
-                <div class="profile-form-column">
-                  <label for="metadata" class="vscode-label">Metadata:</label>
-                  <textarea id="metadata" name="metadata" class="vscode-textarea metadata-textarea">${profile && profile.metadata ? profile.metadata : ""}</textarea>
-                </div>
-              </div> <!-- end of flex row -->
-
-            </form>
-            <br/><br/>
-            <hr class="vscode-divider""/>
-            
-            <label class="vscode-label">Metadata size</label>
-            <div id="tokenSummary" class="token-count">
-              
-              <span class="vscode-label">Tokens:</span>
-              <span id="tokenCountInfo" class="token-count-value"></span>
-              <span class="vscode-label">Tokens (filtered):</span>
-              <span id="filteredCountInfo" class="token-count-value"></span>
-            </div>
-            <p>Make sure the metadata fits into the Github Copilot input token limit. Use filtering in Settings to reduce size.</p>
-            <details id="copilotAdvancedSection" class="vscode-collapsible">
-              <summary>
-                <i class="codicon codicon-chevron-right icon-arrow"></i>
-                <h2 class="title">Github Copilot Models<span class="description">Github Copilot models and max input tokens</span></h2>
-              </summary>
-              <div>    
-                  <div id="modelInfo">No info on Copilot models yet, retry.</div>
-              </div>
-            </details>
-            <script nonce="${nonce}" src="${scriptUri}"></script>
-            ${initialMessageScript}
-          </body>
-        </html>
-        `;
+    /**
+     * Send metadata payload to the webview panel.
+     */
+    private async sendMetadataToWebview(metadata: string) {
+        if (!this.currentWebviewPanel) {
+            return;
+        }
+        const payload = await this.buildMetadataPayload(metadata);
+        this.currentWebviewPanel.webview.postMessage({ command: "metadataReceived", ...payload });
     }
 
     /**
@@ -437,36 +442,34 @@ export class ProfileTreeProvider
     }
 
     /**
-     * Prepare metadata payload with raw data, token counts, and model limits.
+     * Deletes a profile and its secrets from storage.
+     * Updates the selected profile if necessary.
      */
-    private async buildMetadataPayload(metadata: string) {
-        const { tokenCount, filteredCount } = this.getMetadataCounts(metadata);
-        const models = await vscode.lm.selectChatModels();
-        const limits = models.map((model) => ({
-            name: model.name,
-            maxTokens: model.maxInputTokens,
-        }));
-        return { data: metadata, tokenCount, filteredCount, limits };
-    }
-
-    private async sendMetadataToWebview(metadata: string) {
-        if (!this.currentWebviewPanel) {
-            return;
+    async deleteProfile(profile: Profile) {
+        let profiles: Profile[] = this.context.globalState.get<Profile[]>(
+            globalStates.profiles,
+            [],
+        );
+        profiles = profiles.filter((p: Profile) => p.name !== profile.name);
+        if (profiles.length === 0) {
+            this.context.globalState.update(globalStates.selectedProfile, undefined);
+        } else if (
+            this.context.globalState.get<Profile>(globalStates.selectedProfile)?.name ===
+            profile.name
+        ) {
+            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
         }
-        const payload = await this.buildMetadataPayload(metadata);
-        this.currentWebviewPanel.webview.postMessage({ command: "metadataReceived", ...payload });
+        this.context.globalState.update(globalStates.profiles, profiles);
+        // Remove secrets from context.secrets
+        const key = this.getSecretKey(profile.name);
+        await this.context.secrets.delete(key);
+        this.refresh();
     }
 }
 
-function getNonce() {
-    let text = "";
-    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    for (let i = 0; i < 32; i++) {
-        text += possible.charAt(Math.floor(Math.random() * possible.length));
-    }
-    return text;
-}
-
+/**
+ * Returns file dialog filters for a given input type (cert, key, pfx, etc).
+ */
 function getFiltersForType(type: string): { [name: string]: string[] } {
     switch (type) {
         case "cert":
@@ -479,6 +482,9 @@ function getFiltersForType(type: string): { [name: string]: string[] } {
     }
 }
 
+/**
+ * Parses raw profile data from the webview into a Profile object.
+ */
 function parseProfile(data: any): Profile {
     const auth: IProfileAuthentication = {
         kind: data.auth.kind as AuthKind,

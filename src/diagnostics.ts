@@ -1,21 +1,20 @@
 import * as vscode from "vscode";
 import {
-    SyntaxError,
     LocationRange,
     ParsedTree,
-    ParseSuccessHandler,
     ParseResult,
     ParseSyntaxErrorHandler,
+    SyntaxError,
     SyntaxLocation,
 } from "./parser/syntaxparser";
 
 import { Profile } from "./contracts/types";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 
+import { getConfig, internalCommands } from "./configuration";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
-import { getConfig, globalStates } from "./configuration";
-import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
 /**
  * Provides diagnostic services for OData queries in a Visual Studio Code extension.
@@ -79,14 +78,11 @@ export class ODataDiagnosticProvider extends Disposable {
      * @param uri vscode.Uri of the document to set the diagnostics for
      * @param result ODataUri object representing the parsed OData query
      */
-    public handleParseSucess: ParseSuccessHandler = async (
-        uri: vscode.Uri,
-        result: ParseResult,
-    ) => {
-        const diagnostics: vscode.Diagnostic[] = [];
-        this.diagnostics.set(uri, diagnostics);
-
-        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+    public async handleParseSucess(uri: vscode.Uri, result: ParseResult) {
+        // Use the internal command to get the selected profile with secrets
+        const profile = await vscode.commands.executeCommand<Profile | undefined>(
+            internalCommands.getSelectedProfileWithSecrets,
+        );
         if (!profile) {
             return;
         }
@@ -95,13 +91,16 @@ export class ODataDiagnosticProvider extends Disposable {
             return;
         }
 
+        const diagnostics: vscode.Diagnostic[] = [];
+        this.diagnostics.set(uri, diagnostics);
+
         const resource = this.diagnoseResourcePath(diagnostics, metadata, result.tree, profile);
         if (resource) {
             this.diagnoseQueryOptions(diagnostics, metadata, result, resource, profile);
         }
 
         this.diagnostics.set(uri, diagnostics);
-    };
+    }
 
     /**
      * Diagnose query options in an OData query and add relevant diagnostics.

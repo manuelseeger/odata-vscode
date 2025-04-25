@@ -26,7 +26,7 @@ const testData: TestData[] = [];
  * with tiktoken.
  *
  * We then use this heuristic to approximate the token count of a string. This approximation
- * is ~50% better than using a naive token per character approach.
+ * is ~80% closer than using a naive token per character approach.
  */
 function main(): void {
     const testDataDir: string = path.join(__dirname, "../test/testdata");

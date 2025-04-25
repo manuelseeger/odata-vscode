@@ -2,7 +2,7 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Language and Query Runner",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "publisher": "manuelseeger",
   "repository": {
     "type": "git",
@@ -158,7 +158,9 @@
         "odata.metadata.filterXPath": {
           "type": "array",
           "description": "Filter out nodes matching XPath expressions in the OData metadata file",
-          "default": ["//edm:Annotation"],
+          "default": [
+            "//edm:Annotation"
+          ],
           "items": {
             "type": "string"
           }
@@ -177,6 +179,11 @@
           "type": "boolean",
           "description": "Disable the OData query runner.",
           "default": false
+        },
+        "odata.openResultInNewPane": {
+          "type": "boolean",
+          "description": "Open result document in new pane when running queries.",
+          "default": true
         }
       }
     }
@@ -188,11 +195,13 @@
     "package": "webpack --mode production --devtool hidden-source-map",
     "prepackage": "npm run clean",
     "compile-tests": "tsc -p . --outDir out",
-    "pretest": "npm run clean && npm run compile-tests && npm run test:unit",
-    "lint": "eslint src",
-    "test": "vscode-test",
-    "clean": "rimraf out dist",
+    "pretest": "npm run clean && npm run compile-tests",
+    "test:integration": "vscode-test -l integration",
+    "test:e2e": "vscode-test -l e2e",
     "test:unit": "mocha -u tdd --require ts-node/register src/test/unit/**/*.test.ts",
+    "lint": "eslint src",
+    "test": "npm run test:unit && npm run test:integration && npm run compile && npm run test:e2e",
+    "clean": "rimraf out dist",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
     "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
@@ -212,7 +221,9 @@
     "@vscode/vsce": "^3.3.2",
     "abnf": "^4.3.1",
     "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
     "eslint": "^9.21.0",
+    "mini-css-extract-plugin": "^2.9.2",
     "peggy": "^4.2.0",
     "pegjs-backtrace": "^0.2.1",
     "prettier": "^3.5.3",
@@ -226,8 +237,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
-    "@odata2ts/converter-runtime": "^0.5.5",
-    "@odata2ts/odata2ts": "^0.39.1",
+    "@odata2ts/odata-core": "^0.6.0",
     "@vscode-elements/elements-lite": "^0.3.0",
     "@vscode/codicons": "^0.0.36",
     "@vscode/prompt-tsx": "^0.3.0-alpha.23",

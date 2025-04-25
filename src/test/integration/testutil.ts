@@ -46,6 +46,31 @@ export async function setupTests(
     await setTabSize(4);
     await setEOL("\n");
 
+    // Stub workspace configuration for 'odata' to support get/update in tests
+    const configStore: { [key: string]: any } = {
+        metadata: { filterNs: [], filterXPath: ["//edm:Annotation"], xpathDefaultNsPrefix: "edm" },
+        defaultFormat: "json",
+        strictParser: true,
+        disableRunner: false,
+        openResultInNewPane: true,
+    };
+    const odataConfig: any = {
+        get: (section: string, defaultValue?: any) =>
+            configStore[section] !== undefined ? configStore[section] : defaultValue,
+        update: async (section: string, value: any) => {
+            configStore[section] = value;
+            return Promise.resolve();
+        },
+    };
+    // Override getConfiguration to return stubbed config for 'odata' only
+    const originalGetConfig = (vscode.workspace as any).getConfiguration;
+    (vscode.workspace as any).getConfiguration = function (section?: string, ...args: any[]) {
+        if (section === "odata") {
+            return odataConfig;
+        }
+        return originalGetConfig.call(this, section, ...args);
+    };
+
     if (!profile) {
         profile = {
             name: "TestProfile",
@@ -95,6 +120,18 @@ export async function setupTests(
             headers: { "Content-Type": "application/xml" },
         }),
     );
+
+    const secretsStore: Record<string, string | undefined> = {};
+    const secretsMock = {
+        get: async (key: string) => secretsStore[key],
+        store: async (key: string, value: string) => {
+            secretsStore[key] = value;
+        },
+        delete: async (key: string) => {
+            delete secretsStore[key];
+        },
+    };
+    when((mockContext as any).secrets).thenReturn(secretsMock);
 
     return {
         profile,

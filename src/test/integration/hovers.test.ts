@@ -37,24 +37,7 @@ suite("HoverProvider Integration", () => {
         assert.ok(contents.value.includes("OrderDate (Edm.DateTimeOffset)"));
     });
 
-    test("should return undefined if no profile", async () => {
-        // Arrange
-        // Remove selectedProfile from globalState
-        const globalState = context.globalState as any;
-        globalState.get = () => undefined;
-        const odata = `${profile.baseUrl}Orders?$select=OrderID,OrderDate`;
-        const document = await vscode.workspace.openTextDocument({ content: odata });
-        const idx = odata.indexOf("Orders");
-        const position = new vscode.Position(0, idx + 1);
-
-        // Act
-        const hover = await hoverProvider.provideHover(document, position, {} as any);
-
-        // Assert
-        assert.strictEqual(hover, undefined);
-    });
-
-    test("should return undefined if no metadata", async () => {
+    test("should return profile link if no metadata", async () => {
         // Arrange
         // Patch metadataService.getModel to return undefined
         (hoverProvider as any).metadataService.getModel = async () => undefined;
@@ -67,7 +50,10 @@ suite("HoverProvider Integration", () => {
         const hover = await hoverProvider.provideHover(document, position, {} as any);
 
         // Assert
-        assert.strictEqual(hover, undefined);
+        assert.ok(hover instanceof vscode.Hover);
+        const contents = (hover as vscode.Hover).contents[0] as vscode.MarkdownString;
+        assert.ok(contents.value.includes("**Base URL**: https://example.com/odata/"));
+        assert.ok(contents.value.includes(`${odata}`));
     });
 
     test("should return hover for selected profile", async () => {

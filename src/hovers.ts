@@ -1,4 +1,5 @@
-import { globalStates, ODataMode } from "./configuration";
+import * as vscode from "vscode";
+import { internalCommands, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { Profile } from "./contracts/types";
 import {
@@ -7,7 +8,7 @@ import {
     PropertyModel,
 } from "./odata2ts/data-model/DataTypeModel";
 import { Disposable } from "./provider";
-import * as vscode from "vscode";
+import { combineODataUrl, getBaseUrl } from "./util";
 
 export class HoverProvider extends Disposable implements vscode.HoverProvider {
     public _id: string = "HoverProvider";
@@ -28,30 +29,31 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
         const wordRange = document.getWordRangeAtPosition(position);
         const word = document.getText(wordRange);
 
-        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        // Use the internal command to get the selected profile with secrets
+        const profile = await vscode.commands.executeCommand<Profile | undefined>(
+            internalCommands.getSelectedProfileWithSecrets,
+        );
         if (!profile) {
             return;
         }
 
         const metadata = await this.metadataService.getModel(profile);
-        if (!metadata) {
-            return;
-        }
+        if (metadata) {
+            const entityContainer = metadata.getEntityContainer();
+            if (!entityContainer) {
+                return;
+            }
 
-        const entityContainer = metadata.getEntityContainer();
-        if (!entityContainer) {
-            return;
-        }
-
-        const matchingMember = Object.values(entityContainer.entitySets).find(
-            (member) => member.odataName === word,
-        );
-        if (matchingMember) {
-            const hover = this.getEntityTypeHover(matchingMember);
-            return new vscode.Hover(hover, wordRange);
+            const matchingMember = Object.values(entityContainer.entitySets).find(
+                (member) => member.odataName === word,
+            );
+            if (matchingMember) {
+                const hover = this.getEntityTypeHover(matchingMember);
+                return new vscode.Hover(hover, wordRange);
+            }
         }
         // default show the selected profile and URL
-        return new vscode.Hover(this.getSelectedProfileHover(profile));
+        return new vscode.Hover(this.getSelectedProfileHover(document, profile));
     }
 
     private getEntityTypeHover(member: EntitySetType): vscode.MarkdownString {
@@ -72,9 +74,14 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
         return new vscode.MarkdownString(hoverText);
     }
 
-    private getSelectedProfileHover(profile: Profile): vscode.MarkdownString {
+    private getSelectedProfileHover(
+        document: vscode.TextDocument,
+        profile: Profile,
+    ): vscode.MarkdownString {
         let hoverText = `**Selected Profile**: ${profile.name}\n\n`;
-        hoverText += `**Base URL**: ${profile.baseUrl}`;
+        hoverText += `**Base URL**: ${getBaseUrl(profile.baseUrl)}\n\n`;
+        const queryUrl = combineODataUrl(document.getText());
+        hoverText += `**Query:** [${queryUrl}](<${queryUrl}>)`;
 
         return new vscode.MarkdownString(hoverText);
     }
