@@ -11,5 +11,5 @@ Testing:
 - Integration tests use ./src/test/integration/testutil.ts for arranging the test environment.
 
 General: 
-- Make sure to update README.md and CHANGELOG.md when adding / changing features
+- Make sure to update README.md and CHANGELOG.md when adding / changing features. Only do this for features visible to the user. 
 - Don't be lazy, always make sure all steps you plan to do are also completed

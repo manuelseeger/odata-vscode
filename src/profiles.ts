@@ -292,13 +292,15 @@ export class ProfileTreeProvider
         const stylesUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "webview.bundle.css"),
         );
-        const htmlPath = path.join(
-            this.context.extensionPath,
-            "src",
+        // Use VS Code API to read HTML from dist/webview/profileForm.html
+        const htmlUri = vscode.Uri.joinPath(
+            this.context.extensionUri,
+            "dist",
             "webview",
             "profileForm.html",
         );
-        let html = fs.readFileSync(htmlPath, "utf8");
+        const htmlBytes = await vscode.workspace.fs.readFile(htmlUri);
+        let html = Buffer.from(htmlBytes).toString("utf8");
 
         html = html.replace(
             '<link id="vscode-stylesheet" rel="stylesheet" />',

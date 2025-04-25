@@ -94,7 +94,17 @@ const webviewConfig = {
             },
         ],
     },
-    plugins: [new MiniCssExtractPlugin({ filename: "webview.bundle.css" })],
+    plugins: [
+        new MiniCssExtractPlugin({ filename: "webview.bundle.css" }),
+        new CopyPlugin({
+            patterns: [
+                {
+                    from: path.resolve(__dirname, "src/webview/profileForm.html"),
+                    to: path.resolve(__dirname, "dist/webview/profileForm.html"),
+                },
+            ],
+        }),
+    ],
 };
 // Export both extension and webview configurations
 module.exports = [extensionConfig, webviewConfig];
