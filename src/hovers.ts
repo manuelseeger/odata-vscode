@@ -1,4 +1,5 @@
-import { globalStates, ODataMode, internalCommands } from "./configuration";
+import * as vscode from "vscode";
+import { internalCommands, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { Profile } from "./contracts/types";
 import {
@@ -7,7 +8,6 @@ import {
     PropertyModel,
 } from "./odata2ts/data-model/DataTypeModel";
 import { Disposable } from "./provider";
-import * as vscode from "vscode";
 import { combineODataUrl, getBaseUrl } from "./util";
 
 export class HoverProvider extends Disposable implements vscode.HoverProvider {
@@ -38,21 +38,19 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
         }
 
         const metadata = await this.metadataService.getModel(profile);
-        if (!metadata) {
-            return;
-        }
+        if (metadata) {
+            const entityContainer = metadata.getEntityContainer();
+            if (!entityContainer) {
+                return;
+            }
 
-        const entityContainer = metadata.getEntityContainer();
-        if (!entityContainer) {
-            return;
-        }
-
-        const matchingMember = Object.values(entityContainer.entitySets).find(
-            (member) => member.odataName === word,
-        );
-        if (matchingMember) {
-            const hover = this.getEntityTypeHover(matchingMember);
-            return new vscode.Hover(hover, wordRange);
+            const matchingMember = Object.values(entityContainer.entitySets).find(
+                (member) => member.odataName === word,
+            );
+            if (matchingMember) {
+                const hover = this.getEntityTypeHover(matchingMember);
+                return new vscode.Hover(hover, wordRange);
+            }
         }
         // default show the selected profile and URL
         return new vscode.Hover(this.getSelectedProfileHover(document, profile));

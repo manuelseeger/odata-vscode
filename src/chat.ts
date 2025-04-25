@@ -1,13 +1,13 @@
-import * as vscode from "vscode";
 import { renderPrompt } from "@vscode/prompt-tsx";
-import { APP_NAME, getConfig, globalStates, internalCommands } from "./configuration";
+import * as vscode from "vscode";
+import { APP_NAME, getConfig, internalCommands } from "./configuration";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { Profile } from "./contracts/types";
 import { Disposable } from "./provider";
 import { extractCodeBlocks, getBaseUrl } from "./util";
-import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
-import { BasePrompt } from "./prompts/base";
 import { ITokenizer } from "./contracts/ITokenizer";
+import { BasePrompt } from "./prompts/base";
 
 export class ChatParticipantProvider extends Disposable {
     public _id: string = "ChatParticipantProvider";
@@ -54,12 +54,12 @@ export class ChatParticipantProvider extends Disposable {
             );
             return;
         }
-        console.time("getFilteredMetadataXml");
+
         const cleanedXml = this.metadataService.getFilteredMetadataXml(
             profile.metadata,
             getConfig(),
         );
-        console.timeEnd("getFilteredMetadataXml");
+
         const dataModel = await this.metadataService.getModel(profile);
 
         const tsx = await renderPrompt(
@@ -85,8 +85,6 @@ export class ChatParticipantProvider extends Disposable {
                     .join(""),
             );
         }
-        console.log(tokenCount);
-        console.log(request.model.maxInputTokens);
 
         if (tokenCount > request.model.maxInputTokens) {
             stream.markdown(

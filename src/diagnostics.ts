@@ -1,21 +1,20 @@
 import * as vscode from "vscode";
 import {
-    SyntaxError,
     LocationRange,
     ParsedTree,
-    ParseSuccessHandler,
     ParseResult,
     ParseSyntaxErrorHandler,
+    SyntaxError,
     SyntaxLocation,
 } from "./parser/syntaxparser";
 
 import { Profile } from "./contracts/types";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 
+import { getConfig, internalCommands } from "./configuration";
+import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
-import { globalStates, getConfig, internalCommands } from "./configuration";
-import { IMetadataModelService } from "./contracts/IMetadataModelService";
 
 /**
  * Provides diagnostic services for OData queries in a Visual Studio Code extension.

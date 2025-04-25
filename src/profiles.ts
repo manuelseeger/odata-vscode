@@ -1,12 +1,12 @@
-import * as vscode from "vscode";
-import * as path from "path";
 import * as fs from "fs";
+import * as path from "path";
+import * as vscode from "vscode";
 
-import { Disposable } from "./provider";
 import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
-import { Profile, IProfileAuthentication, AuthKind } from "./contracts/types";
-import { ITokenizer } from "./contracts/ITokenizer";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
+import { ITokenizer } from "./contracts/ITokenizer";
+import { AuthKind, IProfileAuthentication, Profile } from "./contracts/types";
+import { Disposable } from "./provider";
 
 const profileCommands = {
     deleteProfile: `${APP_NAME}.deleteProfile`,

@@ -1,10 +1,9 @@
 import * as vscode from "vscode";
-import { Disposable } from "./provider";
-import { Profile } from "./contracts/types";
-import { commands, getConfig, globalStates, internalCommands, ODataMode } from "./configuration";
-import { combineODataUrl } from "./util";
-import { getMetadataUrl } from "./util";
+import { commands, getConfig, internalCommands, ODataMode } from "./configuration";
 import { IQueryRunner } from "./contracts/IQueryRunner";
+import { Profile } from "./contracts/types";
+import { Disposable } from "./provider";
+import { combineODataUrl, getMetadataUrl } from "./util";
 
 export class CommandProvider extends Disposable {
     public _id: string = "CommandProvider";
@@ -124,7 +123,10 @@ export class CommandProvider extends Disposable {
             });
         }
 
-        const editor = await vscode.window.showTextDocument(this.queryDocument, { preview: false });
+        const editor = await vscode.window.showTextDocument(this.queryDocument, {
+            preview: false,
+            viewColumn: vscode.ViewColumn.One,
+        });
         const entireRange = new vscode.Range(
             this.queryDocument.positionAt(0),
             this.queryDocument.positionAt(this.queryDocument.getText().length),
