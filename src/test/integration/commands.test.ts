@@ -161,6 +161,7 @@ suite("CommandProvider", () => {
                 const editor = await vscode.window.showTextDocument(document, {
                     preview: false,
                 });
+                await new Promise((resolve) => setTimeout(resolve, 50));
                 const initialCol = editor.viewColumn;
 
                 // Act
