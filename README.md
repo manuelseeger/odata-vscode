@@ -47,7 +47,7 @@ In Copilot Chat, chat with participant `@odata`, example:
 | `odata.metadata.xpathDefaultNsPrefix` | A prefix for the default namespace (usually on &lt;Schema&gt;) used in your XPath expression | `edm`          |
 | `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`).               | `true`        |
 | `odata.disableRunner`          | Disable the query runner, for example if your authentication is not supported.               | `false`       |
-| `odata.openResultInNewPane`    | Open result document in new pane when running queries.                              | `true`        |
+| `odata.openResultInNewPane`    | Open result document in new pane when running queries. Disable to open results in active view.  | `true`        |
 
 ## Known Issues and Limitations
 
