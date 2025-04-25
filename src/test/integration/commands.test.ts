@@ -134,11 +134,11 @@ suite("CommandProvider", () => {
                 await vscode.window.showTextDocument(document, {
                     preview: false,
                 });
-                await new Promise((resolve) => setTimeout(resolve, 50));
+                await new Promise((resolve) => setTimeout(resolve, 100));
 
                 // Act
                 await commandProvider.runEditorQuery();
-                await new Promise((resolve) => setTimeout(resolve, 50));
+                await new Promise((resolve) => setTimeout(resolve, 100));
 
                 // Assert: active editor should be in beside viewColumn
                 const active = vscode.window.activeTextEditor;
