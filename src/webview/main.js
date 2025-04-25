@@ -113,22 +113,15 @@
             document.getElementById('baseUrl').value = profile.baseUrl || '';
             document.getElementById('metadata').value = profile.metadata || '';
             // Auth
-            if (profile.auth) {
-                document.getElementById('authKind').value = profile.auth.kind || 'none';
-                if (profile.auth.kind === 'basic') {
-                    document.getElementById('username').value = profile.auth.username || '';
-                    document.getElementById('password').value = profile.auth.password || '';
-                } else if (profile.auth.kind === 'bearer') {
-                    document.getElementById('token').value = profile.auth.token || '';
-                } else if (profile.auth.kind === 'cliencert') {
-                    document.getElementById('cert').value = (profile.auth.cert && profile.auth.cert.path) || '';
-                    document.getElementById('key').value = (profile.auth.key && profile.auth.key.path) || '';
-                    document.getElementById('pfx').value = (profile.auth.pfx && profile.auth.pfx.path) || '';
-                    document.getElementById('passphrase').value = profile.auth.passphrase || '';
-                }
-                // Update auth fields visibility after setting value
-                updateAuthFields();
-            }
+            document.getElementById('authKind').value = (profile.auth && profile.auth.kind) || 'none';
+            document.getElementById('username').value = (profile.auth && profile.auth.username) || '';
+            document.getElementById('password').value = (profile.auth && profile.auth.password) || '';
+            document.getElementById('token').value = (profile.auth && profile.auth.token) || '';
+            document.getElementById('cert').value = (profile.auth && profile.auth.cert && profile.auth.cert.path) || '';
+            document.getElementById('key').value = (profile.auth && profile.auth.key && profile.auth.key.path) || '';
+            document.getElementById('pfx').value = (profile.auth && profile.auth.pfx && profile.auth.pfx.path) || '';
+            document.getElementById('passphrase').value = (profile.auth && profile.auth.passphrase) || '';
+            updateAuthFields();
             // Headers
             const headersContainer = document.getElementById('headersContainer');
             headersContainer.innerHTML = '';
@@ -147,9 +140,15 @@
                     headersContainer.appendChild(row);
                 });
             }
-            // If token/model info is present, update UI immediately
+            // Clear token/model info if not present
             if (message.tokenCount !== undefined && message.filteredCount !== undefined && message.limits) {
                 updateTokenCountUI(message.limits, message.tokenCount, message.filteredCount);
+            } else {
+                // Clear token/model info UI
+                document.getElementById('tokenCountInfo').textContent = '';
+                document.getElementById('filteredCountInfo').textContent = '';
+                const modelInfoEl = document.getElementById('modelInfo');
+                if (modelInfoEl) modelInfoEl.innerHTML = '';
             }
         }
     });

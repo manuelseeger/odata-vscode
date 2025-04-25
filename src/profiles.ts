@@ -71,6 +71,10 @@ export class ProfileTreeProvider
         ];
     }
 
+    /**
+     * Returns the TreeItem representation for a given ProfileItem.
+     * Adds a check icon if the profile is currently selected.
+     */
     getTreeItem(element: ProfileItem): vscode.TreeItem {
         const selectedProfile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (selectedProfile && selectedProfile.name === element.profile.name) {
@@ -79,6 +83,9 @@ export class ProfileTreeProvider
         return element;
     }
 
+    /**
+     * Returns the list of ProfileItems to display in the tree view.
+     */
     getChildren(): ProfileItem[] {
         const profiles: Profile[] = this.context.globalState.get<Profile[]>(
             globalStates.profiles,
@@ -87,16 +94,23 @@ export class ProfileTreeProvider
         return profiles.map((profile: Profile) => new ProfileItem(profile));
     }
 
+    /**
+     * Refreshes the tree view by firing the change event.
+     */
     refresh() {
         this._onDidChangeTreeData.fire();
     }
 
-    // Helper: get the key for secrets storage
+    /**
+     * Helper: get the key for secrets storage for a given profile name.
+     */
     private getSecretKey(profileName: string): string {
         return `${APP_NAME}.profile.secret.${profileName}`;
     }
 
-    // Helper: extract secrets from a profile
+    /**
+     * Helper: extract secrets from a profile's authentication object.
+     */
     private extractSecrets(profile: Profile): Record<string, string | undefined> {
         const { auth } = profile;
         return {
@@ -106,7 +120,9 @@ export class ProfileTreeProvider
         };
     }
 
-    // Helper: remove secrets from a profile (for globalState)
+    /**
+     * Helper: remove secrets from a profile (for storing in globalState).
+     */
     private stripSecrets(profile: Profile): Profile {
         const { auth } = profile;
         return {
@@ -120,14 +136,18 @@ export class ProfileTreeProvider
         };
     }
 
-    // Helper: save secrets to context.secrets
+    /**
+     * Helper: save secrets to context.secrets for a profile.
+     */
     private async saveSecrets(profile: Profile) {
         const key = this.getSecretKey(profile.name);
         const secrets = this.extractSecrets(profile);
         await this.context.secrets.store(key, JSON.stringify(secrets));
     }
 
-    // Helper: load secrets from context.secrets and merge into profile
+    /**
+     * Helper: load secrets from context.secrets and merge into the profile.
+     */
     private async loadSecrets(profile: Profile): Promise<Profile> {
         const key = this.getSecretKey(profile.name);
         const secretsRaw = await this.context.secrets.get(key);
@@ -147,7 +167,9 @@ export class ProfileTreeProvider
         };
     }
 
-    // Helper: save profile (non-secrets to globalState, secrets to secrets)
+    /**
+     * Helper: save profile (non-secrets to globalState, secrets to secrets storage).
+     */
     private async saveProfile(newProfile: Profile) {
         let profiles: Profile[] = this.context.globalState.get<Profile[]>(
             globalStates.profiles,
@@ -167,6 +189,9 @@ export class ProfileTreeProvider
         }
     }
 
+    /**
+     * Returns the currently selected profile with secrets loaded, or undefined if none is selected.
+     */
     async getSelectedProfile(): Promise<Profile | undefined> {
         const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         if (!selected) {
@@ -175,6 +200,9 @@ export class ProfileTreeProvider
         return this.loadSecrets(selected);
     }
 
+    /**
+     * Sets the selected profile in globalState (without secrets).
+     */
     setSelectedProfile(profile: Profile) {
         this.context.globalState.update(globalStates.selectedProfile, this.stripSecrets(profile));
     }
@@ -208,9 +236,8 @@ export class ProfileTreeProvider
 
     /**
      * Get the metadata for the selected profile and update the profile.
-     *
      * If no profile is selected, prompt the user to select one.
-     * If no profile is found, return an empty string.
+     * If no profile is found, show an error message.
      */
     async getEndpointMetadata() {
         let selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
@@ -238,6 +265,10 @@ export class ProfileTreeProvider
         this.refresh();
     }
 
+    /**
+     * Requests metadata for the given profile and saves it if found.
+     * Returns the metadata string if successful.
+     */
     async requestProfileMetadata(profile: Profile): Promise<string | undefined> {
         const fullProfile = await this.loadSecrets(profile);
         const metadata = await vscode.commands.executeCommand<string>(
@@ -251,6 +282,9 @@ export class ProfileTreeProvider
         }
     }
 
+    /**
+     * Loads and returns the HTML content for the profile webview panel.
+     */
     private async _getWebViewContent(webview: vscode.Webview, profile?: Profile): Promise<string> {
         const scriptUri = webview.asWebviewUri(
             vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "main.js"),
@@ -279,6 +313,10 @@ export class ProfileTreeProvider
         return html;
     }
 
+    /**
+     * Opens the profile webview panel for creating or editing a profile.
+     * Handles webview messages for saving, requesting metadata, and file dialogs.
+     */
     public async openProfileWebview(profile?: Profile) {
         if (!this.currentWebviewPanel) {
             this.currentWebviewPanel = vscode.window.createWebviewPanel(
@@ -367,6 +405,9 @@ export class ProfileTreeProvider
         });
     }
 
+    /**
+     * Builds a metadata payload with token counts and model limits for the webview.
+     */
     private async buildMetadataPayload(metadata: string) {
         const { tokenCount, filteredCount } = this.getMetadataCounts(metadata);
         const models = await vscode.lm.selectChatModels();
@@ -398,6 +439,10 @@ export class ProfileTreeProvider
         return { tokenCount, filteredCount };
     }
 
+    /**
+     * Deletes a profile and its secrets from storage.
+     * Updates the selected profile if necessary.
+     */
     async deleteProfile(profile: Profile) {
         let profiles: Profile[] = this.context.globalState.get<Profile[]>(
             globalStates.profiles,
@@ -420,6 +465,9 @@ export class ProfileTreeProvider
     }
 }
 
+/**
+ * Returns file dialog filters for a given input type (cert, key, pfx, etc).
+ */
 function getFiltersForType(type: string): { [name: string]: string[] } {
     switch (type) {
         case "cert":
@@ -432,6 +480,9 @@ function getFiltersForType(type: string): { [name: string]: string[] } {
     }
 }
 
+/**
+ * Parses raw profile data from the webview into a Profile object.
+ */
 function parseProfile(data: any): Profile {
     const auth: IProfileAuthentication = {
         kind: data.auth.kind as AuthKind,

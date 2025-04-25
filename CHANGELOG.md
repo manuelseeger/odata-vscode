@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Profile UI not updating after new profile selection
+- Credentials synced between VSCode profiles
 
 ## [0.3.0] - 2025-04-19
 
