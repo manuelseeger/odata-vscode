@@ -51,25 +51,44 @@ export class ODataDocumentFormatter
                         const start = document.positionAt(syntaxNode.span.start.offset);
                         const end = document.positionAt(syntaxNode.span.end.offset);
 
-                        // Calculate indentation based on depth
                         const indent = " ".repeat(options.tabSize * depth);
 
-                        // Look back in the text to remove all leading whitespace
+                        // Look back in the text and replace any leading whitespace with indentation
                         let leadingStartOffset = syntaxNode.span.start.offset;
                         while (leadingStartOffset > 0 && /\s/.test(text[leadingStartOffset - 1])) {
                             leadingStartOffset--;
                         }
                         const leadingStart = document.positionAt(leadingStartOffset);
                         const leadingWhitespaceRange = new vscode.Range(leadingStart, start);
-
-                        // Replace all leading whitespace with proper indentation
                         edits.push(vscode.TextEdit.replace(leadingWhitespaceRange, `\n${indent}`));
 
-                        // Replace the node content with trimmed content
+                        // Determine if this node is followed by a separator
+                        const contentStartPos = start;
+                        const nodeEndOffset = syntaxNode.span.end.offset;
+
+                        let sepOffset = nodeEndOffset;
+                        while (sepOffset < text.length && /\s/.test(text[sepOffset])) {
+                            sepOffset++;
+                        }
+                        // Identify the next non-whitespace character
+                        const nextChar = sepOffset < text.length ? text[sepOffset] : "";
+                        const isSeparator =
+                            (depth === 1 && nextChar === "?") || (depth === 2 && nextChar === "&");
+                        // Determine replacement end position (include separator if present)
+                        const contentEndPos = isSeparator
+                            ? document.positionAt(sepOffset + 1)
+                            : end;
+                        let raw = text
+                            .substring(syntaxNode.span.start.offset, syntaxNode.span.end.offset)
+                            .trim();
+                        if (isSeparator) {
+                            raw += nextChar;
+                        }
+                        // Replace the node content (and its separator) with trimmed content and proper separator
                         edits.push(
                             vscode.TextEdit.replace(
-                                new vscode.Range(start, end),
-                                `${text.substring(syntaxNode.span.start.offset, syntaxNode.span.end.offset).trim()}`,
+                                new vscode.Range(contentStartPos, contentEndPos),
+                                raw,
                             ),
                         );
                     }

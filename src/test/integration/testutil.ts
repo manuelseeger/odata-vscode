@@ -43,6 +43,10 @@ export async function setupTests(
     queryRunner: IQueryRunner;
     runnerMock: any;
 }> {
+    // Disable auto-detection of indentation so tests always use the configured tabSize
+    await vscode.workspace
+        .getConfiguration("editor")
+        .update("detectIndentation", false, vscode.ConfigurationTarget.Global);
     await setTabSize(4);
     await setEOL("\n");
 

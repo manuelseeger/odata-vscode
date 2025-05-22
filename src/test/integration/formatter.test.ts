@@ -28,6 +28,11 @@ suite("Document Formatter", () => {
             input: "https://services.odata.org/northwind/northwind.svc/Orders?$filter=Employee/FirstName eq 'Steven' and Employee/LastName eq 'Buchanan'&$orderby=OrderDate desc&$top=5&$select=ShipName,ShipAddress,ShipCity,ShipRegion,ShipPostalCode,ShipCountry",
             expected: `https://services.odata.org/northwind/northwind.svc/\n    Orders?\n        $filter=Employee/FirstName eq 'Steven' and Employee/LastName eq 'Buchanan'&\n        $orderby=OrderDate desc&\n        $top=5&\n        $select=ShipName,ShipAddress,ShipCity,ShipRegion,ShipPostalCode,ShipCountry`,
         },
+        {
+            name: "Should format with new lines and extra spaces",
+            input: "https://services.odata.org/northwind/northwind.svc/Orders  \n  ?  \n  $top=1  \n  &$select=OrderDate,Freight,Employee/LastName  \n  &$expand=Employee",
+            expected: `https://services.odata.org/northwind/northwind.svc/\n    Orders?\n        $top=1&\n        $select=OrderDate,Freight,Employee/LastName&\n        $expand=Employee`,
+        },
     ];
 
     for (const testCase of testCases) {
