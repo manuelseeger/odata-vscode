@@ -29,6 +29,7 @@ suite("Core activation without chat", function () {
             assert.ok(commands.includes(command), command);
         }
         assert.ok(!commands.includes("odata.getSelectedProfileWithSecrets"));
+        assert.ok(!commands.includes("odata.requestMetadata"));
     });
 
     test("opens the profile webview without chat", async function () {

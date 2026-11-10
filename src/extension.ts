@@ -32,11 +32,19 @@ export async function activate(context: vscode.ExtensionContext) {
         v4: v4 as odata.Spec,
     };
 
-    const profiles = new ProfileTreeProvider(tokenizer, metadataService, context);
+    const commands: CommandProvider = new CommandProvider(context, queryRunner, () =>
+        profiles.getSelectedProfile(),
+    );
+    const profiles: ProfileTreeProvider = new ProfileTreeProvider(
+        tokenizer,
+        metadataService,
+        context,
+        (profile, signal) => commands.requestProfileMetadata(profile, signal),
+    );
     context.subscriptions.push(
         new SignatureHelpProvider(context, reference),
         profiles,
-        new CommandProvider(context, queryRunner, () => profiles.getSelectedProfile()),
+        commands,
         new DefaultCompletionItemProvider(context, metadataService),
         new SystemQueryCompletionItemProvider(),
         new MetadataCompletionItemProvider(metadataService, context),

@@ -3,13 +3,13 @@ import * as vscode from "vscode";
 import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { ITokenizer } from "./contracts/ITokenizer";
-import { Profile, ProfileSecrets, PublicProfile } from "./contracts/types";
-import { parseHeaders, parseProfile, publicProfile } from "./profileData";
+import { AuthKind, Profile, ProfileSecrets, StoredProfile } from "./contracts/types";
+import { parseEndpoint, parseProfileDraft, parseProfile, publicProfile } from "./profileData";
 import { Disposable } from "./provider";
 import { requireTrustedWorkspace } from "./security";
 
 export class ProfileItem extends vscode.TreeItem {
-    constructor(public profile: Profile) {
+    constructor(public profile: StoredProfile) {
         super(profile.name, vscode.TreeItemCollapsibleState.None);
         this.contextValue = `${APP_NAME}.profile`;
     }
@@ -29,19 +29,30 @@ export class ProfileTreeProvider
         private tokenizer: ITokenizer,
         private metadataService: IMetadataModelService,
         private context: vscode.ExtensionContext,
+        private requestMetadata: (
+            profile: Profile,
+            signal?: AbortSignal,
+        ) => Promise<string | undefined>,
         subscribe = true,
     ) {
         super();
+        const secure = () => {
+            void this.enqueue(() => this.migratePublicStorage())
+                .then(() => this.refresh())
+                .catch(() => {
+                    void vscode.window.showErrorMessage(
+                        "Cannot secure stored profiles. Check profile settings.",
+                    );
+                });
+        };
         if (vscode.workspace.isTrusted) {
-            void this.enqueue(() => this.migratePublicStorage()).catch(() => {
-                void vscode.window.showErrorMessage(
-                    "Cannot secure stored profiles. Check profile settings.",
-                );
-            });
+            secure();
         }
+        const trustListener = vscode.workspace.onDidGrantWorkspaceTrust(secure);
         this.subscriptions = subscribe
             ? [
                   this.changes,
+                  trustListener,
                   vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
                   vscode.commands.registerCommand(commands.addProfile, () =>
                       this.openProfileWebview(),
@@ -63,7 +74,7 @@ export class ProfileTreeProvider
                       this.selectedPublicProfile(),
                   ),
               ]
-            : [this.changes];
+            : [this.changes, trustListener];
     }
 
     override dispose(): void {
@@ -71,70 +82,156 @@ export class ProfileTreeProvider
         super.dispose();
     }
 
-    private async migratePublicStorage(): Promise<void> {
-        requireTrustedWorkspace();
-        const raw = this.context.globalState.get<unknown>(globalStates.profiles, []);
-        if (!Array.isArray(raw)) {
-            return;
-        }
-        const profiles: Profile[] = [];
-        for (const item of raw) {
-            const profile = parseProfile(item);
-            const { password, token, passphrase } = profile.auth;
-            if (password || token || passphrase || Object.keys(profile.headers).length) {
-                requireTrustedWorkspace();
-                const stored = await this.context.secrets.get(this.secretKey(profile.name));
-                let previous: Record<string, unknown> = {};
-                if (stored) {
-                    const data: unknown = JSON.parse(stored);
-                    if (data && typeof data === "object" && !Array.isArray(data)) {
-                        const record = data as Record<string, unknown>;
-                        previous = {
-                            password: record.password,
-                            token: record.token,
-                            passphrase: record.passphrase,
-                            headers: record.headers,
-                        };
-                    }
-                }
-                await this.context.secrets.store(
-                    this.secretKey(profile.name),
-                    JSON.stringify({
-                        ...previous,
-                        ...(password ? { password } : {}),
-                        ...(token ? { token } : {}),
-                        ...(passphrase ? { passphrase } : {}),
-                        ...(Object.keys(profile.headers).length
-                            ? { headers: profile.headers }
-                            : {}),
-                    }),
-                );
+    private storedDraft(value: unknown, index: number): StoredProfile {
+        try {
+            const safe = publicProfile(parseProfileDraft(value));
+            if (
+                value &&
+                typeof value === "object" &&
+                "recovery" in value &&
+                value.recovery === true
+            ) {
+                return { ...safe, recovery: true };
             }
-            profiles.push(publicProfile(profile));
+            return safe;
+        } catch {
+            const data =
+                value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+            let baseUrl = "";
+            if (typeof data.baseUrl === "string") {
+                try {
+                    parseEndpoint(data.baseUrl);
+                    baseUrl = data.baseUrl;
+                } catch {}
+            }
+            return {
+                name:
+                    typeof data.name === "string" && data.name
+                        ? data.name
+                        : `Recovered profile ${index + 1}`,
+                baseUrl,
+                auth: { kind: AuthKind.None },
+                headers: {},
+                recovery: true,
+            };
         }
-        await this.context.globalState.update(globalStates.profiles, profiles);
-        const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        await this.context.globalState.update(
-            globalStates.selectedProfile,
-            profiles.find((p) => p.name === selected?.name),
-        );
     }
 
-    private profiles(): PublicProfile[] {
-        const input = this.context.globalState.get<unknown>(globalStates.profiles, []);
-        if (!Array.isArray(input)) {
-            return [];
-        }
-        return input.flatMap((value) => {
-            try {
-                return [publicProfile(parseProfile(value))];
-            } catch {
+    private storedDrafts(values: unknown[]): StoredProfile[] {
+        const names = new Set(
+            values.flatMap((value) => {
+                if (
+                    value &&
+                    typeof value === "object" &&
+                    "name" in value &&
+                    typeof value.name === "string" &&
+                    value.name
+                ) {
+                    return [value.name];
+                }
                 return [];
+            }),
+        );
+        return values.map((value, index) => {
+            const profile = this.storedDraft(value, index);
+            const named =
+                value &&
+                typeof value === "object" &&
+                "name" in value &&
+                typeof value.name === "string" &&
+                value.name;
+            if (profile.recovery && !named) {
+                const base = profile.name;
+                let suffix = 1;
+                while (names.has(profile.name)) {
+                    profile.name = `${base} (${suffix++})`;
+                }
+                names.add(profile.name);
             }
+            return profile;
         });
     }
 
-    private selectedPublicProfile(): PublicProfile | undefined {
+    private async migratePublicStorage(): Promise<StoredProfile[]> {
+        requireTrustedWorkspace();
+        const raw = this.context.globalState.get<unknown>(globalStates.profiles, []);
+        const items: unknown[] = Array.isArray(raw) ? [...raw] : [raw];
+        const selected = this.context.globalState.get<unknown>(globalStates.selectedProfile);
+        const drafts = this.storedDrafts([...items, ...(selected === undefined ? [] : [selected])]);
+        const profiles = drafts.slice(0, items.length);
+        const selectedDraft = selected === undefined ? undefined : drafts.at(-1);
+        if (selectedDraft && !profiles.some((profile) => profile.name === selectedDraft.name)) {
+            items.push(selected);
+            profiles.push(selectedDraft);
+        }
+        const sources: { item: unknown; safe: StoredProfile; overwrite: boolean }[] = [];
+        if (selectedDraft) {
+            sources.push({ item: selected, safe: selectedDraft, overwrite: false });
+        }
+        sources.push(
+            ...items.map((item, index) => ({ item, safe: profiles[index], overwrite: true })),
+        );
+        let failed = false;
+        for (const { item, safe, overwrite } of sources) {
+            try {
+                let fields: Partial<ProfileSecrets>;
+                try {
+                    const draft = parseProfileDraft(item);
+                    fields = {};
+                    for (const field of ["password", "token", "passphrase"] as const) {
+                        if (draft.auth[field] !== undefined) {
+                            fields[field] = draft.auth[field];
+                        }
+                    }
+                    if (Object.keys(draft.headers).length) {
+                        fields.headers = draft.headers;
+                    }
+                } catch {
+                    fields = { recovery: item };
+                }
+                if (!Object.keys(fields).length) {
+                    continue;
+                }
+                requireTrustedWorkspace();
+                const rawSecret = await this.context.secrets.get(this.secretKey(safe.name));
+                const previous: unknown = rawSecret ? JSON.parse(rawSecret) : {};
+                if (!previous || typeof previous !== "object" || Array.isArray(previous)) {
+                    throw new Error("Invalid stored profile secrets.");
+                }
+                const next = JSON.stringify(
+                    overwrite ? { ...previous, ...fields } : { ...fields, ...previous },
+                );
+                if (next !== rawSecret) {
+                    await this.context.secrets.store(this.secretKey(safe.name), next);
+                }
+            } catch {
+                failed = true;
+            }
+        }
+        if (failed) {
+            throw new Error("Cannot secure stored profiles.");
+        }
+        if (JSON.stringify(raw) !== JSON.stringify(profiles)) {
+            await this.context.globalState.update(globalStates.profiles, profiles);
+        }
+        const nextSelected = profiles.find((profile) => profile.name === selectedDraft?.name);
+        if (JSON.stringify(selected) !== JSON.stringify(nextSelected)) {
+            await this.context.globalState.update(globalStates.selectedProfile, nextSelected);
+        }
+        return profiles;
+    }
+
+    private profiles(): StoredProfile[] {
+        const input = this.context.globalState.get<unknown>(globalStates.profiles, []);
+        const items: unknown[] = Array.isArray(input) ? input : [input];
+        const selected = this.context.globalState.get<unknown>(globalStates.selectedProfile);
+        return this.storedDrafts([...items, ...(selected === undefined ? [] : [selected])]).slice(
+            0,
+            items.length,
+        );
+    }
+
+    private selectedPublicProfile(): StoredProfile | undefined {
         const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
         return this.profiles().find((profile) => profile.name === selected?.name);
     }
@@ -155,9 +252,12 @@ export class ProfileTreeProvider
         this.changes.fire();
     }
 
-    private enqueue(operation: () => Promise<void>): Promise<void> {
+    private enqueue<T>(operation: () => Promise<T>): Promise<T> {
         const result = this.writes.then(operation);
-        this.writes = result.catch(() => undefined);
+        this.writes = result.then(
+            () => undefined,
+            () => undefined,
+        );
         return result;
     }
 
@@ -165,7 +265,15 @@ export class ProfileTreeProvider
         return `${APP_NAME}.profile.secret.${name}`;
     }
 
-    private async loadSecrets(profile: Profile): Promise<Profile> {
+    private async loadSecrets(profile: Profile): Promise<Profile & { recoveryData?: unknown }> {
+        return this.enqueue(async () => {
+            const profiles = await this.migratePublicStorage();
+            const current = profiles.find((value) => value.name === profile.name) || profile;
+            return this.readSecrets(current);
+        });
+    }
+
+    private async readSecrets(profile: Profile): Promise<Profile & { recoveryData?: unknown }> {
         requireTrustedWorkspace();
         const raw = await this.context.secrets.get(this.secretKey(profile.name));
         if (!raw) {
@@ -190,15 +298,17 @@ export class ProfileTreeProvider
                 auth[field] = data[field];
             }
         }
-        return parseProfile({ ...profile, auth, headers: parseHeaders(data.headers) });
+        return {
+            ...parseProfileDraft({ ...profile, auth, headers: data.headers }),
+            ...(data.recovery !== undefined ? { recoveryData: data.recovery } : {}),
+        };
     }
 
     async saveProfile(input: unknown, previousName?: string): Promise<void> {
         requireTrustedWorkspace();
-        const profile = parseProfile(input);
         await this.enqueue(async () => {
-            requireTrustedWorkspace();
-            const profiles = this.profiles();
+            const profiles = await this.migratePublicStorage();
+            const profile = parseProfile(input);
             if (
                 previousName &&
                 previousName !== profile.name &&
@@ -235,14 +345,22 @@ export class ProfileTreeProvider
 
     async getSelectedProfile(): Promise<Profile | undefined> {
         requireTrustedWorkspace();
-        await this.writes;
-        const selected = this.selectedPublicProfile();
-        return selected ? this.loadSecrets(selected) : undefined;
+        return this.enqueue(async () => {
+            const profiles = await this.migratePublicStorage();
+            const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+            const current = profiles.find((profile) => profile.name === selected?.name);
+            if (current?.recovery) {
+                throw new Error("Repair this recovered profile before use.");
+            }
+            return current ? parseProfile(await this.readSecrets(current)) : undefined;
+        });
     }
 
     async setSelectedProfile(profile: Profile): Promise<void> {
+        requireTrustedWorkspace();
         await this.enqueue(async () => {
-            const current = this.profiles().find((p) => p.name === profile.name);
+            const profiles = await this.migratePublicStorage();
+            const current = profiles.find((p) => p.name === profile.name);
             await this.context.globalState.update(globalStates.selectedProfile, current);
             this.refresh();
         });
@@ -274,7 +392,7 @@ export class ProfileTreeProvider
             if (metadata) {
                 await this.saveProfile({ ...profile, metadata });
                 void vscode.window.showInformationMessage(
-                    `Metadata updated for profile ${profile.name}.`,
+                    `Metadata updated successfully for profile ${profile.name}.`,
                 );
             }
         } catch {
@@ -290,15 +408,11 @@ export class ProfileTreeProvider
     ): Promise<string | undefined> {
         requireTrustedWorkspace();
         const profile = parseProfile(input);
-        return vscode.commands.executeCommand<string>(
-            internalCommands.requestMetadata,
-            profile,
-            signal,
-        );
+        return this.requestMetadata(profile, signal);
     }
 
     public async openProfileWebview(input?: Profile): Promise<void> {
-        input = input ? publicProfile(parseProfile(input)) : undefined;
+        input = input ? publicProfile(parseProfileDraft(input)) : undefined;
         this.currentWebviewPanel?.dispose();
         const panel = vscode.window.createWebviewPanel(
             "profileManager",
@@ -326,7 +440,20 @@ export class ProfileTreeProvider
         const sendProfile = async () => {
             const value =
                 profile && vscode.workspace.isTrusted ? await this.loadSecrets(profile) : profile;
-            post({ command: "initProfile", profile: value });
+            post({
+                command: "initProfile",
+                profile: value
+                    ? {
+                          ...value,
+                          auth: {
+                              ...value.auth,
+                              cert: value.auth.cert?.toString(),
+                              key: value.auth.key?.toString(),
+                              pfx: value.auth.pfx?.toString(),
+                          },
+                      }
+                    : undefined,
+            });
             if (value?.metadata) {
                 const payload = await this.buildMetadataPayload(value.metadata);
                 post({ command: "metadataStats", ...payload });
@@ -354,15 +481,14 @@ export class ProfileTreeProvider
                         await sendProfile();
                     } else if (data.command === "saveProfile") {
                         requireTrustedWorkspace();
-                        const next = parseProfile(data.data);
                         panelWrites = panelWrites
                             .catch(() => undefined)
                             .then(async () => {
                                 if (!active) {
                                     return;
                                 }
-                                await this.saveProfile(next, profile?.name);
-                                profile = next;
+                                await this.saveProfile(data.data, profile?.name);
+                                profile = parseProfile(data.data);
                             });
                         await panelWrites;
                     } else if (data.command === "requestMetadata") {
@@ -477,8 +603,8 @@ export class ProfileTreeProvider
     async deleteProfile(profile: Profile): Promise<void> {
         requireTrustedWorkspace();
         await this.enqueue(async () => {
-            requireTrustedWorkspace();
-            const profiles = this.profiles().filter((p) => p.name !== profile.name);
+            const secured = await this.migratePublicStorage();
+            const profiles = secured.filter((p) => p.name !== profile.name);
             await this.context.secrets.delete(this.secretKey(profile.name));
             await this.context.globalState.update(globalStates.profiles, profiles);
             if (

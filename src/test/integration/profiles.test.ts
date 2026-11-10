@@ -28,11 +28,19 @@ suite("ProfileTreeProvider", () => {
         const tokenizer = new Tokenizer();
         commandProvider = new CommandProvider(context, queryRunner, async () => profile, false);
 
-        profileTreeProvider = new ProfileTreeProvider(tokenizer, metadataService, context, false);
-        profileTreeProvider.requestProfileMetadata = value => commandProvider.requestProfileMetadata(value);
+        profileTreeProvider = new ProfileTreeProvider(
+            tokenizer,
+            metadataService,
+            context,
+            (value, signal) => commandProvider.requestProfileMetadata(value, signal),
+            false,
+        );
     });
 
-    teardown(() => { profileTreeProvider?.dispose(); commandProvider?.dispose(); });
+    teardown(() => {
+        profileTreeProvider?.dispose();
+        commandProvider?.dispose();
+    });
 
     test("should get metadata for profile", async () => {
         // Act
@@ -41,7 +49,12 @@ suite("ProfileTreeProvider", () => {
 
         // Assert
         verify(
-            runnerMock.fetch("https://example.com/odata/$metadata", anything(), anything(), anything()),
+            runnerMock.fetch(
+                "https://example.com/odata/$metadata",
+                anything(),
+                anything(),
+                anything(),
+            ),
         ).once();
     });
 });

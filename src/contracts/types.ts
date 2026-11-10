@@ -31,6 +31,11 @@ export interface ProfileSecrets {
     token?: string;
     passphrase?: string;
     headers: Record<string, string>;
+    recovery?: unknown;
+}
+
+export interface StoredProfile extends PublicProfile {
+    recovery?: true;
 }
 
 export interface PublicProfile extends Profile {

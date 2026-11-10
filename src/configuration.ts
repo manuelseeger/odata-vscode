@@ -6,7 +6,7 @@ import {
     PublicProfile,
 } from "./contracts/types";
 
-import { parseProfile, publicProfile } from "./profileData";
+import { parseProfileDraft, publicProfile } from "./profileData";
 
 export function getSelectedPublicProfile(
     context: vscode.ExtensionContext,
@@ -16,7 +16,7 @@ export function getSelectedPublicProfile(
         return undefined;
     }
     try {
-        return publicProfile(parseProfile(selected));
+        return publicProfile(parseProfileDraft(selected));
     } catch {
         return undefined;
     }
@@ -34,7 +34,6 @@ export const commands = {
 
 export const internalCommands = {
     openAndRunQuery: `${APP_NAME}.openAndRunQuery`,
-    requestMetadata: `${APP_NAME}.requestMetadata`,
     getSelectedProfile: `${APP_NAME}.getSelectedProfile`,
 };
 

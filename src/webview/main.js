@@ -105,24 +105,14 @@
             document.getElementById("password").value =
                 (profile.auth && profile.auth.password) || "";
             document.getElementById("token").value = (profile.auth && profile.auth.token) || "";
-            document.getElementById("cert").value =
-                (profile.auth &&
-                    profile.auth.cert &&
-                    profile.auth.cert.scheme === "file" &&
-                    "file://" + (profile.auth.cert.authority || "") + profile.auth.cert.path) ||
-                "";
-            document.getElementById("key").value =
-                (profile.auth &&
-                    profile.auth.key &&
-                    profile.auth.key.scheme === "file" &&
-                    "file://" + (profile.auth.key.authority || "") + profile.auth.key.path) ||
-                "";
-            document.getElementById("pfx").value =
-                (profile.auth &&
-                    profile.auth.pfx &&
-                    profile.auth.pfx.scheme === "file" &&
-                    "file://" + (profile.auth.pfx.authority || "") + profile.auth.pfx.path) ||
-                "";
+            document.getElementById("cert").value = (profile.auth && profile.auth.cert) || "";
+            document.getElementById("key").value = (profile.auth && profile.auth.key) || "";
+            document.getElementById("pfx").value = (profile.auth && profile.auth.pfx) || "";
+            const recovery = document.getElementById("recoveryData");
+            document.getElementById("recoveryDetails").hidden = profile.recoveryData === undefined;
+            recovery.textContent = profile.recoveryData === undefined
+                ? ""
+                : JSON.stringify(profile.recoveryData, null, 2);
             document.getElementById("passphrase").value =
                 (profile.auth && profile.auth.passphrase) || "";
             updateAuthFields();

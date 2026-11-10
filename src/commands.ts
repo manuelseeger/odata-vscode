@@ -47,12 +47,6 @@ export class CommandProvider extends Disposable {
                 this.openAndRunQuery,
                 this,
             ),
-
-            vscode.commands.registerCommand(
-                internalCommands.requestMetadata,
-                this.requestProfileMetadata,
-                this,
-            ),
         ];
     }
 
@@ -87,7 +81,9 @@ export class CommandProvider extends Disposable {
                 const url = new URL(combinedUrl);
                 await this.runQuery(url.href);
             } catch (exception) {
-                vscode.window.showWarningMessage("Document does not represent a valid URL.");
+                vscode.window.showWarningMessage(
+                    "Cannot run query. Check the URL, workspace trust, and selected profile settings.",
+                );
             }
         }
     }

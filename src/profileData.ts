@@ -103,19 +103,54 @@ function file(value: unknown): URI | undefined {
     return uri;
 }
 
-export function parseProfile(value: unknown): Profile {
+export function parseProfileDraft(value: unknown): Profile {
     const data = record(value);
-    const name = text(data.name).trim();
-    if (!name || name.length > 200 || /[\x00-\x1f]/.test(name)) {
-        throw new Error("A valid profile name is required.");
+    const baseUrl = text(data.baseUrl);
+    let endpoint: URL | undefined;
+    try {
+        endpoint = new URL(baseUrl);
+    } catch {}
+    if (endpoint?.username || endpoint?.password || /^[a-z]+:\/\/[^/?#]*@/i.test(baseUrl.trim())) {
+        throw new Error("Endpoint user information requires recovery.");
     }
-    const baseUrl = text(data.baseUrl).trim();
-    const url = parseEndpoint(baseUrl);
     const input = record(data.auth);
     if (!Object.values(AuthKind).includes(input.kind as AuthKind)) {
         throw new Error("Invalid authentication kind.");
     }
     const auth: IProfileAuthentication = { kind: input.kind as AuthKind };
+    for (const field of ["username", "password", "token", "passphrase"] as const) {
+        if (input[field] !== undefined) {
+            auth[field] = text(input[field]);
+        }
+    }
+    for (const field of ["cert", "key", "pfx"] as const) {
+        auth[field] = file(input[field]);
+    }
+    const headers: Record<string, string> = Object.create(null);
+    for (const [key, value] of Object.entries(
+        data.headers === undefined ? {} : record(data.headers),
+    )) {
+        headers[key] = text(value);
+    }
+    return {
+        name: text(data.name),
+        baseUrl,
+        auth,
+        headers,
+        metadata: data.metadata === undefined ? undefined : text(data.metadata),
+    };
+}
+
+export function parseProfile(value: unknown): Profile {
+    const data = parseProfileDraft(value);
+    const name = data.name.trim();
+    if (!name || name.length > 200 || /[\x00-\x1f]/.test(name)) {
+        throw new Error("A valid profile name is required.");
+    }
+    const baseUrl = data.baseUrl.trim();
+    const url = parseEndpoint(baseUrl);
+    const input = data.auth;
+    const auth: IProfileAuthentication = { kind: input.kind };
     if (auth.kind === AuthKind.Basic) {
         auth.username = text(input.username);
         auth.password = text(input.password);
