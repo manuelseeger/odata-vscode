@@ -16,6 +16,7 @@
 		"jsxFactory": "vscpp",
 		"jsxFragmentFactory": "vscppf"
 	},
+	"include": ["src/**/*"],
 	"exclude": [
 			"playground",
 			"out",

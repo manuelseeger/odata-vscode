@@ -1,20 +1,13 @@
----
-name: "PR Test"
+name: Test
 
 on:
   pull_request:
-    branches:
-      - "*"
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-     - uses: actions/checkout@v4
-     - uses: actions/setup-node@v4
-     - run: npm install
-     - run: xvfb-run npm test
-       if: runner.os == 'Linux'
-     - run: npm test
-       if: runner.os != 'Linux'
+  validate:
+    uses: ./.github/workflows/validate.yml
