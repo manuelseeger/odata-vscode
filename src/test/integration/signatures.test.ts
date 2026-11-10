@@ -77,12 +77,41 @@ suite("SignatureHelpProvider Integration Tests", () => {
         );
     });
 
-    test("should not provide signature help when canceled", async () => {
+    test("should provide signature help inside empty parentheses before the closing parenthesis", async () => {
+        const document = await vscode.workspace.openTextDocument({
+            content: "testFunction()",
+            language: "odata",
+        });
+        const position = new vscode.Position(0, "testFunction(".length);
+
+        for (const isRetrigger of [false, true]) {
+            const signatureHelp = await signatureHelpProvider.provideSignatureHelp(
+                document,
+                position,
+                {} as vscode.CancellationToken,
+                {
+                    triggerKind: vscode.SignatureHelpTriggerKind.TriggerCharacter,
+                    triggerCharacter: "(",
+                    isRetrigger,
+                    activeSignatureHelp: undefined,
+                },
+            );
+
+            assert.ok(signatureHelp.signatures.length > 0, "Expected signature help inside ().");
+            assert.strictEqual(
+                signatureHelp.signatures[signatureHelp.activeSignature].label,
+                "testFunction(param1: Edm.String)",
+            );
+            assert.strictEqual(signatureHelp.activeParameter, 0);
+        }
+    });
+
+    test("should not provide signature help after the closing parenthesis", async () => {
         const document = await vscode.workspace.openTextDocument({
             content: `testFunction()`,
             language: "odata",
         });
-        const position = new vscode.Position(0, 12); // Position after the closing parenthesis
+        const position = new vscode.Position(0, "testFunction()".length);
         const context = {
             triggerKind: vscode.SignatureHelpTriggerKind.Invoke,
             isRetrigger: true,
