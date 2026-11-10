@@ -32,11 +32,11 @@ export async function activate(context: vscode.ExtensionContext) {
         v4: v4 as odata.Spec,
     };
 
+    const profiles = new ProfileTreeProvider(tokenizer, metadataService, context);
     context.subscriptions.push(
         new SignatureHelpProvider(context, reference),
-        new ChatParticipantProvider(context, metadataService, tokenizer),
-        new ProfileTreeProvider(tokenizer, metadataService, context),
-        new CommandProvider(context, queryRunner),
+        profiles,
+        new CommandProvider(context, queryRunner, () => profiles.getSelectedProfile()),
         new DefaultCompletionItemProvider(context, metadataService),
         new SystemQueryCompletionItemProvider(),
         new MetadataCompletionItemProvider(metadataService, context),
@@ -55,6 +55,12 @@ export async function activate(context: vscode.ExtensionContext) {
             syntaxParser.handleChangeTextDocument(event.document);
         }),
     );
+
+    try {
+        context.subscriptions.push(
+            new ChatParticipantProvider(context, metadataService, tokenizer),
+        );
+    } catch {}
 
     return context;
 }

@@ -26,6 +26,22 @@ export interface Profile {
     headers: { [key: string]: string };
 }
 
+export interface ProfileSecrets {
+    password?: string;
+    token?: string;
+    passphrase?: string;
+    headers: Record<string, string>;
+}
+
+export interface PublicProfile extends Profile {
+    auth: Omit<IProfileAuthentication, "password" | "token" | "passphrase"> & {
+        password?: never;
+        token?: never;
+        passphrase?: never;
+    };
+    headers: Record<string, never>;
+}
+
 export type ODataFormat = "json" | "xml";
 
 export interface IODataMetadataConfigurationMapEntry {

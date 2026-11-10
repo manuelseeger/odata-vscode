@@ -1,23 +1,17 @@
-import * as fs from "fs";
-import * as path from "path";
+import { randomBytes } from "crypto";
 import * as vscode from "vscode";
-
 import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { ITokenizer } from "./contracts/ITokenizer";
-import { AuthKind, IProfileAuthentication, Profile } from "./contracts/types";
+import { Profile, ProfileSecrets, PublicProfile } from "./contracts/types";
+import { parseHeaders, parseProfile, publicProfile } from "./profileData";
 import { Disposable } from "./provider";
-
-const profileCommands = {
-    deleteProfile: `${APP_NAME}.deleteProfile`,
-    editProfile: `${APP_NAME}.editProfile`,
-    requestMetadata: `${APP_NAME}.requestProfileMetadata`,
-};
+import { requireTrustedWorkspace } from "./security";
 
 export class ProfileItem extends vscode.TreeItem {
     constructor(public profile: Profile) {
         super(profile.name, vscode.TreeItemCollapsibleState.None);
-        this.contextValue = `${APP_NAME}.profile`; // Enables context menu
+        this.contextValue = `${APP_NAME}.profile`;
     }
 }
 
@@ -25,483 +19,475 @@ export class ProfileTreeProvider
     extends Disposable
     implements vscode.TreeDataProvider<ProfileItem>
 {
-    public _id: string = "ProfileTreeProvider";
-    private _onDidChangeTreeData: vscode.EventEmitter<ProfileItem | undefined | void> =
-        new vscode.EventEmitter<ProfileItem | undefined | void>();
-    readonly onDidChangeTreeData: vscode.Event<ProfileItem | undefined | void> =
-        this._onDidChangeTreeData.event;
-    private currentWebviewPanel: vscode.WebviewPanel | undefined;
+    public _id = "ProfileTreeProvider";
+    private changes = new vscode.EventEmitter<ProfileItem | undefined | void>();
+    readonly onDidChangeTreeData = this.changes.event;
+    private currentWebviewPanel?: vscode.WebviewPanel;
+    private writes: Promise<void> = Promise.resolve();
 
     constructor(
         private tokenizer: ITokenizer,
         private metadataService: IMetadataModelService,
         private context: vscode.ExtensionContext,
+        subscribe = true,
     ) {
         super();
-        this.subscriptions = [
-            vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
-            vscode.commands.registerCommand(commands.addProfile, this.openProfileWebview, this),
-            vscode.commands.registerCommand(commands.getMetadata, this.getEndpointMetadata, this),
-            vscode.commands.registerCommand(commands.selectProfile, this.selectProfile, this),
-            vscode.commands.registerCommand(
-                profileCommands.editProfile,
-                (profileItem: ProfileItem) => {
-                    this.openProfileWebview(profileItem.profile);
-                },
-            ),
-            vscode.commands.registerCommand(
-                profileCommands.deleteProfile,
-                (profileItem: ProfileItem) => {
-                    this.deleteProfile(profileItem.profile);
-                },
-            ),
-            vscode.commands.registerCommand(
-                profileCommands.requestMetadata,
-                async (profileItem: ProfileItem) => {
-                    await this.requestProfileMetadata(profileItem.profile);
-                },
-            ),
-            // Register internal command for getting selected profile with secrets
-            vscode.commands.registerCommand(
-                internalCommands.getSelectedProfileWithSecrets,
-                async () => {
-                    return await this.getSelectedProfile();
-                },
-            ),
-        ];
-    }
-
-    /**
-     * Returns the TreeItem representation for a given ProfileItem.
-     * Adds a check icon if the profile is currently selected.
-     */
-    getTreeItem(element: ProfileItem): vscode.TreeItem {
-        const selectedProfile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        if (selectedProfile && selectedProfile.name === element.profile.name) {
-            element.iconPath = new vscode.ThemeIcon("check");
+        if (vscode.workspace.isTrusted) {
+            void this.enqueue(() => this.migratePublicStorage()).catch(() => {
+                void vscode.window.showErrorMessage(
+                    "Cannot secure stored profiles. Check profile settings.",
+                );
+            });
         }
-        return element;
+        this.subscriptions = subscribe
+            ? [
+                  this.changes,
+                  vscode.window.registerTreeDataProvider(`${APP_NAME}.profiles-view`, this),
+                  vscode.commands.registerCommand(commands.addProfile, () =>
+                      this.openProfileWebview(),
+                  ),
+                  vscode.commands.registerCommand(commands.getMetadata, () =>
+                      this.getEndpointMetadata(),
+                  ),
+                  vscode.commands.registerCommand(commands.selectProfile, () =>
+                      this.selectProfile(),
+                  ),
+                  vscode.commands.registerCommand(`${APP_NAME}.editProfile`, (item: ProfileItem) =>
+                      this.openProfileWebview(item.profile),
+                  ),
+                  vscode.commands.registerCommand(
+                      `${APP_NAME}.deleteProfile`,
+                      (item: ProfileItem) => this.deleteProfile(item.profile),
+                  ),
+                  vscode.commands.registerCommand(internalCommands.getSelectedProfile, () =>
+                      this.selectedPublicProfile(),
+                  ),
+              ]
+            : [this.changes];
     }
 
-    /**
-     * Returns the list of ProfileItems to display in the tree view.
-     */
-    getChildren(): ProfileItem[] {
-        const profiles: Profile[] = this.context.globalState.get<Profile[]>(
-            globalStates.profiles,
-            [],
+    override dispose(): void {
+        this.currentWebviewPanel?.dispose();
+        super.dispose();
+    }
+
+    private async migratePublicStorage(): Promise<void> {
+        requireTrustedWorkspace();
+        const raw = this.context.globalState.get<unknown>(globalStates.profiles, []);
+        if (!Array.isArray(raw)) {
+            return;
+        }
+        const profiles: Profile[] = [];
+        for (const item of raw) {
+            const profile = parseProfile(item);
+            const { password, token, passphrase } = profile.auth;
+            if (password || token || passphrase || Object.keys(profile.headers).length) {
+                requireTrustedWorkspace();
+                const stored = await this.context.secrets.get(this.secretKey(profile.name));
+                let previous: Record<string, unknown> = {};
+                if (stored) {
+                    const data: unknown = JSON.parse(stored);
+                    if (data && typeof data === "object" && !Array.isArray(data)) {
+                        const record = data as Record<string, unknown>;
+                        previous = {
+                            password: record.password,
+                            token: record.token,
+                            passphrase: record.passphrase,
+                            headers: record.headers,
+                        };
+                    }
+                }
+                await this.context.secrets.store(
+                    this.secretKey(profile.name),
+                    JSON.stringify({
+                        ...previous,
+                        ...(password ? { password } : {}),
+                        ...(token ? { token } : {}),
+                        ...(passphrase ? { passphrase } : {}),
+                        ...(Object.keys(profile.headers).length
+                            ? { headers: profile.headers }
+                            : {}),
+                    }),
+                );
+            }
+            profiles.push(publicProfile(profile));
+        }
+        await this.context.globalState.update(globalStates.profiles, profiles);
+        const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        await this.context.globalState.update(
+            globalStates.selectedProfile,
+            profiles.find((p) => p.name === selected?.name),
         );
-        return profiles.map((profile: Profile) => new ProfileItem(profile));
     }
 
-    /**
-     * Refreshes the tree view by firing the change event.
-     */
-    refresh() {
-        this._onDidChangeTreeData.fire();
+    private profiles(): PublicProfile[] {
+        const input = this.context.globalState.get<unknown>(globalStates.profiles, []);
+        if (!Array.isArray(input)) {
+            return [];
+        }
+        return input.flatMap((value) => {
+            try {
+                return [publicProfile(parseProfile(value))];
+            } catch {
+                return [];
+            }
+        });
     }
 
-    /**
-     * Helper: get the key for secrets storage for a given profile name.
-     */
-    private getSecretKey(profileName: string): string {
-        return `${APP_NAME}.profile.secret.${profileName}`;
+    private selectedPublicProfile(): PublicProfile | undefined {
+        const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        return this.profiles().find((profile) => profile.name === selected?.name);
     }
 
-    /**
-     * Helper: extract secrets from a profile's authentication object.
-     */
-    private extractSecrets(profile: Profile): Record<string, string | undefined> {
-        const { auth } = profile;
-        return {
-            password: auth.password,
-            token: auth.token,
-            passphrase: auth.passphrase,
-        };
+    getTreeItem(item: ProfileItem): vscode.TreeItem {
+        item.iconPath =
+            this.selectedPublicProfile()?.name === item.profile.name
+                ? new vscode.ThemeIcon("check")
+                : undefined;
+        return item;
     }
 
-    /**
-     * Helper: remove secrets from a profile (for storing in globalState).
-     */
-    private stripSecrets(profile: Profile): Profile {
-        const { auth } = profile;
-        return {
-            ...profile,
-            auth: {
-                ...auth,
-                password: undefined,
-                token: undefined,
-                passphrase: undefined,
-            },
-        };
+    getChildren(): ProfileItem[] {
+        return this.profiles().map((profile) => new ProfileItem(profile));
     }
 
-    /**
-     * Helper: save secrets to context.secrets for a profile.
-     */
-    private async saveSecrets(profile: Profile) {
-        const key = this.getSecretKey(profile.name);
-        const secrets = this.extractSecrets(profile);
-        await this.context.secrets.store(key, JSON.stringify(secrets));
+    refresh(): void {
+        this.changes.fire();
     }
 
-    /**
-     * Helper: load secrets from context.secrets and merge into the profile.
-     */
+    private enqueue(operation: () => Promise<void>): Promise<void> {
+        const result = this.writes.then(operation);
+        this.writes = result.catch(() => undefined);
+        return result;
+    }
+
+    private secretKey(name: string): string {
+        return `${APP_NAME}.profile.secret.${name}`;
+    }
+
     private async loadSecrets(profile: Profile): Promise<Profile> {
-        const key = this.getSecretKey(profile.name);
-        const secretsRaw = await this.context.secrets.get(key);
-        if (!secretsRaw) {
+        requireTrustedWorkspace();
+        const raw = await this.context.secrets.get(this.secretKey(profile.name));
+        if (!raw) {
             return profile;
         }
-        let secrets: Record<string, string | undefined> = {};
+        let secret: unknown;
         try {
-            secrets = JSON.parse(secretsRaw);
-        } catch {}
-        return {
-            ...profile,
-            auth: {
-                ...profile.auth,
-                ...secrets,
-            },
-        };
+            secret = JSON.parse(raw);
+        } catch {
+            throw new Error("Invalid stored profile secrets.");
+        }
+        if (!secret || typeof secret !== "object" || Array.isArray(secret)) {
+            throw new Error("Invalid stored profile secrets.");
+        }
+        const data = secret as Record<string, unknown>;
+        const auth = { ...profile.auth };
+        for (const field of ["password", "token", "passphrase"] as const) {
+            if (data[field] !== undefined) {
+                if (typeof data[field] !== "string") {
+                    throw new Error("Invalid stored authentication field.");
+                }
+                auth[field] = data[field];
+            }
+        }
+        return parseProfile({ ...profile, auth, headers: parseHeaders(data.headers) });
     }
 
-    /**
-     * Helper: save profile (non-secrets to globalState, secrets to secrets storage).
-     */
-    private async saveProfile(newProfile: Profile) {
-        let profiles: Profile[] = this.context.globalState.get<Profile[]>(
-            globalStates.profiles,
-            [],
-        );
-        const index = profiles.findIndex((p: Profile) => p.name === newProfile.name);
-        const profileNoSecrets = this.stripSecrets(newProfile);
-        if (index >= 0) {
-            profiles[index] = profileNoSecrets;
-        } else {
-            profiles.push(profileNoSecrets);
-        }
-        this.context.globalState.update(globalStates.profiles, profiles);
-        await this.saveSecrets(newProfile);
-        if (profiles.length === 1) {
-            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
-        }
-    }
-
-    /**
-     * Returns the currently selected profile with secrets loaded, or undefined if none is selected.
-     */
-    async getSelectedProfile(): Promise<Profile | undefined> {
-        const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        if (!selected) {
-            return undefined;
-        }
-        return this.loadSecrets(selected);
-    }
-
-    /**
-     * Sets the selected profile in globalState (without secrets).
-     */
-    setSelectedProfile(profile: Profile) {
-        this.context.globalState.update(globalStates.selectedProfile, this.stripSecrets(profile));
-    }
-
-    /**
-     * Prompt the user to select a profile from the list of profiles.
-     */
-    async selectProfile() {
-        const profiles: Profile[] = this.context.globalState.get<Profile[]>(
-            globalStates.profiles,
-            [],
-        );
-        if (profiles.length === 0) {
-            return;
-        }
-        const profileName = await vscode.window.showQuickPick(
-            profiles.map((p: Profile) => p.name),
-            {
-                placeHolder: "Select an endpoint",
-            },
-        );
-        if (!profileName) {
-            return;
-        }
-        const profile = profiles.find((p: Profile) => p.name === profileName);
-        if (profile) {
-            this.setSelectedProfile(profile);
+    async saveProfile(input: unknown, previousName?: string): Promise<void> {
+        requireTrustedWorkspace();
+        const profile = parseProfile(input);
+        await this.enqueue(async () => {
+            requireTrustedWorkspace();
+            const profiles = this.profiles();
+            if (
+                previousName &&
+                previousName !== profile.name &&
+                profiles.some((p) => p.name === profile.name)
+            ) {
+                throw new Error("A profile with that name already exists.");
+            }
+            const oldName = previousName || profile.name;
+            const index = profiles.findIndex((p) => p.name === oldName);
+            const safe = publicProfile(profile);
+            const secret: ProfileSecrets = {
+                password: profile.auth.password,
+                token: profile.auth.token,
+                passphrase: profile.auth.passphrase,
+                headers: profile.headers,
+            };
+            await this.context.secrets.store(this.secretKey(profile.name), JSON.stringify(secret));
+            if (index < 0) {
+                profiles.push(safe);
+            } else {
+                profiles[index] = safe;
+            }
+            await this.context.globalState.update(globalStates.profiles, profiles);
+            const selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+            if (!selected || selected.name === oldName) {
+                await this.context.globalState.update(globalStates.selectedProfile, safe);
+            }
+            if (oldName !== profile.name) {
+                await this.context.secrets.delete(this.secretKey(oldName));
+            }
             this.refresh();
-        }
+        });
     }
 
-    /**
-     * Get the metadata for the selected profile and update the profile.
-     * If no profile is selected, prompt the user to select one.
-     * If no profile is found, show an error message.
-     */
-    async getEndpointMetadata() {
-        let selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        if (!selected) {
-            await vscode.commands.executeCommand<string>(commands.selectProfile);
-            selected = this.context.globalState.get<Profile>(globalStates.selectedProfile);
-        }
-        if (!selected) {
-            vscode.window.showErrorMessage("No profile selected or found.");
-            return;
-        }
-        const profile = await this.loadSecrets(selected);
-        const metadata = await this.requestProfileMetadata(profile);
-        if (!metadata) {
-            vscode.window.showErrorMessage("No metadata found for the selected profile.");
-            return;
-        }
-        profile.metadata = metadata;
-        await this.saveProfile(profile);
-        this.setSelectedProfile(profile);
-        vscode.window.showInformationMessage(
-            `Metadata updated successfully for profile ${profile.name}.`,
+    async getSelectedProfile(): Promise<Profile | undefined> {
+        requireTrustedWorkspace();
+        await this.writes;
+        const selected = this.selectedPublicProfile();
+        return selected ? this.loadSecrets(selected) : undefined;
+    }
+
+    async setSelectedProfile(profile: Profile): Promise<void> {
+        await this.enqueue(async () => {
+            const current = this.profiles().find((p) => p.name === profile.name);
+            await this.context.globalState.update(globalStates.selectedProfile, current);
+            this.refresh();
+        });
+    }
+
+    async selectProfile(): Promise<void> {
+        const profiles = this.profiles();
+        const name = await vscode.window.showQuickPick(
+            profiles.map((p) => p.name),
+            { placeHolder: "Select an endpoint" },
         );
-        this.sendMetadataToWebview(metadata);
-        this.refresh();
+        const profile = profiles.find((p) => p.name === name);
+        if (profile) {
+            await this.setSelectedProfile(profile);
+        }
     }
 
-    /**
-     * Requests metadata for the given profile and saves it if found.
-     * Returns the metadata string if successful.
-     */
-    async requestProfileMetadata(profile: Profile): Promise<string | undefined> {
-        const fullProfile = await this.loadSecrets(profile);
-        const metadata = await vscode.commands.executeCommand<string>(
+    async getEndpointMetadata(): Promise<void> {
+        try {
+            requireTrustedWorkspace();
+            if (!this.selectedPublicProfile()) {
+                await this.selectProfile();
+            }
+            const profile = await this.getSelectedProfile();
+            if (!profile) {
+                return;
+            }
+            const metadata = await this.requestProfileMetadata(profile);
+            if (metadata) {
+                await this.saveProfile({ ...profile, metadata });
+                void vscode.window.showInformationMessage(
+                    `Metadata updated for profile ${profile.name}.`,
+                );
+            }
+        } catch {
+            void vscode.window.showErrorMessage(
+                "Cannot get metadata. Check workspace trust and profile settings.",
+            );
+        }
+    }
+
+    async requestProfileMetadata(
+        input: Profile,
+        signal?: AbortSignal,
+    ): Promise<string | undefined> {
+        requireTrustedWorkspace();
+        const profile = parseProfile(input);
+        return vscode.commands.executeCommand<string>(
             internalCommands.requestMetadata,
-            fullProfile,
+            profile,
+            signal,
         );
-        if (metadata) {
-            fullProfile.metadata = metadata;
-            await this.saveProfile(fullProfile);
-            return metadata;
-        }
     }
 
-    /**
-     * Loads and returns the HTML content for the profile webview panel.
-     */
-    private async _getWebViewContent(webview: vscode.Webview, profile?: Profile): Promise<string> {
-        const scriptUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "main.js"),
+    public async openProfileWebview(input?: Profile): Promise<void> {
+        input = input ? publicProfile(parseProfile(input)) : undefined;
+        this.currentWebviewPanel?.dispose();
+        const panel = vscode.window.createWebviewPanel(
+            "profileManager",
+            input ? `Edit Profile: ${input.name}` : "Create HTTP Profile",
+            vscode.ViewColumn.One,
+            {
+                enableScripts: true,
+                localResourceRoots: [
+                    vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview"),
+                ],
+            },
         );
-        const stylesUri = webview.asWebviewUri(
-            vscode.Uri.joinPath(this.context.extensionUri, "dist", "webview", "webview.bundle.css"),
+        this.currentWebviewPanel = panel;
+        let active = true;
+        let revision = 0;
+        let profile = input;
+        const controller = new AbortController();
+        const events: vscode.Disposable[] = [];
+        const post = (message: unknown) => {
+            if (active) {
+                void panel.webview.postMessage(message);
+            }
+        };
+        let panelWrites: Promise<void> = Promise.resolve();
+        const sendProfile = async () => {
+            const value =
+                profile && vscode.workspace.isTrusted ? await this.loadSecrets(profile) : profile;
+            post({ command: "initProfile", profile: value });
+            if (value?.metadata) {
+                const payload = await this.buildMetadataPayload(value.metadata);
+                post({ command: "metadataStats", ...payload });
+            }
+        };
+        events.push(
+            panel.onDidDispose(() => {
+                active = false;
+                controller.abort();
+                events.forEach((event) => event.dispose());
+                if (this.currentWebviewPanel === panel) {
+                    this.currentWebviewPanel = undefined;
+                }
+            }),
         );
-        // Use VS Code API to read HTML from dist/webview/profileForm.html
+        events.push(
+            panel.webview.onDidReceiveMessage(async (message: unknown) => {
+                if (!active || !message || typeof message !== "object" || Array.isArray(message)) {
+                    return;
+                }
+                const data = message as Record<string, unknown>;
+                const current = ++revision;
+                try {
+                    if (data.command === "webviewLoaded") {
+                        await sendProfile();
+                    } else if (data.command === "saveProfile") {
+                        requireTrustedWorkspace();
+                        const next = parseProfile(data.data);
+                        panelWrites = panelWrites
+                            .catch(() => undefined)
+                            .then(async () => {
+                                if (!active) {
+                                    return;
+                                }
+                                await this.saveProfile(next, profile?.name);
+                                profile = next;
+                            });
+                        await panelWrites;
+                    } else if (data.command === "requestMetadata") {
+                        requireTrustedWorkspace();
+                        const next = parseProfile(data.data);
+                        const metadata = await this.requestProfileMetadata(next, controller.signal);
+                        if (active && current === revision && metadata) {
+                            await panelWrites;
+                            if (active && current === revision) {
+                                await this.saveProfile({ ...next, metadata }, profile?.name);
+                                profile = { ...next, metadata };
+                                post({ command: "metadataReceived", data: metadata });
+                                const payload = await this.buildMetadataPayload(metadata);
+                                if (active && current === revision) {
+                                    post({ command: "metadataStats", ...payload });
+                                }
+                            }
+                        } else {
+                            post({ command: "requestFinished" });
+                        }
+                    } else if (
+                        data.command === "openFileDialog" &&
+                        typeof data.inputName === "string" &&
+                        ["cert", "key", "pfx"].includes(data.inputName)
+                    ) {
+                        requireTrustedWorkspace();
+                        const files = await vscode.window.showOpenDialog({
+                            canSelectFiles: true,
+                            canSelectFolders: false,
+                            canSelectMany: false,
+                        });
+                        if (active && files?.[0]?.scheme === "file") {
+                            post({
+                                command: "fileSelected",
+                                inputName: data.inputName,
+                                filePath: files[0].toString(),
+                            });
+                        }
+                    }
+                } catch {
+                    post({ command: "requestFinished" });
+                    if (active) {
+                        void vscode.window.showErrorMessage(
+                            "Cannot update profile. Check workspace trust and profile fields.",
+                        );
+                    }
+                }
+            }),
+        );
         const htmlUri = vscode.Uri.joinPath(
             this.context.extensionUri,
             "dist",
             "webview",
             "profileForm.html",
         );
-        const htmlBytes = await vscode.workspace.fs.readFile(htmlUri);
-        let html = Buffer.from(htmlBytes).toString("utf8");
-
-        html = html.replace(
-            '<link id="vscode-stylesheet" rel="stylesheet" />',
-            `<link href="${stylesUri}" rel="stylesheet" />`,
-        );
-        html = html.replace(
-            '<script id="vscode-script"></script>',
-            `<script src="${scriptUri}"></script>`,
-        );
-        // Set CSP source
-        html = html.replace(/\{\{cspSource\}\}/g, webview.cspSource);
-        return html;
-    }
-
-    /**
-     * Opens the profile webview panel for creating or editing a profile.
-     * Handles webview messages for saving, requesting metadata, and file dialogs.
-     */
-    public async openProfileWebview(profile?: Profile) {
-        if (!this.currentWebviewPanel) {
-            this.currentWebviewPanel = vscode.window.createWebviewPanel(
-                "profileManager",
-                profile ? `Edit Profile: ${profile.name}` : "Create HTTP Profile",
-                vscode.ViewColumn.One,
-                { enableScripts: true },
-            );
-        }
-        this.currentWebviewPanel.title = profile
-            ? `Edit Profile: ${profile.name}`
-            : "Create HTTP Profile";
-        this.currentWebviewPanel.webview.html = await this._getWebViewContent(
-            this.currentWebviewPanel.webview,
-            profile,
-        );
-        this.currentWebviewPanel.reveal(vscode.ViewColumn.One);
-        await this.sendProfileToWebview(profile ? await this.loadSecrets(profile) : undefined);
-        this.currentWebviewPanel.webview.onDidReceiveMessage(
-            async (message) => {
-                if (message.command === "saveProfile") {
-                    const newProfile: Profile = parseProfile(message.data);
-                    await this.saveProfile(newProfile);
-                    if (newProfile.metadata) {
-                        await this.sendMetadataToWebview(newProfile.metadata);
-                    }
-                    this.refresh();
-                } else if (message.command === "requestMetadata") {
-                    const newProfile = parseProfile(message.data);
-                    const metadata = await this.requestProfileMetadata(newProfile);
-                    if (metadata) {
-                        await this.sendMetadataToWebview(metadata);
-                    }
-                    this.refresh();
-                } else if (message.command === "openFileDialog") {
-                    const type = message.inputName;
-                    const fileUri = await vscode.window.showOpenDialog({
-                        canSelectFiles: true,
-                        canSelectFolders: false,
-                        canSelectMany: false,
-                        filters: getFiltersForType(type),
-                    });
-                    if (fileUri && fileUri.length > 0) {
-                        this.currentWebviewPanel!.webview.postMessage({
-                            command: "fileSelected",
-                            inputName: type,
-                            filePath: fileUri[0].path,
-                        });
-                    }
-                } else if (message.command === "webviewLoaded") {
-                    await this.sendProfileToWebview(
-                        profile ? await this.loadSecrets(profile) : undefined,
-                    );
-                }
-            },
-            undefined,
-            this.context.subscriptions,
-        );
-        this.currentWebviewPanel.onDidDispose(() => {
-            this.currentWebviewPanel = undefined;
-        });
-    }
-
-    /**
-     * Send profile data (including token/model info) to the webview panel.
-     */
-    private async sendProfileToWebview(profile?: Profile) {
-        if (!this.currentWebviewPanel) {
+        const html = Buffer.from(await vscode.workspace.fs.readFile(htmlUri)).toString("utf8");
+        if (!active) {
             return;
         }
-        let tokenCount, filteredCount, limits, metadata;
-        if (profile && profile.metadata) {
-            const payload = await this.buildMetadataPayload(profile.metadata);
-            tokenCount = payload.tokenCount;
-            filteredCount = payload.filteredCount;
-            limits = payload.limits;
-            metadata = profile.metadata;
-        }
-        this.currentWebviewPanel.webview.postMessage({
-            command: "initProfile",
-            profile,
-            tokenCount,
-            filteredCount,
-            limits,
-            metadata,
-        });
+        const nonce = randomBytes(24).toString("base64");
+        panel.webview.html = html
+            .replace(
+                /\{\{styleUri\}\}/g,
+                panel.webview
+                    .asWebviewUri(
+                        vscode.Uri.joinPath(
+                            this.context.extensionUri,
+                            "dist",
+                            "webview",
+                            "webview.bundle.css",
+                        ),
+                    )
+                    .toString(),
+            )
+            .replace(
+                /\{\{scriptUri\}\}/g,
+                panel.webview
+                    .asWebviewUri(
+                        vscode.Uri.joinPath(
+                            this.context.extensionUri,
+                            "dist",
+                            "webview",
+                            "main.js",
+                        ),
+                    )
+                    .toString(),
+            )
+            .replace(/\{\{cspSource\}\}/g, panel.webview.cspSource)
+            .replace(/\{\{nonce\}\}/g, nonce);
     }
 
-    /**
-     * Builds a metadata payload with token counts and model limits for the webview.
-     */
     private async buildMetadataPayload(metadata: string) {
-        const { tokenCount, filteredCount } = this.getMetadataCounts(metadata);
-        const models = await vscode.lm.selectChatModels();
-        const limits = models.map((model) => ({
-            name: model.name,
-            maxTokens: model.maxInputTokens,
-        }));
+        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
+        let filteredCount = tokenCount;
+        try {
+            filteredCount = this.tokenizer.approximateTokenCount(
+                this.metadataService.getFilteredMetadataXml(metadata, getConfig()),
+            );
+        } catch {}
+        let limits: { name: string; maxTokens: number }[] = [];
+        if (vscode.workspace.isTrusted) {
+            try {
+                limits = (await vscode.lm.selectChatModels()).map((model) => ({
+                    name: model.name,
+                    maxTokens: model.maxInputTokens,
+                }));
+            } catch {}
+        }
         return { data: metadata, tokenCount, filteredCount, limits };
     }
 
-    /**
-     * Send metadata payload to the webview panel.
-     */
-    private async sendMetadataToWebview(metadata: string) {
-        if (!this.currentWebviewPanel) {
-            return;
-        }
-        const payload = await this.buildMetadataPayload(metadata);
-        this.currentWebviewPanel.webview.postMessage({ command: "metadataReceived", ...payload });
+    async deleteProfile(profile: Profile): Promise<void> {
+        requireTrustedWorkspace();
+        await this.enqueue(async () => {
+            requireTrustedWorkspace();
+            const profiles = this.profiles().filter((p) => p.name !== profile.name);
+            await this.context.secrets.delete(this.secretKey(profile.name));
+            await this.context.globalState.update(globalStates.profiles, profiles);
+            if (
+                this.context.globalState.get<Profile>(globalStates.selectedProfile)?.name ===
+                profile.name
+            ) {
+                await this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
+            }
+            this.refresh();
+        });
     }
-
-    /**
-     * Compute raw token counts and filtered token counts for a metadata string.
-     */
-    private getMetadataCounts(metadata: string) {
-        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
-        const filteredXml = this.metadataService.getFilteredMetadataXml(metadata, getConfig());
-        const filteredCount = this.tokenizer.approximateTokenCount(filteredXml);
-        return { tokenCount, filteredCount };
-    }
-
-    /**
-     * Deletes a profile and its secrets from storage.
-     * Updates the selected profile if necessary.
-     */
-    async deleteProfile(profile: Profile) {
-        let profiles: Profile[] = this.context.globalState.get<Profile[]>(
-            globalStates.profiles,
-            [],
-        );
-        profiles = profiles.filter((p: Profile) => p.name !== profile.name);
-        if (profiles.length === 0) {
-            this.context.globalState.update(globalStates.selectedProfile, undefined);
-        } else if (
-            this.context.globalState.get<Profile>(globalStates.selectedProfile)?.name ===
-            profile.name
-        ) {
-            this.context.globalState.update(globalStates.selectedProfile, profiles[0]);
-        }
-        this.context.globalState.update(globalStates.profiles, profiles);
-        // Remove secrets from context.secrets
-        const key = this.getSecretKey(profile.name);
-        await this.context.secrets.delete(key);
-        this.refresh();
-    }
-}
-
-/**
- * Returns file dialog filters for a given input type (cert, key, pfx, etc).
- */
-function getFiltersForType(type: string): { [name: string]: string[] } {
-    switch (type) {
-        case "cert":
-        case "key":
-            return { Certificates: ["crt", "pem", "key"], "All Files": ["*"] };
-        case "pfx":
-            return { "PFX Files": ["pfx", "p12"], "All Files": ["*"] };
-        default:
-            return { "All Files": ["*"] };
-    }
-}
-
-/**
- * Parses raw profile data from the webview into a Profile object.
- */
-function parseProfile(data: any): Profile {
-    const auth: IProfileAuthentication = {
-        kind: data.auth.kind as AuthKind,
-        username: data.auth.username || "",
-        password: data.auth.password || "",
-        token: data.auth.token || "undefined",
-        cert: data.auth.cert ? vscode.Uri.parse(data.auth.cert) : undefined,
-        key: data.auth.key ? vscode.Uri.parse(data.auth.key) : undefined,
-        pfx: data.auth.pfx ? vscode.Uri.parse(data.auth.pfx) : undefined,
-        passphrase: data.auth.passphrase || "",
-    };
-
-    return {
-        name: data.name.trim(),
-        baseUrl: data.baseUrl.trim(),
-        auth,
-        metadata: data.metadata.trim() || undefined,
-        headers: data.headers || {},
-    };
 }

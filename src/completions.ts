@@ -9,7 +9,7 @@ import {
 } from "./odata2ts/data-model/DataTypeModel";
 import { LocationRange } from "./parser/parser.js";
 
-import { globalStates, ODataMode } from "./configuration";
+import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
@@ -73,7 +73,7 @@ export class DefaultCompletionItemProvider
             item.documentation = methodObj.doc;
             return item;
         });
-        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        const profile = getSelectedPublicProfile(this.context);
 
         if (!profile || !(await this.metadataService.hasModel(profile))) {
             return new vscode.CompletionList(methodCompletions);
@@ -171,7 +171,8 @@ export class MetadataCompletionItemProvider
         token: vscode.CancellationToken,
     ): Promise<vscode.CompletionList<vscode.CompletionItem> | null | undefined> {
         const completions: vscode.CompletionItem[] = [];
-        const profile = this.context.globalState.get<Profile>(globalStates.selectedProfile);
+        const profile = getSelectedPublicProfile(this.context);
+        if (!profile) { return null; }
 
         const model = await this.metadataService.getModel(profile!);
         if (!model) {

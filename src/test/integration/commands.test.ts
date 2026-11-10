@@ -36,8 +36,10 @@ suite("CommandProvider", () => {
         ({ profile, context, queryRunner, runnerMock } = await setupTests(queryResponses));
         metadataService = new MetadataModelService();
 
-        commandProvider = new CommandProvider(context, queryRunner, false);
+        commandProvider = new CommandProvider(context, queryRunner, async () => profile, false);
     });
+
+    teardown(() => commandProvider.dispose());
 
     suite("Runner commands", () => {
         test("should run current editor query", async () => {

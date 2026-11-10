@@ -11,7 +11,7 @@ import {
 import { Profile } from "./contracts/types";
 import { DataModel } from "./odata2ts/data-model/DataModel";
 
-import { getConfig, internalCommands } from "./configuration";
+import { getConfig, getSelectedPublicProfile } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
@@ -79,10 +79,7 @@ export class ODataDiagnosticProvider extends Disposable {
      * @param result ODataUri object representing the parsed OData query
      */
     public async handleParseSucess(uri: vscode.Uri, result: ParseResult) {
-        // Use the internal command to get the selected profile with secrets
-        const profile = await vscode.commands.executeCommand<Profile | undefined>(
-            internalCommands.getSelectedProfileWithSecrets,
-        );
+        const profile = getSelectedPublicProfile(this.context);
         if (!profile) {
             return;
         }

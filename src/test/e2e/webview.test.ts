@@ -1,23 +1,37 @@
 import * as assert from "assert";
 import * as vscode from "vscode";
-import { activate } from "../../extension";
 
-suite("Webview End-to-End", function () {
-    let extensionContext: vscode.ExtensionContext;
-
+suite("Core activation without chat", function () {
     suiteSetup(async function () {
-        // Activate the extension before running tests
-        const ext = vscode.extensions.getExtension("manuelseeger.odata");
-        assert.ok(ext, "Extension not found");
-        if (!ext.isActive) {
-            extensionContext = await ext.activate();
-        } else {
-            extensionContext = ext.exports;
+        const extension = vscode.extensions.getExtension("manuelseeger.odata");
+        assert.ok(extension, "Extension not found");
+        assert.ok(!extension.isActive, "This suite requires a fresh extension host");
+        const original = vscode.chat.createChatParticipant;
+        vscode.chat.createChatParticipant = () => {
+            throw new Error("Chat provider unavailable");
+        };
+        try {
+            await extension.activate();
+        } finally {
+            vscode.chat.createChatParticipant = original;
         }
     });
 
-    test("opens add profile webview", async function () {
-        // Open the add profile webview
+    test("registers core commands when optional chat registration fails", async function () {
+        const commands = await vscode.commands.getCommands();
+        for (const command of [
+            "odata.run",
+            "odata.copy",
+            "odata.getMetadata",
+            "odata.selectProfile",
+            "odata.addProfile",
+        ]) {
+            assert.ok(commands.includes(command), command);
+        }
+        assert.ok(!commands.includes("odata.getSelectedProfileWithSecrets"));
+    });
+
+    test("opens the profile webview without chat", async function () {
         await vscode.commands.executeCommand("odata.addProfile");
     });
 });

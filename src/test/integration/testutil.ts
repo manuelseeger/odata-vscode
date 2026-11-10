@@ -97,28 +97,19 @@ export async function setupTests(
     for (const [key, value] of Object.entries(queryRunnerMap!)) {
         const url = new URL(key);
         url.searchParams.append("$format", "json");
-        when(queryRunner.run(url.href, anything())).thenResolve(
-            new Response(value, {
-                status: 200,
-                headers: { "Content-Type": "application/json" },
-            }),
+        when(queryRunner.run(url.href, anything(), anything())).thenResolve(
+            { text: value, status: 200, statusText: "OK", contentType: "application/json" },
         );
     }
 
     const doesnotexist = new URL(`${profile.baseUrl}DoesNotExist`);
     doesnotexist.searchParams.append("$format", "json");
-    when(queryRunner.run(doesnotexist.href, anything())).thenResolve(
-        new Response("", {
-            status: 404,
-            headers: { "Content-Type": "application/json" },
-        }),
+    when(queryRunner.run(doesnotexist.href, anything(), anything())).thenResolve(
+        { text: "", status: 404, statusText: "Not Found", contentType: "application/json" },
     );
 
-    when(queryRunner.fetch(`${profile.baseUrl}$metadata`, anything(), anything())).thenResolve(
-        new Response(metadataString, {
-            status: 200,
-            headers: { "Content-Type": "application/xml" },
-        }),
+    when(queryRunner.fetch(`${profile.baseUrl}$metadata`, anything(), anything(), anything())).thenResolve(
+        { text: metadataString, status: 200, statusText: "OK", contentType: "application/xml" },
     );
 
     const secretsStore: Record<string, string | undefined> = {};

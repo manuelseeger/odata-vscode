@@ -1,5 +1,26 @@
 import * as vscode from "vscode";
-import { IODataConfiguration, IODataMetadataConfiguration, ODataFormat } from "./contracts/types";
+import {
+    IODataConfiguration,
+    IODataMetadataConfiguration,
+    ODataFormat,
+    PublicProfile,
+} from "./contracts/types";
+
+import { parseProfile, publicProfile } from "./profileData";
+
+export function getSelectedPublicProfile(
+    context: vscode.ExtensionContext,
+): PublicProfile | undefined {
+    const selected = context.globalState.get<unknown>(globalStates.selectedProfile);
+    if (selected === undefined) {
+        return undefined;
+    }
+    try {
+        return publicProfile(parseProfile(selected));
+    } catch {
+        return undefined;
+    }
+}
 
 export const APP_NAME = "odata";
 
@@ -14,7 +35,7 @@ export const commands = {
 export const internalCommands = {
     openAndRunQuery: `${APP_NAME}.openAndRunQuery`,
     requestMetadata: `${APP_NAME}.requestMetadata`,
-    getSelectedProfileWithSecrets: `${APP_NAME}.getSelectedProfileWithSecrets`,
+    getSelectedProfile: `${APP_NAME}.getSelectedProfile`,
 };
 
 export const globalStates = {
