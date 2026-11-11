@@ -1,14 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src {{cspSource}}; style-src {{cspSource}}; script-src {{cspSource}};">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; font-src {{cspSource}}; style-src {{cspSource}}; script-src 'nonce-{{nonce}}'; base-uri 'none'; form-action 'none';">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile</title>
     <meta charset="UTF-8">
-    <link id="vscode-stylesheet" rel="stylesheet" />
+    <link href="{{styleUri}}" rel="stylesheet" />
   </head>
   <body>
     <h1 id="formTitle">Profile</h1>
+    <details id="recoveryDetails" hidden>
+      <summary>Recovered source data</summary>
+      <p>Repair the profile fields before use. The source remains in SecretStorage until you save a valid profile or delete it.</p>
+      <pre id="recoveryData"></pre>
+    </details>
     <form id="profileForm">
       <div class="profile-form-row">
         <div class="profile-form-column">
@@ -101,6 +106,6 @@
           <div id="modelInfo">No info on Copilot models yet, retry.</div>
       </div>
     </details>
-    <script id="vscode-script"></script>
+    <script nonce="{{nonce}}" src="{{scriptUri}}"></script>
   </body>
 </html>

@@ -36,8 +36,10 @@ suite("CommandProvider", () => {
         ({ profile, context, queryRunner, runnerMock } = await setupTests(queryResponses));
         metadataService = new MetadataModelService();
 
-        commandProvider = new CommandProvider(context, queryRunner, false);
+        commandProvider = new CommandProvider(context, queryRunner, async () => profile, false);
     });
+
+    teardown(() => commandProvider.dispose());
 
     suite("Runner commands", () => {
         test("should run current editor query", async () => {
@@ -75,6 +77,56 @@ suite("CommandProvider", () => {
     ]
 }`),
             );
+        });
+
+        test("reports trust and origin failures without calling them invalid URLs", async () => {
+            const originalWarning = vscode.window.showWarningMessage;
+            const descriptor = Object.getOwnPropertyDescriptor(vscode.workspace, "isTrusted")!;
+            const warnings: string[] = [];
+            (
+                vscode.window as unknown as { showWarningMessage: typeof originalWarning }
+            ).showWarningMessage = ((message: string) => {
+                warnings.push(message);
+                return Promise.resolve(undefined);
+            }) as typeof originalWarning;
+            try {
+                const crossOrigin = await vscode.workspace.openTextDocument({
+                    language: "odata",
+                    content: "https://other.test/Orders",
+                });
+                await vscode.window.showTextDocument(crossOrigin);
+                await commandProvider.runEditorQuery();
+                Object.defineProperty(vscode.workspace, "isTrusted", {
+                    configurable: true,
+                    get: () => false,
+                });
+                const sameOrigin = await vscode.workspace.openTextDocument({
+                    language: "odata",
+                    content: `${profile.baseUrl}Orders`,
+                });
+                await vscode.window.showTextDocument(sameOrigin);
+                await commandProvider.runEditorQuery();
+                assert.strictEqual(warnings.length, 2);
+                assert.ok(
+                    warnings.every(
+                        (message) =>
+                            message.includes("workspace trust") &&
+                            message.includes("profile settings"),
+                    ),
+                );
+                assert.ok(
+                    warnings.every(
+                        (message) =>
+                            !message.includes("valid URL") && !message.includes("other.test"),
+                    ),
+                );
+                verify(runnerMock.run(anything(), anything(), anything())).never();
+            } finally {
+                Object.defineProperty(vscode.workspace, "isTrusted", descriptor);
+                (
+                    vscode.window as unknown as { showWarningMessage: typeof originalWarning }
+                ).showWarningMessage = originalWarning;
+            }
         });
 
         test("should not run if no active editor", async () => {

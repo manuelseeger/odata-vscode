@@ -1,9 +1,17 @@
 import * as vscode from "vscode";
-import { commands, getConfig, internalCommands, ODataMode } from "./configuration";
-import { IQueryRunner } from "./contracts/IQueryRunner";
+import {
+    commands,
+    getConfig,
+    getSelectedPublicProfile,
+    internalCommands,
+    ODataMode,
+} from "./configuration";
+import { IQueryRunner, RequestResult } from "./contracts/IQueryRunner";
+import { requireTrustedWorkspace } from "./security";
 import { Profile } from "./contracts/types";
 import { Disposable } from "./provider";
 import { combineODataUrl, getMetadataUrl } from "./util";
+import { parseEndpoint } from "./profileData";
 
 export class CommandProvider extends Disposable {
     public _id: string = "CommandProvider";
@@ -20,6 +28,7 @@ export class CommandProvider extends Disposable {
     constructor(
         private context: vscode.ExtensionContext,
         private runner: IQueryRunner,
+        private getProfile: () => Promise<Profile | undefined>,
         subscribe: boolean = true,
     ) {
         super();
@@ -28,12 +37,6 @@ export class CommandProvider extends Disposable {
         }
     }
 
-    /**
-     * Register the commands for the command provider.
-     *
-     * This is put into a dedicated method so that we can run CommandProvider in extension
-     * testing without re-registering the commands.
-     */
     private registerCommands() {
         this.subscriptions = [
             vscode.commands.registerCommand(commands.run, this.runEditorQuery, this),
@@ -44,38 +47,20 @@ export class CommandProvider extends Disposable {
                 this.openAndRunQuery,
                 this,
             ),
-
-            vscode.commands.registerCommand(
-                internalCommands.requestMetadata,
-                this.requestProfileMetadata,
-                this,
-            ),
         ];
     }
 
-    /**
-     * Open a query in the editor and run it.
-     *
-     * This is used by the chat handler to open and run queries the chat participant generates.
-     * @param query The query to run.
-     */
     async openAndRunQuery(query: string) {
-        // strip leading http verb
         query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
         query = query.trim();
-        this.openQuery(query);
+        requireTrustedWorkspace();
+        await this.openQuery(query);
         if (getConfig().disableRunner) {
             return;
         }
         query = combineODataUrl(query);
         await this.runQuery(query);
     }
-
-    /**
-     * Run the query in the editor.
-     *
-     * Run the query from the active editor. The query is expected to be a valid OData URL.
-     */
 
     async runEditorQuery() {
         if (getConfig().disableRunner) {
@@ -94,28 +79,16 @@ export class CommandProvider extends Disposable {
                 let text = editor.document.getText();
                 let combinedUrl = combineODataUrl(text);
                 const url = new URL(combinedUrl);
-                this.runQuery(url.href);
+                await this.runQuery(url.href);
             } catch (exception) {
-                vscode.window.showWarningMessage("Document does not represent a valid URL.");
+                vscode.window.showWarningMessage(
+                    "Cannot run query. Check the URL, workspace trust, and selected profile settings.",
+                );
             }
         }
     }
 
-    /**
-     * Open the query in the editor.
-     *
-     * This is used by the chat handler to open queries the chat participant generates.
-     *
-     * @param query The query to show in the editor.
-     */
     private async openQuery(query: string) {
-        // Use the internal command to get the selected profile with secrets
-        const profile = await vscode.commands.executeCommand<Profile | undefined>(
-            internalCommands.getSelectedProfileWithSecrets,
-        );
-        if (!profile) {
-            return;
-        }
         if (!this.queryDocument) {
             this.queryDocument = await vscode.workspace.openTextDocument({
                 language: "odata",
@@ -135,8 +108,6 @@ export class CommandProvider extends Disposable {
             editBuilder.replace(entireRange, query);
         });
 
-        // Set the language of the query document again after the edit; VSCode might determine
-        // the wrong language based on the edit above
         this.queryDocument = await vscode.languages.setTextDocumentLanguage(
             this.queryDocument,
             "odata",
@@ -144,17 +115,17 @@ export class CommandProvider extends Disposable {
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
 
-    /**
-     * Run the query against the selected profile.
-     *
-     * @param query The query to run.
-     */
     private async runQuery(query: string) {
+        requireTrustedWorkspace();
         const config = getConfig();
-        // Use the internal command to get the selected profile with secrets
-        const profile = await vscode.commands.executeCommand<Profile | undefined>(
-            internalCommands.getSelectedProfileWithSecrets,
-        );
+        const publicProfile = getSelectedPublicProfile(this.context);
+        if (
+            publicProfile &&
+            parseEndpoint(query).origin !== parseEndpoint(publicProfile.baseUrl).origin
+        ) {
+            throw new Error("The query must use the selected endpoint origin.");
+        }
+        const profile = await this.getProfile();
         if (!profile) {
             return;
         }
@@ -163,7 +134,7 @@ export class CommandProvider extends Disposable {
         try {
             url = new URL(query);
         } catch (error) {
-            vscode.window.showErrorMessage("Invalid URL: " + query);
+            vscode.window.showErrorMessage("Invalid query URL.");
             return;
         }
 
@@ -171,10 +142,20 @@ export class CommandProvider extends Disposable {
             url.searchParams.append("$format", config.defaultFormat);
         }
 
-        const res = await this.runner.run(url.href, profile);
+        let res: RequestResult;
+        try {
+            res = await this.withRequestProgress("Run OData query", (signal) =>
+                this.runner.run(url.href, profile, signal),
+            );
+        } catch {
+            void vscode.window.showErrorMessage(
+                "Request failed or cancelled. Check workspace trust and profile settings.",
+            );
+            return;
+        }
 
         let format = "plaintext";
-        const contentType = res.headers.get("Content-Type");
+        const contentType = res.contentType;
         if (contentType) {
             if (contentType.includes("json")) {
                 format = "json";
@@ -183,7 +164,7 @@ export class CommandProvider extends Disposable {
             }
         }
 
-        const newContent = await res.text();
+        const newContent = res.text;
         if (!this.resultDocument) {
             this.resultDocument = await vscode.workspace.openTextDocument({
                 language: format,
@@ -191,7 +172,7 @@ export class CommandProvider extends Disposable {
             });
         }
 
-        if (!res.ok) {
+        if (res.status < 200 || res.status >= 300) {
             let show: string | undefined = undefined;
             if (newContent && newContent.length > 0) {
                 show = await vscode.window.showErrorMessage(
@@ -221,8 +202,6 @@ export class CommandProvider extends Disposable {
             editBuilder.replace(entireRange, newContent);
         });
 
-        // Set the language of the result document again after the edit; VSCode might determine
-        // the wrong language based on the edit above (like JS instead of JSON)
         this.resultDocument = await vscode.languages.setTextDocumentLanguage(
             this.resultDocument,
             format,
@@ -231,44 +210,56 @@ export class CommandProvider extends Disposable {
         await vscode.commands.executeCommand("editor.action.formatDocument");
     }
 
-    /**
-     * Requests and returns the metadata for the given OData profile.
-     *
-     * This method uses the provided profile's details to build the metadata URL and performs an HTTP GET request.
-     * If the request is successful, the XML metadata is returned as a string; otherwise, an empty string is returned.
-     *
-     * @param profile The OData profile containing the base URL and authentication details.
-     * @returns A promise that resolves to the metadata string or an empty string on failure.
-     */
-    async requestProfileMetadata(profile: Profile): Promise<string> {
-        // request the /$metadata endpoint via http using the profile details
-        const requestInit = {
-            headers: { Accept: "application/xml" },
-        } as RequestInit;
+    async requestProfileMetadata(profile: Profile, signal?: AbortSignal): Promise<string> {
+        requireTrustedWorkspace();
         const metadataUrl = getMetadataUrl(profile.baseUrl);
-        let response: Response;
+        let response: RequestResult;
         try {
-            response = await this.runner.fetch(metadataUrl, profile, requestInit);
+            response = await this.withRequestProgress(
+                "Get OData metadata",
+                (requestSignal) =>
+                    this.runner.fetch(metadataUrl, profile, "application/xml", requestSignal),
+                signal,
+            );
         } catch (err) {
-            vscode.window.showErrorMessage(`Failed to fetch metadata: ${err}`);
+            vscode.window.showErrorMessage("Metadata request failed or cancelled.");
             return "";
         }
 
-        if (!response.ok) {
+        if (response.status < 200 || response.status >= 300) {
             vscode.window.showErrorMessage(
                 `Failed to fetch metadata: ${response.status} ${response.statusText}`,
             );
             return "";
         }
-        const metadata = await response.text();
-        return metadata;
+        return response.text;
     }
 
-    /**
-     * Copy the query in the editor to the clipboard.
-     *
-     * This command takes the current editor content, combines the URL, and copies the resulting one-line URL to the clipboard.
-     */
+    private async withRequestProgress<T>(
+        title: string,
+        request: (signal: AbortSignal) => Promise<T>,
+        signal?: AbortSignal,
+    ): Promise<T> {
+        return vscode.window.withProgress(
+            { location: vscode.ProgressLocation.Notification, title, cancellable: true },
+            async (_progress, token) => {
+                const controller = new AbortController();
+                const abort = () => controller.abort();
+                const listener = token.onCancellationRequested(abort);
+                signal?.addEventListener("abort", abort, { once: true });
+                if (signal?.aborted || token.isCancellationRequested) {
+                    abort();
+                }
+                try {
+                    return await request(controller.signal);
+                } finally {
+                    listener.dispose();
+                    signal?.removeEventListener("abort", abort);
+                }
+            },
+        );
+    }
+
     async copyQueryToClipboard(): Promise<string | undefined> {
         const editor = vscode.window.activeTextEditor;
         const config = getConfig();

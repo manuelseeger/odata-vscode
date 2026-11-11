@@ -128,10 +128,7 @@ function analyzeTestData(): TokenWeights {
         avgContribution: entry.avgContrib!,
     }));
 
-    const outputPath = path.join(__dirname, "../definitions/tokenClasses.json");
-    fs.writeFileSync(outputPath, JSON.stringify(classArray, null, 2));
-
-    // also write an exploded map of character to their class's weight:
+    // write an exploded map of character to their class's weight:
     const explodedMapPath = path.join(__dirname, "../definitions/tokenWeights.json");
     const explodedMap: TokenWeights = {};
     for (const cl of classArray) {

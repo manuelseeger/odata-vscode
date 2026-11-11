@@ -28,9 +28,6 @@ export class SignatureHelpProvider extends Disposable implements vscode.Signatur
         token: vscode.CancellationToken,
         context: vscode.SignatureHelpContext,
     ): Promise<vscode.SignatureHelp> {
-        if (this.shouldCancelSignatureHelp(document, position, context)) {
-            return new vscode.SignatureHelp();
-        }
         const funcInfo = this.findFunctionCallStart(document, position);
         if (funcInfo) {
             const help = new vscode.SignatureHelp();
@@ -53,34 +50,6 @@ export class SignatureHelpProvider extends Disposable implements vscode.Signatur
             }
         }
         return new vscode.SignatureHelp();
-    }
-
-    /**
-     * Check if the signature help should be canceled.
-     *
-     * This method checks the character before and after the current position
-     * to determine if the signature help should be canceled.
-     *
-     * @param document The text document being edited.
-     * @param position The current position in the document.
-     * @param context The context of the signature help.
-     * @returns {boolean} True if the signature help should be canceled, false otherwise.
-     */
-    private shouldCancelSignatureHelp(
-        document: vscode.TextDocument,
-        position: vscode.Position,
-        context: vscode.SignatureHelpContext,
-    ): boolean {
-        const charBefore =
-            position.character > 0
-                ? document.getText(new vscode.Range(position.translate(0, -1), position))
-                : "";
-
-        const charAfter = document.getText(new vscode.Range(position, position.translate(0, 1)));
-
-        return (
-            charBefore === ")" || charAfter === ")" || (context.isRetrigger && charAfter === ")")
-        );
     }
 
     /**

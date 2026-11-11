@@ -9,7 +9,7 @@ suite("Document Formatter", () => {
     let formatter: ODataDocumentFormatter;
     suiteSetup(async () => {
         ({ context } = await setupTests());
-        formatter = new ODataDocumentFormatter(new SyntaxParser());
+        await vscode.extensions.getExtension("manuelseeger.odata")?.activate();
     });
 
     const testCases = [

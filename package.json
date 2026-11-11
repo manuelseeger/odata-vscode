@@ -2,14 +2,15 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Language and Query Runner",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "manuelseeger",
   "repository": {
     "type": "git",
     "url": "https://github.com/manuelseeger/odata-vscode.git"
   },
   "engines": {
-    "vscode": "^1.98.0"
+    "vscode": "^1.146.0",
+    "node": ">=24.22.1"
   },
   "categories": [
     "Programming Languages",
@@ -40,7 +41,7 @@
     "views": {
       "explorer": [
         {
-          "icon": "assets/icon-odata.png",
+          "icon": "assets/odata.128x128.png",
           "id": "odata.profiles-view",
           "name": "OData Endpoint Profiles"
         }
@@ -191,60 +192,80 @@
   "scripts": {
     "vscode:prepublish": "npm run package",
     "precompile": "npm run peggy-compile",
-    "compile": "webpack",
-    "package": "webpack --mode production --devtool hidden-source-map",
-    "prepackage": "npm run clean",
+    "compile": "npm run typecheck && node esbuild.mjs",
+    "package": "npm run typecheck && node esbuild.mjs --production",
+    "prepackage": "npm run clean && npm run peggy-compile",
     "compile-tests": "tsc -p . --outDir out",
     "pretest": "npm run clean && npm run compile-tests",
     "test:integration": "vscode-test -l integration",
     "test:e2e": "vscode-test -l e2e",
-    "test:unit": "mocha -u tdd --require ts-node/register src/test/unit/**/*.test.ts",
+    "test:unit": "mocha -u tdd --require ts-node/register 'src/test/unit/**/*.test.ts'",
     "lint": "eslint src",
-    "test": "npm run test:unit && npm run test:integration && npm run compile && npm run test:e2e",
+    "test": "npm run validate && npm run test:host",
     "clean": "rimraf out dist",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
     "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
     "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
     "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy",
     "coverage": "vscode-test --coverage --coverage-reporter json --coverage-output ../../coverage --reporter ../../node_modules/@vscode/test-cli/out/fullJsonStreamReporter.cjs",
-    "buildtokenizer": "ts-node src/tools/buildtokenizer.ts"
+    "buildtokenizer": "ts-node src/tools/buildtokenizer.ts",
+    "typecheck": "tsc --noEmit",
+    "test:host": "npm run compile-tests && vscode-test",
+    "validate": "npm run lint && npm run test:unit && npm run package && npm audit --audit-level=low && npm run check:vsix",
+    "check:vsix": "vsce package --no-dependencies -o odata-validation.vsix && node scripts/check-vsix.mjs odata-validation.vsix && node scripts/test-vsix.mjs odata-validation.vsix",
+    "watch:esbuild": "node esbuild.mjs --watch",
+    "watch:tsc": "tsc --noEmit --watch -p .",
+    "watch:peggy": "peggy --watch --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
+    "watch:tests": "tsc -p . --outDir out --watch"
   },
   "devDependencies": {
-    "@types/node": "20.x",
-    "@types/vscode": "^1.98.0",
-    "@types/vscode-webview": "^1.57.5",
-    "@types/xml2js": "^0.4.14",
-    "@typescript-eslint/eslint-plugin": "^8.25.0",
-    "@typescript-eslint/parser": "^8.25.0",
-    "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1",
-    "@vscode/vsce": "^3.3.2",
-    "abnf": "^4.3.1",
-    "copy-webpack-plugin": "^13.0.0",
-    "css-loader": "^7.1.2",
-    "eslint": "^9.21.0",
-    "mini-css-extract-plugin": "^2.9.2",
-    "peggy": "^4.2.0",
-    "pegjs-backtrace": "^0.2.1",
-    "prettier": "^3.5.3",
-    "rimraf": "^6.0.1",
-    "tiktoken": "^1.0.20",
-    "ts-loader": "^9.5.2",
-    "ts-mockito": "^2.6.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.7.3",
-    "webpack": "^5.98.0",
-    "webpack-cli": "^6.0.1"
+    "@types/node": "24.19.2",
+    "@types/vscode": "1.145.0",
+    "@types/vscode-webview": "1.57.5",
+    "@types/xml2js": "0.4.14",
+    "@typescript-eslint/eslint-plugin": "8.72.2",
+    "@typescript-eslint/parser": "8.72.2",
+    "@vscode/test-cli": "0.0.15",
+    "@vscode/test-electron": "3.1.0",
+    "@vscode/vsce": "4.1.0",
+    "abnf": "5.0.5",
+    "eslint": "10.14.0",
+    "peggy": "5.1.1",
+    "pegjs-backtrace": "0.2.1",
+    "prettier": "3.9.10",
+    "rimraf": "6.1.4",
+    "tiktoken": "1.0.22",
+    "ts-mockito": "2.6.1",
+    "ts-node": "10.9.2",
+    "typescript": "6.0.3",
+    "mocha": "12.0.3",
+    "@types/mocha": "10.0.10",
+    "esbuild": "0.28.2"
+  },
+  "overrides": {
+    "minimatch": "11.0.7",
+    "glob": "14.0.4",
+    "serialize-javascript": "7.1.4",
+    "@vscode/test-cli": {
+      "mocha": "$mocha"
+    }
   },
   "dependencies": {
-    "@odata2ts/odata-core": "^0.6.0",
-    "@vscode-elements/elements-lite": "^0.3.0",
-    "@vscode/codicons": "^0.0.36",
-    "@vscode/prompt-tsx": "^0.3.0-alpha.23",
-    "@xmldom/xmldom": "^0.9.8",
-    "undici": "^6.21.2",
-    "vscode-uri": "^3.1.0",
-    "xml2js": "^0.6.2",
-    "xpath": "^0.0.34"
+    "@odata2ts/odata-core": "0.7.1",
+    "@vscode-elements/elements-lite": "0.4.0",
+    "@vscode/codicons": "0.0.46-24",
+    "@vscode/prompt-tsx": "0.4.0-alpha.9",
+    "@xmldom/xmldom": "0.9.12",
+    "undici": "8.12.4",
+    "vscode-uri": "3.2.0",
+    "xml2js": "0.6.2",
+    "xpath": "0.0.36"
+  },
+  "packageManager": "npm@10.9.9",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Language tools, query copy, and public profile inspection are available. Network, secrets, certificates, profile edits, and chat require trust."
+    }
   }
 }

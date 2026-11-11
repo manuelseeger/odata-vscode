@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { internalCommands, ODataMode } from "./configuration";
+import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { Profile } from "./contracts/types";
 import {
@@ -29,10 +29,7 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
         const wordRange = document.getWordRangeAtPosition(position);
         const word = document.getText(wordRange);
 
-        // Use the internal command to get the selected profile with secrets
-        const profile = await vscode.commands.executeCommand<Profile | undefined>(
-            internalCommands.getSelectedProfileWithSecrets,
-        );
+        const profile = getSelectedPublicProfile(this.context);
         if (!profile) {
             return;
         }

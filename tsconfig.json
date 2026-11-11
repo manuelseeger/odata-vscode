@@ -16,13 +16,14 @@
 		"jsxFactory": "vscpp",
 		"jsxFragmentFactory": "vscppf"
 	},
+	"include": ["src/**/*"],
 	"exclude": [
 			"playground",
 			"out",
 			"dist",
 			"assets",
 			"eslint.config.mjs",
-			"webpack.config.js",
+			"esbuild.mjs",
 			"coverage"
 		],
 }

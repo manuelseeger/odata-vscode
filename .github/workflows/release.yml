@@ -1,49 +1,37 @@
----
-name: "Release"
+name: Release
 
 on:
   push:
-    tags:
-      - "v*"
+    tags: ["v*"]
+
+permissions:
+  contents: read
 
 jobs:
-  build:
-    name: Build
+  validate:
+    uses: ./.github/workflows/validate.yml
+  release:
+    needs: validate
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-      - run: npm install
-      - run: xvfb-run npm test
-        if: runner.os == 'Linux'
-      - run: npm run vsce-latest
-      - uses: actions/upload-artifact@v4
-        with:
-          name: 'odata-vscode-latest.vsix'
-          path: 'odata-vscode-latest.vsix'
-
-  versioned-release:
-    name: Create versioned release
-    needs: build
     permissions:
       contents: write
-    if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
     steps:
-      - name: Download vsix artifact from build workflow
-        uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: 'odata-vscode-latest.vsix'
-      - name: Rename artifact
-        run: mv odata-vscode-latest.vsix odata-vscode-${{ github.ref_name }}.vsix
-      - name: Create GitHub Release
-        uses: ncipollo/release-action@v1
+          persist-credentials: false
+      - uses: jdx/mise-action@v5
+      - uses: actions/cache@v4
         with:
-          tag: ${{ github.ref_name }}
-          artifacts: odata-vscode-${{ github.ref_name }}.vsix
-          name: ${{ github.ref_name }}
-          makeLatest: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          generateReleaseNotes: true
-      - name: Publish to VSCode Marketplace
-        run: npx vsce publish -i odata-vscode-${{ github.ref_name }}.vsix -p ${{ secrets.VSCE_TOKEN }}
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+      - run: npm ci --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: odata-vsix
+      - run: node scripts/check-vsix.mjs odata-validation.vsix
+      - run: gh release create "$GITHUB_REF_NAME" odata-validation.vsix --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: npx --no-install vsce publish --packagePath odata-validation.vsix
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}

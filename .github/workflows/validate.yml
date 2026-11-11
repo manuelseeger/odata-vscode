@@ -1,0 +1,42 @@
+name: Validate
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v5
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      - run: npm run validate
+      - uses: actions/upload-artifact@v4
+        with:
+          name: odata-vsix
+          path: odata-validation.vsix
+  host:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vscode: ["1.146.0", "stable"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: jdx/mise-action@v5
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('package-lock.json') }}
+      - run: npm ci
+      - run: npm run package
+      - run: xvfb-run -a npm run test:host
+        env:
+          VSCODE_VERSION: ${{ matrix.vscode }}

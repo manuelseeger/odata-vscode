@@ -8,6 +8,7 @@ import { extractCodeBlocks, getBaseUrl } from "./util";
 
 import { ITokenizer } from "./contracts/ITokenizer";
 import { BasePrompt } from "./prompts/base";
+import { requireTrustedWorkspace } from "./security";
 
 export class ChatParticipantProvider extends Disposable {
     public _id: string = "ChatParticipantProvider";
@@ -39,9 +40,9 @@ export class ChatParticipantProvider extends Disposable {
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken,
     ) => {
-        // Use the internal command to get the selected profile with secrets
+        requireTrustedWorkspace();
         const profile = await vscode.commands.executeCommand<Profile | undefined>(
-            internalCommands.getSelectedProfileWithSecrets,
+            internalCommands.getSelectedProfile,
         );
         if (!profile) {
             vscode.window.showWarningMessage("No profile selected.");
