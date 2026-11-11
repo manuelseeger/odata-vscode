@@ -20,6 +20,25 @@ jobs:
         with:
           persist-credentials: false
       - uses: jdx/mise-action@v5
+      - uses: actions/download-artifact@v4
+        with:
+          name: odata-vsix
+      - run: node scripts/check-vsix.mjs odata-validation.vsix
+      - run: gh release create "$GITHUB_REF_NAME" odata-validation.vsix --generate-notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    environment: marketplace
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: jdx/mise-action@v5
       - uses: actions/cache@v4
         with:
           path: ~/.npm
@@ -29,9 +48,4 @@ jobs:
         with:
           name: odata-vsix
       - run: node scripts/check-vsix.mjs odata-validation.vsix
-      - run: gh release create "$GITHUB_REF_NAME" odata-validation.vsix --generate-notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: npx --no-install vsce publish --packagePath odata-validation.vsix
-        env:
-          VSCE_PAT: ${{ secrets.VSCE_TOKEN }}
+      - run: npx --no-install vsce publish --packagePath odata-validation.vsix --oidc
