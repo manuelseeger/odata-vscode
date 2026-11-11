@@ -4,13 +4,10 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"type": "npm",
-			"script": "compile-tests",
-			"problemMatcher": "$ts-webpack-watch",
-			"isBackground": true,
+			"label": "watch",
+			"dependsOn": ["npm: watch:peggy", "npm: watch:tsc", "npm: watch:esbuild"],
 			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
+				"reveal": "never"
 			},
 			"group": {
 				"kind": "build",
@@ -18,18 +15,66 @@
 			}
 		},
 		{
-			"label": "compile",
 			"type": "npm",
-			"script": "compile",
-			"problemMatcher": "$ts-webpack-watch",
+			"script": "watch:peggy",
 			"isBackground": true,
+			"problemMatcher": "$peggy-watch",
 			"presentation": {
-				"reveal": "never",
-				"group": "watchers"
-			},
-			"group": {
-				"kind": "build",
+				"group": "watch",
+				"reveal": "never"
 			}
+		},
+		{
+			"type": "npm",
+			"script": "watch:tsc",
+			"isBackground": true,
+			"problemMatcher": "$tsc-watch",
+			"presentation": {
+				"group": "watch",
+				"reveal": "never"
+			}
+		},
+		{
+			"type": "npm",
+			"script": "watch:esbuild",
+			"isBackground": true,
+			"problemMatcher": {
+				"owner": "esbuild",
+				"source": "esbuild",
+				"fileLocation": "relative",
+				"pattern": [
+					{
+						"regexp": "^✘ \\[ERROR\\] (.*)$",
+						"message": 1
+					},
+					{
+						"regexp": "^\\s+(.*):(\\d+):(\\d+):$",
+						"file": 1,
+						"line": 2,
+						"column": 3
+					}
+				],
+				"background": {
+					"activeOnStart": true,
+					"beginsPattern": "^\\[watch\\] build started",
+					"endsPattern": "^\\[watch\\] build finished"
+				}
+			},
+			"presentation": {
+				"group": "watch",
+				"reveal": "never"
+			}
+		},
+		{
+			"type": "npm",
+			"script": "watch:tests",
+			"isBackground": true,
+			"problemMatcher": "$tsc-watch",
+			"presentation": {
+				"group": "watch",
+				"reveal": "never"
+			},
+			"group": "test"
 		}
 	]
 }

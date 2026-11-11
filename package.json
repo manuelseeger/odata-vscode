@@ -192,8 +192,8 @@
   "scripts": {
     "vscode:prepublish": "npm run package",
     "precompile": "npm run peggy-compile",
-    "compile": "webpack",
-    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile": "npm run typecheck && node esbuild.mjs",
+    "package": "npm run typecheck && node esbuild.mjs --production",
     "prepackage": "npm run clean && npm run peggy-compile",
     "compile-tests": "tsc -p . --outDir out",
     "pretest": "npm run clean && npm run compile-tests",
@@ -211,8 +211,12 @@
     "buildtokenizer": "ts-node src/tools/buildtokenizer.ts",
     "typecheck": "tsc --noEmit",
     "test:host": "npm run compile-tests && vscode-test",
-    "validate": "npm run lint && npm run typecheck && npm run test:unit && npm run package && npm audit --audit-level=low && npm run check:vsix",
-    "check:vsix": "vsce package --no-dependencies -o odata-validation.vsix && node scripts/check-vsix.mjs odata-validation.vsix && node scripts/test-vsix.mjs odata-validation.vsix"
+    "validate": "npm run lint && npm run test:unit && npm run package && npm audit --audit-level=low && npm run check:vsix",
+    "check:vsix": "vsce package --no-dependencies -o odata-validation.vsix && node scripts/check-vsix.mjs odata-validation.vsix && node scripts/test-vsix.mjs odata-validation.vsix",
+    "watch:esbuild": "node esbuild.mjs --watch",
+    "watch:tsc": "tsc --noEmit --watch -p .",
+    "watch:peggy": "peggy --watch --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
+    "watch:tests": "tsc -p . --outDir out --watch"
   },
   "devDependencies": {
     "@types/node": "22.20.5",
@@ -225,29 +229,26 @@
     "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "4.1.0",
     "abnf": "5.0.5",
-    "copy-webpack-plugin": "14.0.0",
-    "css-loader": "7.1.5",
     "eslint": "10.14.0",
-    "mini-css-extract-plugin": "2.10.2",
     "peggy": "5.1.1",
     "pegjs-backtrace": "0.2.1",
     "prettier": "3.9.10",
     "rimraf": "6.1.4",
     "tiktoken": "1.0.22",
-    "ts-loader": "9.6.2",
     "ts-mockito": "2.6.1",
     "ts-node": "10.9.2",
     "typescript": "5.9.3",
-    "webpack": "5.112.2",
-    "webpack-cli": "7.3.1",
     "mocha": "12.0.3",
-    "@types/mocha": "10.0.10"
+    "@types/mocha": "10.0.10",
+    "esbuild": "0.28.2"
   },
   "overrides": {
     "minimatch": "11.0.6",
     "glob": "14.0.4",
     "serialize-javascript": "7.1.4",
-    "@vscode/test-cli": { "mocha": "$mocha" }
+    "@vscode/test-cli": {
+      "mocha": "$mocha"
+    }
   },
   "dependencies": {
     "@odata2ts/odata-core": "0.7.1",

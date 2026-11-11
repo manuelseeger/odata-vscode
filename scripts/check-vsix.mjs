@@ -68,7 +68,7 @@ for (const entry of entries) {
         `Private or source file in VSIX ${entry}`,
     );
     assert(
-        !/(?:^|\/)(?:webpack\.config\.js|mise\.toml|package-lock\.json|\.nvmrc|tsconfig\.json|eslint\.config\.mjs|\.prettierrc|\.vscode-test\.[^/]+)$|\.(?:test|spec)\.[cm]?js$/.test(
+        !/(?:^|\/)(?:esbuild\.mjs|mise\.toml|package-lock\.json|\.nvmrc|tsconfig\.json|eslint\.config\.mjs|\.prettierrc|\.vscode-test\.[^/]+)$|\.(?:test|spec)\.[cm]?js$/.test(
             entry,
         ),
         `Development file in VSIX ${entry}`,

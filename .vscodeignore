@@ -20,7 +20,7 @@ playground/**
 **/tsconfig.json
 **/eslint.config.mjs
 **/.vscode-test.*
-webpack.config.js
+esbuild.mjs
 package-lock.json
 .gitignore
 .nvmrc
