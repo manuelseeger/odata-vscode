@@ -5,11 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.1] - 2026-11-11
+
+### Breaking changes
+
+- The minimum VS Code version is 1.146.0.
+- Authentication and custom headers require an HTTPS endpoint. Requests with credentials to an HTTP endpoint fail. Anonymous HTTP requests are available.
+- Redirects are blocked, including same-origin redirects.
+- A query URL must use the origin of the selected endpoint. Endpoint and query URLs with user information or a fragment are rejected.
+- A request stops after 30 seconds. A response body is limited to 10 MiB.
+- In an untrusted workspace, requests, secret reads, certificate reads, profile selection, profile edits, and chat are not available. Language tools, Copy Query, and profile inspection are available.
+- Passwords, bearer tokens, certificate passphrases, and all custom headers move to the VS Code secret storage. Existing profiles migrate automatically in a trusted workspace.
+- A profile with an invalid URL, header, certificate path, or certificate combination cannot be saved or used for requests. The profile stays editable.
+
+### Added
+
+- Cancellable progress for Run and Get Metadata
+- Recovery of malformed profile data in the profile editor
+- Troubleshooting note for TLS inspection proxies (`NODE_EXTRA_CA_CERTS`)
 
 ### Fixed
 
 - Line breaks between tokens in a multiline query become a space in the combined URL (#6)
+- Signature help shows before the closing parenthesis is typed
+
+### Changed
+
+- Maintenance: updated dependencies and build tooling
 
 ## [0.3.1] - 2025-04-25
 
