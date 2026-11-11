@@ -15,7 +15,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A query URL must use the origin of the selected endpoint. Endpoint and query URLs with user information or a fragment are rejected.
 - A request stops after 30 seconds. A response body is limited to 10 MiB.
 - In an untrusted workspace, requests, secret reads, certificate reads, profile selection, profile edits, and chat are not available. Language tools, Copy Query, and profile inspection are available.
-- Passwords, bearer tokens, certificate passphrases, and all custom headers move to the VS Code secret storage. Existing profiles migrate automatically in a trusted workspace.
 - A profile with an invalid URL, header, certificate path, or certificate combination cannot be saved or used for requests. The profile stays editable.
 
 ### Added
@@ -31,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Custom headers are stored in the VS Code secret storage. Existing profiles migrate automatically when the workspace is trusted.
 - Maintenance: updated dependencies and build tooling
 
 ## [0.3.1] - 2025-04-25
