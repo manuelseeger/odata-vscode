@@ -9,12 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking changes
 
-- The minimum VS Code version is 1.146.0.
 - A profile with authentication or custom headers must use an HTTPS endpoint. Only anonymous profiles without custom headers can use HTTP.
-- Redirects are blocked, including same-origin redirects.
-- A query URL must use the origin of the selected endpoint.
 - Endpoint and query URLs must use HTTP or HTTPS and cannot contain user information or a fragment.
-- A request stops after 30 seconds. A response body is limited to 10 MiB.
 - A custom `Authorization` header cannot be used together with profile authentication.
 - Custom headers cannot use the names `Host`, `Connection`, `Content-Length`, `Transfer-Encoding`, `Upgrade`, or names that start with `Proxy-` or `Sec-`.
 - A Basic authentication username cannot contain a colon. A bearer token must contain only printable ASCII characters.
@@ -36,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The minimum VS Code version is 1.146.0.
+- Redirects are blocked, including same-origin redirects.
+- A query URL must use the origin of the selected endpoint.
+- A request stops after 30 seconds. A response body is limited to 10 MiB.
 - Custom headers are stored in the VS Code secret storage. Existing profiles migrate automatically when the workspace is trusted.
 - Maintenance: updated dependencies
 
