@@ -37,8 +37,15 @@ export function extractCodeBlocks(response: string): string[] {
 }
 
 export function combineODataUrl(input: string): string {
-    // Remove line breaks and condense to a single line
-    const singleLine: string = input.replace(/\s*\n\s*/g, "");
+    // Join lines. A line break between two tokens becomes a space.
+    // A line break after an opening delimiter or before a closing delimiter is removed.
+    const singleLine: string = input
+        .trim()
+        .replace(/\s*\r?\n\s*/g, (match: string, offset: number, whole: string) => {
+            const before = whole[offset - 1] ?? "";
+            const after = whole[offset + match.length] ?? "";
+            return /[(/,=&?]/.test(before) || /[)/,=&?]/.test(after) ? "" : " ";
+        });
 
     // Split the URL into host/resource path and query parameters
     let [baseUrl, queryParams] = singleLine.split("?");
