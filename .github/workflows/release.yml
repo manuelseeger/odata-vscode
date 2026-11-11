@@ -24,7 +24,8 @@ jobs:
         with:
           name: odata-vsix
       - run: node scripts/check-vsix.mjs odata-validation.vsix
-      - run: gh release create "$GITHUB_REF_NAME" odata-validation.vsix --generate-notes
+      - run: mv odata-validation.vsix "odata-vscode-${GITHUB_REF_NAME}.vsix"
+      - run: gh release create "$GITHUB_REF_NAME" "odata-vscode-${GITHUB_REF_NAME}.vsix" --generate-notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
@@ -48,4 +49,5 @@ jobs:
         with:
           name: odata-vsix
       - run: node scripts/check-vsix.mjs odata-validation.vsix
-      - run: npx --no-install vsce publish --packagePath odata-validation.vsix --oidc
+      - run: mv odata-validation.vsix "odata-vscode-${GITHUB_REF_NAME}.vsix"
+      - run: npx --no-install vsce publish --packagePath "odata-vscode-${GITHUB_REF_NAME}.vsix" --oidc
