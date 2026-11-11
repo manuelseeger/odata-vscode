@@ -23,7 +23,6 @@ playground/**
 esbuild.mjs
 package-lock.json
 .gitignore
-.nvmrc
 mise.toml
 .prettierrc
 assets/*.gif
