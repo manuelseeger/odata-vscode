@@ -54,7 +54,7 @@ const contexts = await Promise.all([
         entryPoints: ["src/extension.ts"],
         outfile: "dist/extension.js",
         platform: "node",
-        target: "node22",
+        target: "node24",
         format: "cjs",
         external: ["vscode"],
         plugins: [problemMatcher],

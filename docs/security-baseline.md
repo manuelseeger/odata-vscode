@@ -2,9 +2,9 @@
 
 ## Supported versions
 
-The minimum VS Code version is 1.109.0. The API types are pinned to 1.109.0. CI runs extension-host tests on 1.109.0 and the current stable release without Copilot or other installed extensions.
+The minimum VS Code version is 1.146.0. The API types are pinned to 1.145.0. CI runs extension-host tests on 1.146.0 and the current stable release without Copilot or other installed extensions.
 
-VS Code 1.109.0 uses Electron 39.3.0 and Node.js 22.21.1, so the bundle targets Node.js 22. Development and CI use Node.js 26.13.0 and npm 11.20.0. `mise.toml` pins Node.js, and `engines.node` requires it. `package-lock.json` supports reproducible `npm ci` installs.
+VS Code 1.146.0 uses Electron 43.8.6 and Node.js 24.22.1, so the bundle targets Node.js 24. Development and CI use Node.js 24.22.1 and npm 11.19.1. `mise.toml` pins Node.js, and `engines.node` requires it. `package-lock.json` supports reproducible `npm ci` installs.
 
 TypeScript stays on 5.9.3. The TypeScript ESLint parser supports TypeScript versions below 6.1.0. The optional Copilot integration uses the existing chat participant API and prompt-tsx 0.3 API.
 

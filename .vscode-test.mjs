@@ -1,7 +1,7 @@
 import { defineConfig } from "@vscode/test-cli";
 
 const common = {
-    version: process.env.VSCODE_VERSION || "1.109.0",
+    version: process.env.VSCODE_VERSION || "1.146.0",
     useInstallation: process.env.VSCODE_EXECUTABLE
         ? { fromPath: process.env.VSCODE_EXECUTABLE }
         : undefined,

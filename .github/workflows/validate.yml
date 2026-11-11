@@ -27,7 +27,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        vscode: ["1.109.0", "stable"]
+        vscode: ["1.146.0", "stable"]
     steps:
       - uses: actions/checkout@v4
       - uses: jdx/mise-action@v5
