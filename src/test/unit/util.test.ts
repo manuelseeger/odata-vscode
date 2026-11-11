@@ -190,4 +190,51 @@ $filter=Name eq 'John'`;
             "https://example.com/odata/Customers?$filter=Name eq 'John'&$orderby=Name asc&$top=10",
         );
     });
+
+    test("should keep a space where a line break separates two tokens", () => {
+        const input = `https://example.com/odata/Orders?$filter=CreateDate ge 2026-01-01
+    and ClosedDate le 2026-12-31`;
+        const result = combineODataUrl(input);
+        assert.strictEqual(
+            result,
+            "https://example.com/odata/Orders?$filter=CreateDate ge 2026-01-01 and ClosedDate le 2026-12-31",
+        );
+    });
+
+    test("should keep a space before an opening parenthesis on a new line", () => {
+        const input = `https://example.com/odata/Orders?$filter=Id eq 1 and
+    (Name eq 'A' or Name eq 'B')`;
+        const result = combineODataUrl(input);
+        assert.strictEqual(
+            result,
+            "https://example.com/odata/Orders?$filter=Id eq 1 and (Name eq 'A' or Name eq 'B')",
+        );
+    });
+
+    test("should combine multiline filter inside apply (issue #6)", () => {
+        const input = `https://example.com/odata/Tickets?$apply=
+    filter(
+        CreateDate ge 2026-01-01
+        and ClosedDate le 2026-12-31
+    )
+    /groupby(
+        (CreatedBy),
+        aggregate($count as CreatedCount)
+    )`;
+        const result = combineODataUrl(input);
+        assert.strictEqual(
+            result,
+            "https://example.com/odata/Tickets?$apply=filter(CreateDate ge 2026-01-01 and ClosedDate le 2026-12-31)/groupby((CreatedBy),aggregate($count as CreatedCount))",
+        );
+    });
+
+    test("should combine CRLF line breaks", () => {
+        const input =
+            "https://example.com/odata/Orders?$filter=Id gt 1\r\n    and Id lt 9\r\n    &$top=5";
+        const result = combineODataUrl(input);
+        assert.strictEqual(
+            result,
+            "https://example.com/odata/Orders?$filter=Id gt 1 and Id lt 9&$top=5",
+        );
+    });
 });
