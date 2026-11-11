@@ -62,6 +62,10 @@ Specials paths like `/$metadata`, `/$count` don't show errors, but the parsed qu
 
 ## Troubleshooting
 
+### Corporate proxy / TLS inspection block requests
+
+For a TLS inspection proxy, set `NODE_EXTRA_CA_CERTS` to the certificate authority file before you start VS Code.
+
 ### Endpoint authentication method is not supported
 
 You can still use all features but the query runner. Create an endpoint profile with your service URL and manually copy the metadata into the profile. Syntax highlighting, metadata-aware completion, and Copilot integration will work. 
