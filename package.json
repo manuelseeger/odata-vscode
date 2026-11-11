@@ -2,7 +2,7 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Language and Query Runner",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "publisher": "manuelseeger",
   "repository": {
     "type": "git",
