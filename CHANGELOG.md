@@ -5,11 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.1] - 2026-11-13
+
+### Breaking changes
+
+- A profile with authentication or custom headers must use an HTTPS endpoint. Only anonymous profiles without custom headers can use HTTP.
+- Endpoint and query URLs must use HTTP or HTTPS and cannot contain user information or a fragment.
+- A custom `Authorization` header cannot be used together with profile authentication.
+- Custom headers cannot use the names `Host`, `Connection`, `Content-Length`, `Transfer-Encoding`, `Upgrade`, or names that start with `Proxy-` or `Sec-`.
+- A Basic authentication username cannot contain a colon. A bearer token must contain only printable ASCII characters.
+- Client certificate paths must be absolute local file paths. A client certificate profile uses either a PFX file or a certificate and key pair, not both.
+- A profile that does not obey these rules cannot be saved or used for requests. Existing profiles of this type stay in the list and you can edit them.
+
+### Added
+
+- Language tools, Copy Query, and profile viewing are available in Restricted Mode. Requests, profile selection, profile edits, and chat require workspace trust.
+- Run shows a progress notification. You can cancel Run and Get Metadata.
+- Malformed stored profiles show as recovered profiles. The profile editor shows the recovered source data. Repair a recovered profile before you use it.
+- Troubleshooting note for TLS inspection proxies (`NODE_EXTRA_CA_CERTS`)
 
 ### Fixed
 
 - Line breaks between tokens in a multiline query become a space in the combined URL (#6)
+- Signature help shows when the cursor is next to a closing parenthesis
+- Client certificate authentication with a certificate and key pair uses the passphrase for an encrypted key
+
+### Changed
+
+- The minimum VS Code version is 1.145.0.
+- Redirects are blocked, including same-origin redirects.
+- A query URL must use the origin of the selected endpoint.
+- A request stops after 30 seconds. A response body is limited to 10 MiB.
+- Custom headers are stored in the VS Code secret storage. Existing profiles migrate automatically when the workspace is trusted.
+- Maintenance: updated dependencies
 
 ## [0.3.1] - 2025-04-25
 

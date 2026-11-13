@@ -2,14 +2,14 @@
   "name": "odata",
   "displayName": "OData",
   "description": "OData Language and Query Runner",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "publisher": "manuelseeger",
   "repository": {
     "type": "git",
     "url": "https://github.com/manuelseeger/odata-vscode.git"
   },
   "engines": {
-    "vscode": "^1.146.0",
+    "vscode": "^1.145.0",
     "node": ">=24.22.1"
   },
   "categories": [
