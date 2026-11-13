@@ -58,11 +58,7 @@ export async function activate(context: vscode.ExtensionContext) {
     syntaxParser.onSyntaxError(diagnosticsProvider.handleSyntaxError.bind(diagnosticsProvider));
     syntaxParser.onParseSuccess(diagnosticsProvider.handleParseSucess.bind(diagnosticsProvider));
 
-    context.subscriptions.push(
-        vscode.workspace.onDidChangeTextDocument((event) => {
-            syntaxParser.handleChangeTextDocument(event.document);
-        }),
-    );
+    registerDocumentParsing(context, syntaxParser);
 
     try {
         context.subscriptions.push(
@@ -71,6 +67,21 @@ export async function activate(context: vscode.ExtensionContext) {
     } catch {}
 
     return context;
+}
+
+export function registerDocumentParsing(
+    context: vscode.ExtensionContext,
+    syntaxParser: SyntaxParser,
+) {
+    context.subscriptions.push(
+        vscode.workspace.onDidOpenTextDocument((document) => syntaxParser.process(document)),
+        vscode.workspace.onDidChangeTextDocument((event) => {
+            syntaxParser.handleChangeTextDocument(event.document);
+        }),
+    );
+    for (const document of vscode.workspace.textDocuments) {
+        syntaxParser.process(document);
+    }
 }
 
 export function deactivate() {}
