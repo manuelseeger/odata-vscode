@@ -72,10 +72,10 @@ export class SyntaxParser implements ISyntaxParser {
         if (text === this._lastQuery) {
             return this._lastTree;
         }
+        const tree = parse(text) as unknown as ParsedTree;
         this._lastQuery = text;
-
-        this._lastTree = parse(text) as unknown as ParsedTree;
-        return this._lastTree;
+        this._lastTree = tree;
+        return tree;
     }
 
     public onSyntaxError(handler: ParseSyntaxErrorHandler) {
