@@ -3,6 +3,13 @@ import { ODataMode } from "./configuration";
 import { odata } from "./contracts/types";
 import { Disposable } from "./provider";
 
+export function formatFunctionLabel(func: odata.Function): string {
+    const parameters = func.params
+        ? func.params.map((param) => `${param.name}: ${param.type}`).join(", ")
+        : "";
+    return `${func.name}(${parameters})`;
+}
+
 export class SignatureHelpProvider extends Disposable implements vscode.SignatureHelpProvider {
     public _id: string = "SignatureHelpProvider";
     public triggerCharacters = [",", "("];
@@ -105,10 +112,7 @@ export class SignatureHelpProvider extends Disposable implements vscode.Signatur
         // we provide signatures for v4 functions even if the document
         // might be v2; this saves us parsing the document to check
         for (const func of this.ref.v4.functions) {
-            const parameters = func.params
-                ? func.params.map((param) => `${param.name}: ${param.type}`).join(", ")
-                : "";
-            const label = `${func.name}(${parameters})`;
+            const label = formatFunctionLabel(func);
             const signature = new vscode.SignatureInformation(label, func.doc);
             signature.parameters =
                 func.params?.map((param) => {

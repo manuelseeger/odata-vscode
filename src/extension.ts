@@ -49,7 +49,7 @@ export async function activate(context: vscode.ExtensionContext) {
         new SystemQueryCompletionItemProvider(),
         new MetadataCompletionItemProvider(metadataService, context),
         new ODataDocumentFormatter(syntaxParser),
-        new HoverProvider(metadataService, context),
+        new HoverProvider(metadataService, context, reference),
     );
 
     const diagnosticsProvider = new ODataDiagnosticProvider(metadataService, context);
