@@ -1,23 +1,33 @@
 import * as vscode from "vscode";
 import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
-import { Profile } from "./contracts/types";
+import { odata, Profile } from "./contracts/types";
 import {
     EntitySetType,
     NavPropBindingType,
     PropertyModel,
 } from "./odata2ts/data-model/DataTypeModel";
 import { Disposable } from "./provider";
+import { formatFunctionLabel } from "./signatures";
 import { combineODataUrl, getBaseUrl } from "./util";
 
 export class HoverProvider extends Disposable implements vscode.HoverProvider {
     public _id: string = "HoverProvider";
+    private functions = new Map<string, odata.Function[]>();
 
     constructor(
         private metadataService: IMetadataModelService,
         private context: vscode.ExtensionContext,
+        ref: odata.Reference,
     ) {
         super();
+        const v4Names = new Set(ref.v4.functions.map((func) => func.name));
+        for (const func of [
+            ...ref.v4.functions,
+            ...ref.v2.functions.filter((func) => !v4Names.has(func.name)),
+        ]) {
+            this.functions.set(func.name, [...(this.functions.get(func.name) ?? []), func]);
+        }
         this.subscriptions = [vscode.languages.registerHoverProvider(ODataMode, this)];
     }
 
@@ -26,6 +36,28 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
         position: vscode.Position,
         token: vscode.CancellationToken,
     ): Promise<vscode.Hover | null | undefined> {
+        const functionRange = document.getWordRangeAtPosition(position, /[A-Za-z][\w.]*/);
+        if (
+            functionRange &&
+            /^\s*\(/.test(document.lineAt(position.line).text.slice(functionRange.end.character))
+        ) {
+            const functions = this.functions.get(document.getText(functionRange));
+            if (functions) {
+                const contents = functions.map((func) => {
+                    const markdown = new vscode.MarkdownString();
+                    markdown.appendCodeblock(formatFunctionLabel(func));
+                    markdown.appendMarkdown(`${func.doc}\n\n`);
+                    for (const param of func.params ?? []) {
+                        markdown.appendMarkdown(
+                            `- \`${param.name}: ${param.type}\` ${param.description}\n`,
+                        );
+                    }
+                    return markdown;
+                });
+                return new vscode.Hover(contents, functionRange);
+            }
+        }
+
         const wordRange = document.getWordRangeAtPosition(position);
         const word = document.getText(wordRange);
 
