@@ -60,15 +60,30 @@ export class ProfileTreeProvider
                   vscode.commands.registerCommand(commands.getMetadata, () =>
                       this.getEndpointMetadata(),
                   ),
-                  vscode.commands.registerCommand(commands.selectProfile, () =>
-                      this.selectProfile(),
-                  ),
+                  vscode.commands.registerCommand(commands.selectProfile, async () => {
+                      try {
+                          requireTrustedWorkspace();
+                          await this.selectProfile();
+                      } catch {
+                          void vscode.window.showErrorMessage(
+                              "Cannot select profile. Check workspace trust and profile settings.",
+                          );
+                      }
+                  }),
                   vscode.commands.registerCommand(`${APP_NAME}.editProfile`, (item: ProfileItem) =>
                       this.openProfileWebview(item.profile),
                   ),
                   vscode.commands.registerCommand(
                       `${APP_NAME}.deleteProfile`,
-                      (item: ProfileItem) => this.deleteProfile(item.profile),
+                      async (item: ProfileItem) => {
+                          try {
+                              await this.deleteProfile(item.profile);
+                          } catch {
+                              void vscode.window.showErrorMessage(
+                                  "Cannot delete profile. Check workspace trust and profile settings.",
+                              );
+                          }
+                      },
                   ),
                   vscode.commands.registerCommand(internalCommands.getSelectedProfile, () =>
                       this.selectedPublicProfile(),

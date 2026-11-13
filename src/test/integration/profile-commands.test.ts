@@ -184,8 +184,14 @@ suite("Profile command callbacks", () => {
 
     test("trusted delete removes the profile and its secrets and selects the remaining profile", async () => {
         secrets.set("odata.profile.secret.Test", "private-secret");
-        await vscode.commands.executeCommand(prefix + "odata.deleteProfile", provider.getChildren()[0]);
-        assert.deepStrictEqual(provider.getChildren().map((item) => item.profile.name), [other.name]);
+        await vscode.commands.executeCommand(
+            prefix + "odata.deleteProfile",
+            provider.getChildren()[0],
+        );
+        assert.deepStrictEqual(
+            provider.getChildren().map((item) => item.profile.name),
+            [other.name],
+        );
         assert.strictEqual((state.get(globalStates.selectedProfile) as Profile).name, other.name);
         assert.strictEqual(secrets.has("odata.profile.secret.Test"), false);
         assert.deepStrictEqual(messages, []);
