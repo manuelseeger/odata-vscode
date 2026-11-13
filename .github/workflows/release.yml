@@ -12,15 +12,15 @@ jobs:
     uses: ./.github/workflows/validate.yml
   release:
     needs: validate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: jdx/mise-action@v5
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: odata-vsix
       - run: node scripts/check-vsix.mjs odata-validation.vsix
@@ -30,22 +30,22 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   publish:
     needs: release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: marketplace
     permissions:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: jdx/mise-action@v5
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.npm
           key: npm-${{ hashFiles('package-lock.json') }}
       - run: npm ci --ignore-scripts
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
           name: odata-vsix
       - run: node scripts/check-vsix.mjs odata-validation.vsix
