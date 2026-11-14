@@ -51,10 +51,8 @@ export class CommandProvider extends Disposable {
     }
 
     async openAndRunQuery(query: string) {
-        query = query.replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "");
-        query = query.trim();
         requireTrustedWorkspace();
-        await this.openQuery(query);
+        query = await this.openQuery(query);
         if (getConfig().disableRunner) {
             return;
         }
@@ -88,8 +86,9 @@ export class CommandProvider extends Disposable {
         }
     }
 
-    private async openQuery(query: string) {
-        if (!this.queryDocument) {
+    public async openQuery(query: string): Promise<string> {
+        query = query.trim().replace(/^(GET|POST|PUT|PATCH|DELETE)\s+/, "").trim();
+        if (!this.queryDocument || this.queryDocument.isClosed) {
             this.queryDocument = await vscode.workspace.openTextDocument({
                 language: "odata",
                 content: query,
@@ -113,6 +112,7 @@ export class CommandProvider extends Disposable {
             "odata",
         );
         await vscode.commands.executeCommand("editor.action.formatDocument");
+        return query;
     }
 
     private async runQuery(query: string) {
