@@ -6,7 +6,7 @@ The minimum VS Code version is 1.146.0. The API types are pinned to 1.145.0. CI 
 
 VS Code 1.146.0 uses Electron 43.8.6 and Node.js 24.22.1, so the bundle targets Node.js 24. Development and CI use Node.js 24.22.1 and npm 11.19.1. `mise.toml` pins Node.js, and `engines.node` requires it. `package-lock.json` supports reproducible `npm ci` installs.
 
-TypeScript stays on 5.9.3. The TypeScript ESLint parser supports TypeScript versions below 6.1.0. The optional Copilot integration uses the existing chat participant API and prompt-tsx 0.3 API.
+TypeScript stays on 5.9.3. The TypeScript ESLint parser supports TypeScript versions below 6.1.0. The optional Copilot integration uses VS Code language-model tools and the bundled `/odata` skill. The `odata.chat.tools.enabled` setting defaults to false and controls tool availability.
 
 ## Request policy
 
@@ -20,7 +20,13 @@ A request has a 30-second total deadline and a 10 MiB decoded body limit. The li
 
 ## Restricted mode
 
-Language tools, Copy Query, and public profile inspection remain available in an untrusted workspace. Requests, secret reads, certificate reads, profile selection, profile edits, and chat require workspace trust. Core language and profile registration precede optional chat registration. Model discovery failures do not prevent profile editing or metadata display.
+Language tools, Copy Query, and public profile inspection remain available in an untrusted workspace. Requests, secret reads, certificate reads, profile selection, profile edits, and Copilot tools require workspace trust. Core language and profile registration precede optional tool registration. Tool registration failures do not prevent profile editing or metadata display.
+
+## Copilot tools
+
+`odata_getMetadata` returns JSON with the selected service's base URL, OData version, and cached metadata XML. The URL contains only the origin and path. The result excludes profile names, credentials, authentication settings, and headers. Metadata filters apply to the returned XML. The whole filtered document goes to the model, so users must filter large or confidential schemas before sharing them.
+
+`odata_openQuery` shows the query in its confirmation message and opens it in an OData editor. It makes no HTTP request and does not create a result document. The user must run **OData: Run** to execute the query.
 
 ## Profile storage and webviews
 

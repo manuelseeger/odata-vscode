@@ -14,9 +14,11 @@ const rejected = (description) => {
     assert.match(result.stderr, /AssertionError/, description);
 };
 try {
-    copyFileSync(original, archive);
-    execFileSync("zip", ["-qd", archive, "extension/odata.configuration.json"]);
-    rejected("Missing contributed resources must fail validation.");
+    for (const resource of ["odata.configuration.json", "skills/odata/SKILL.md"]) {
+        copyFileSync(original, archive);
+        execFileSync("zip", ["-qd", archive, `extension/${resource}`]);
+        rejected(`Missing contributed resource ${resource} must fail validation.`);
+    }
     for (const file of [
         "extension/.pi/secrets.json",
         "extension/src/source.js",
