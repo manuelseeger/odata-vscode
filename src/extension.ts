@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ChatParticipantProvider } from "./chat";
+import { ChatToolsProvider } from "./chatTools";
 import { CommandProvider } from "./commands";
 import {
     DefaultCompletionItemProvider,
@@ -62,7 +62,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     try {
         context.subscriptions.push(
-            new ChatParticipantProvider(context, metadataService, tokenizer),
+            new ChatToolsProvider(
+                () => profiles.getSelectedProfile(),
+                metadataService,
+                (query) => commands.openQuery(query),
+            ),
         );
     } catch {}
 

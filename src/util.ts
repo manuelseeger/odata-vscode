@@ -20,22 +20,6 @@ export function getBaseUrl(url: string): string {
     return `${basePart}/`;
 }
 
-export function extractCodeBlocks(response: string): string[] {
-    const codeBlockRegex =
-        /```odata(?:\w+)?[ \t]*\r?\n((?:(?!```[\w]?)[\s\S])*)[ \t\r\n]*```[ \t]*(?:\r?\n|$)/g;
-
-    let match;
-    const codeBlocks: string[] = [];
-
-    while ((match = codeBlockRegex.exec(response)) !== null) {
-        if (match[1]) {
-            codeBlocks.push(match[1].trim());
-        }
-    }
-
-    return codeBlocks;
-}
-
 export function combineODataUrl(input: string): string {
     // Join lines. A line break between two tokens becomes a space.
     // A line break after an opening delimiter or before a closing delimiter is removed.
