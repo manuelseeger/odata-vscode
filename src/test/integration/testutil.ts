@@ -6,6 +6,12 @@ import { IQueryRunner } from "../../contracts/IQueryRunner";
 import { globalStates } from "../../configuration";
 import { QueryRunner } from "../../services/QueryRunner";
 
+const workspaceGetConfiguration = vscode.workspace.getConfiguration;
+
+export function restoreWorkspaceConfiguration() {
+    vscode.workspace.getConfiguration = workspaceGetConfiguration;
+}
+
 export const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
     <edmx:DataServices>
         <Schema Namespace="testing" xmlns="http://docs.oasis-open.org/odata/ns/edm">
@@ -62,13 +68,11 @@ export async function setupTests(
             return Promise.resolve();
         },
     };
-    // Override getConfiguration to return stubbed config for 'odata' only
-    const originalGetConfig = (vscode.workspace as any).getConfiguration;
     (vscode.workspace as any).getConfiguration = function (section?: string, ...args: any[]) {
         if (section === "odata") {
             return odataConfig;
         }
-        return originalGetConfig.call(this, section, ...args);
+        return workspaceGetConfiguration.call(this, section, ...args);
     };
 
     if (!profile) {
