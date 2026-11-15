@@ -1,17 +1,17 @@
 ---
 name: verify-odata
-description: Drive the OData VS Code extension (this repo) in a real, headless VS Code through its workbench UI and capture proof. Use to verify language mode, highlighting, formatting, diagnostics, completions, hovers, signature help, endpoint profiles (webview + explorer view), and the Run / Copy / Get Metadata / Select Profile commands after a change. Does not cover the Copilot chat participant (@odata) or Copilot tools.
+description: Drive the OData VS Code extension (this repo) in a real, headless VS Code through its workbench UI and capture proof. Use to verify language mode, highlighting, formatting, diagnostics, completions, hovers, signature help, endpoint profiles (webview + explorer view), and the Run / Copy / Get Metadata / Select Profile commands after a change. Does not cover the Copilot /odata skill or Copilot tools.
 ---
 
 # verify-odata
 
 Proves the non-Copilot features of the `odata` extension by driving a real VS Code window. The window has the extension loaded from this checkout and talks to a local mock OData v4 service. All input goes through the workbench UI: command palette, keyboard, mouse, webview form, explorer view, Problems panel. There are no internal setters and no test-only commands.
 
-- Surface: VS Code extension (language `odata`, `*.odata` files). Other surfaces: the `@odata` chat participant and Copilot tools are out of scope.
+- Surface: VS Code extension (language `odata`, `*.odata` files). Other surfaces: the Copilot `/odata` skill and Copilot tools are out of scope.
 - Harness: VS Code stable (downloaded to `.vscode-test/`) runs with `--ozone-platform=headless`, so no X server or sudo is necessary. `playwright-core` connects over CDP. The helpers are in `scripts/`.
 - Feature map: [`features/README.md`](features/README.md). Read it before you drive.
 
-All paths below are relative to this skill directory (`.pi/skills/verify-odata/`).
+All paths below are relative to this skill directory (`.agents/skills/verify-odata/`).
 
 ## Launch
 
@@ -102,9 +102,9 @@ This kills only the two process sessions that `launch.sh` started (pids in `stat
 
 ## Gotchas
 
-- The extension declares only `onChatParticipant` as an activation event. VS Code activates it from contributions (opening an `.odata` file, the view, or a command). The ready check waits for the palette entries for this reason.
+- VS Code activates the extension from its contributions (opening an `.odata` file, the view, or a command). The ready check waits for the palette entries.
 - `OData: Run` and `OData: Copy Query to Clipboard` show in the palette only when the active editor is `odata`.
-- Diagnostics run only on document changes. A file that is open but not edited shows no problems. Type into it.
+- Diagnostics run on document open and changes. Typing into the editor triggers a fresh validation.
 - Diagnostics stay in Problems for closed files. Filter with `problemsInFile`.
 - Query results open as dirty untitled JSON documents. Close them with `closeAllEditors()`, which answers "Don't Save". A native save dialog would kill headless VS Code.
 - The suggest list is virtualized: `suggestions()` returns only the rendered rows (about 12).

@@ -33,7 +33,7 @@ Preconditions:
 
 ## Gotchas
 
-- Diagnostics run only on text changes. Opening a file does not produce diagnostics. Type into it (`replaceAll` in the journey selects all, deletes, and types).
+- Diagnostics run on document open and on text changes. To trigger fresh validation, type into it (`replaceAll` in the journey selects all, deletes, and types).
 - Problems keep the entries of other files, also when those files are closed. Use `vs.problemsInFile(name)`.
 - An unknown `$expand` navigation property gives two warnings. One of them has a stray leading quote: `'Resource Orders doesn't have a navigational property Customer …`. This is a cosmetic defect in the message text.
 - The journey does not drive `diag-strict`. To verify it, change `OData › Strict Parser` in the Settings UI (palette `Preferences: Open Settings (UI)`, search `odata.strictParser`), and then repeat the syntax error step and expect `Warning:`.

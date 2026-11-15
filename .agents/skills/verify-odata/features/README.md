@@ -1,6 +1,6 @@
 # OData extension verification map
 
-This directory is the maintained source for verifying the user-facing, non-Copilot behavior of the OData VS Code extension. Read this index before you drive, then use the applicable feature file as the recipe. The `@odata` chat participant and the Copilot tools are out of scope.
+This directory is the maintained source for verifying the user-facing, non-Copilot behavior of the OData VS Code extension. Read this index before you drive, then use the applicable feature file as the recipe. The Copilot `/odata` skill and the Copilot tools are out of scope.
 
 ## Baseline preconditions
 
@@ -14,7 +14,7 @@ This directory is the maintained source for verifying the user-facing, non-Copil
 
 - Run every journey with `RUN_ID=$RUN_ID scripts/drive.mjs <journey>`. Run them in sequence on the same instance, `profiles` first.
 - Use command palette titles, view names, aria-labels, and webview element ids. Do not use positions.
-- Type into editors with the keyboard. Diagnostics and trigger-character completions occur only when you type.
+- Type into editors with the keyboard. Typing triggers fresh diagnostics and trigger-character completions.
 - Each journey closes its editors when it ends. It keeps profile `Mock` and the files in `ws/`.
 
 ## Proof and skip reporting

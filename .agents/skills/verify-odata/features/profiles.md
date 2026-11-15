@@ -6,7 +6,7 @@ A user creates an endpoint profile (name, service URL, auth, headers) in the "Cr
 
 - `profile-create` opens the form from the palette or from the view title `+` and saves the profile automatically when a field loses focus.
 - `profile-metadata` fills the Metadata textarea and the token counts with the "Request Metadata" button.
-- `profile-list-select` lists profiles in the view and automatically selects the first profile. `OData: Select Endpoint Profile` changes the selection.
+- `profile-list-select` lists profiles in the view and selects a saved profile when none is selected. `OData: Select Endpoint Profile` changes the selection.
 - `profile-get-metadata` refreshes the metadata of the selected profile with `OData: Get Metadata`.
 - `profile-edit` opens the inline action "Edit HTTP Profile" with the stored values.
 - `profile-delete` removes a profile with the inline action "Delete HTTP Profile". If the deleted profile was selected, the selection moves to the first remaining profile.

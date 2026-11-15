@@ -1,6 +1,6 @@
 # Hovers and signature help
 
-When a user hovers an entity set name in a query, the extension shows the entity set, its entity type, and its typed properties from the metadata of the selected profile. A hover in other places shows the selected profile, its base URL, and the combined one-line query as a link. When the user types an OData function call such as `contains(`, signature help shows the parameters and highlights the active parameter.
+When a user hovers an entity set name in a query, the extension shows the entity set, its entity type, and its typed properties from the metadata of the selected profile. Hovering a recognized function name shows its documentation and parameters; other eligible hovers show the selected profile, its base URL, and the combined one-line query as a link. When the user types an OData function call such as `contains(`, signature help shows the parameters and highlights the active parameter.
 
 ## Sub-features
 

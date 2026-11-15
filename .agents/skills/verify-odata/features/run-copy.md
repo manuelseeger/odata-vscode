@@ -1,6 +1,6 @@
 # Run and copy query
 
-`OData: Run` combines the (multi-line) query of the active OData editor into one URL and adds `$format=<odata.defaultFormat>`. Then it sends the request with the auth and headers of the selected profile and opens the response as a formatted document beside the query (JSON or XML language). An error status gives an error toast. `OData: Copy Query to Clipboard` copies the combined one-line URL plus `&$format=…`.
+`OData: Run` combines the (multi-line) query of the active OData editor into one URL and adds `$format=<odata.defaultFormat>` if absent, except for a query ending in `$count`. Then it sends the request with the auth and headers of the selected profile and opens the response as a formatted document beside the query (JSON or XML language). An error status gives an error toast. `OData: Copy Query to Clipboard` copies the combined one-line URL, adding `$format` only if absent.
 
 ## Sub-features
 
