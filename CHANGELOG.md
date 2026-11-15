@@ -7,13 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Breaking changes
-
-- Replace the `@odata` Copilot chat participant with the explicit `/odata` skill.
-
 ### Added
 
 - Add opt-in Copilot tools to share filtered metadata and open a drafted query for review. Enable `odata.chat.tools.enabled` to use them. Opening a query never runs it. Use **OData: Run** to execute it.
+
+### Changed
+
+- Replace the `@odata` Copilot chat participant with the explicit `/odata` skill.
 
 ## [0.4.1] - 2026-11-13
 
