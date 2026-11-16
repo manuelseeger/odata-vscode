@@ -58,7 +58,7 @@ for (const font of fonts) {
 }
 for (const entry of entries) {
     assert(
-        !/(?:^|\/)(?:\.pi|\.git|\.github|\.vscode|\.vscode-test|src|scripts|docs|node_modules|out|coverage|test|tests|testdata|\.artifacts|\.secrets)(?:\/|$)/.test(
+        !/(?:^|\/)(?:\.pi|\.agents|\.git|\.github|\.vscode|\.vscode-test|src|scripts|docs|node_modules|out|coverage|test|tests|testdata|\.artifacts|\.secrets)(?:\/|$)/.test(
             entry,
         ),
         `Development file in VSIX ${entry}`,

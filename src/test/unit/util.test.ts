@@ -1,5 +1,5 @@
 import * as assert from "assert";
-import { getMetadataUrl, getBaseUrl, extractCodeBlocks, combineODataUrl } from "../../util";
+import { getMetadataUrl, getBaseUrl, combineODataUrl } from "../../util";
 
 suite("getMetadataUrl", () => {
     test("should append /$metadata to base URL without trailing slashes", () => {
@@ -64,74 +64,6 @@ suite("getBaseUrl", () => {
         assert.strictEqual(result, "https://example.com/api/");
     });
 });
-suite("extractCodeBlocks", () => {
-    test("should extract a single code block", () => {
-        const response =
-            "Here is some code:\n```odata\nhttps://example.com/odata/Customers?$filter=Name eq 'John'\n```";
-        const result = extractCodeBlocks(response);
-        assert.deepStrictEqual(result, [
-            "https://example.com/odata/Customers?$filter=Name eq 'John'",
-        ]);
-    });
-
-    test("should extract multiple code blocks", () => {
-        const response = `
-            Here is the first code block:
-            \`\`\`odata
-            https://example.com/odata/Customers?$filter=Name eq 'John'
-            \`\`\`
-            And here is the second:
-            \`\`\`odata
-            https://example.com/odata/Orders?$orderby=OrderDate desc
-            \`\`\`
-        `;
-        const result = extractCodeBlocks(response);
-        assert.deepStrictEqual(result, [
-            "https://example.com/odata/Customers?$filter=Name eq 'John'",
-            "https://example.com/odata/Orders?$orderby=OrderDate desc",
-        ]);
-    });
-
-    test("should return an empty array if no code blocks are present", () => {
-        const response = "This response contains no code blocks.";
-        const result = extractCodeBlocks(response);
-        assert.deepStrictEqual(result, []);
-    });
-
-    test("should ignore malformed code blocks", () => {
-        const response = `
-            Here is a malformed code block:
-            \`\`\`odata
-            https://example.com/odata/Customers?$filter=Name eq 'John'
-            And here is a proper one:
-            \`\`\`odata
-            https://example.com/odata/Orders?$orderby=OrderDate desc
-            \`\`\`
-        `;
-        const result = extractCodeBlocks(response);
-        assert.deepStrictEqual(result, [
-            "https://example.com/odata/Orders?$orderby=OrderDate desc",
-        ]);
-    });
-
-    test("should ignore code blocks with different languages", () => {
-        const response = `
-            Here is an odata code block:
-            \`\`\`odata
-            https://example.com/odata/Customers?$filter=Name eq 'John'
-            \`\`\`
-            And here is a Javascript code block:
-            \`\`\`js
-            const url = "https://example.com/odata/Orders?$orderby=OrderDate desc"
-            \`\`\`
-        `;
-        const result = extractCodeBlocks(response);
-        assert.deepStrictEqual(result, [
-            "https://example.com/odata/Customers?$filter=Name eq 'John'",
-        ]);
-    });
-});
-
 suite("combineODataUrl", () => {
     test("should combine multiline OData URL with valid query parameters", () => {
         const input = `https://example.com/odata/Customers
