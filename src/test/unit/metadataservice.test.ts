@@ -136,6 +136,10 @@ suite("MetadataModelService", () => {
             assert.strictEqual(result, true);
         });
 
+        test("rejects EDMX without a usable schema", () => {
+            assert.strictEqual(service.isMetadataXml('<x:Edmx xmlns:x="http://docs.oasis-open.org/odata/ns/edmx" />'), false);
+        });
+
         test("should return false for invalid XML", () => {
             const invalidXml = "<invalid></invalid>";
             const result = service.isMetadataXml(invalidXml);

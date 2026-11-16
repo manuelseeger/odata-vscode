@@ -193,7 +193,6 @@ export function parseCsdl(xml: string): Csdl {
     }
     const targets = new Map<string, Restrictions>();
     const legacyNavs: {
-        type: string;
         name: string;
         relationship: string;
         from: string;
@@ -236,7 +235,6 @@ export function parseCsdl(xml: string): Csdl {
                             throw new Error(`Unresolved association ${relationship}`);
                         }
                         legacyNavs.push({
-                            type: qname,
                             name: attr(nav, "Name"),
                             relationship,
                             from: attr(nav, "FromRole"),
@@ -384,7 +382,6 @@ export function parseCsdl(xml: string): Csdl {
             const source = csdl.entitySets.find(
                 (set) =>
                     set.container === associationSet.container &&
-                    set.type === nav.type &&
                     set.name === associationSet.ends.get(nav.from),
             );
             const target = associationSet.ends.get(nav.to);

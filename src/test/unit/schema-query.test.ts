@@ -79,6 +79,21 @@ suite("Canonical metadata queries", () => {
         assert.doesNotMatch(summarizeCsdl(csdl, "https://example.test/").yaml, /WriteOrders|Unspecified|WriteOnly/);
     });
 
+    test("keeps V2 association bindings scoped to their declaring containers", () => {
+        const xml = fixture("canonical-v2").replace('</Schema>', `
+            <EntityContainer Name="Other">
+                <EntitySet Name="Orders" EntityType="l.Order" />
+                <EntitySet Name="OtherLines" EntityType="l.Line" />
+                <AssociationSet Name="OtherOrderLines" Association="l.OrderLines">
+                    <End Role="Order" EntitySet="Orders" /><End Role="Line" EntitySet="OtherLines" />
+                </AssociationSet>
+            </EntityContainer></Schema>`);
+        const csdl = parseCsdl(xml);
+        assert.deepStrictEqual(csdl.entitySets.filter((set) => set.name === "Orders").map((set) => [
+            set.container, set.bindings.get("Lines"),
+        ]), [["Legacy.C", "Lines"], ["Legacy.Other", "OtherLines"]]);
+    });
+
     test("does not choose a root from an ambiguous container", () => {
         const xml = fixture("canonical").replace(
             '<EntitySet Name="OtherItems" EntityType="B.Item" />',
@@ -89,10 +104,13 @@ suite("Canonical metadata queries", () => {
         assert.strictEqual(findRoot(csdl, "Under_score").kind, "missing");
     });
 
-    test("bounds invalid inheritance and reports missing bases", () => {
-        for (const [base, message] of [["a.Item", /Cyclic/], ["a.Missing", /Unresolved/]] as const) {
-            const csdl = parseCsdl(fixture("canonical").replace('BaseType="a.Base"', `BaseType="${base}"`));
-            assert.throws(() => members(csdl, findType(csdl, "A.Item")!), message);
-        }
+    test("rejects cyclic inheritance without discarding declarations with external bases", () => {
+        const xml = fixture("canonical");
+        const cyclic = parseCsdl(xml.replace('BaseType="a.Base"', 'BaseType="a.Item"'));
+        assert.throws(() => members(cyclic, findType(cyclic, "A.Item")!), /Cyclic/);
+        const csdl = parseCsdl(xml.replace('BaseType="a.Base"', 'BaseType="External.Base"'));
+        const type = findType(csdl, "A.Item")!;
+        assert.deepStrictEqual(members(csdl, type).map((member) => member.record.name), ["lower_name", "address", "nominal"]);
+        assert.match(summarizeCsdl(csdl, "https://example.test/").yaml, /base: External.Base/);
     });
 });

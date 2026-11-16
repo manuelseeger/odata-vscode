@@ -51,11 +51,7 @@ export function members(csdl: Csdl, type: StructuredType): Member[] {
         }
         seen.add(current.qname);
         chain.unshift(current);
-        const base: string | undefined = current.base;
-        current = base ? findType(csdl, base) : undefined;
-        if (base && !current) {
-            throw new Error(`Unresolved CSDL base ${base}`);
-        }
+        current = current.base ? findType(csdl, current.base) : undefined;
     }
     return chain.flatMap((owner) => [
         ...owner.props.map((record): Member => ({ kind: "property", record })),
