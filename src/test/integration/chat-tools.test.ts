@@ -234,6 +234,8 @@ suite("OData language model tools", () => {
         "https://other.test/service/Orders",
         "https://example.test/service-other/Orders",
         "https://example.test/service/../foreign/Orders",
+        "https://example.test/service/a/. ./ . ./foreign/Orders",
+        "https://example.test/service/%2e%2e/foreign/Orders",
     ]) {
         test(`refuses a foreign service root ${query}`, async () => {
             const tool = new OpenQueryTool(
@@ -263,7 +265,150 @@ suite("OData language model tools", () => {
         }
     });
 
-    test("opens a stripped query without HTTP or results until the user runs it", async () => {
+    for (const [name, root, input, visible] of [
+        [
+            "literal percent",
+            "odata/",
+            "Orders?$filter=Name%20eq%20%27%2520%27%20and%20Label%20eq%20%27100%25%27",
+            "$filter=Name eq '%2520' and Label eq '100%25'",
+        ],
+        ["path key spaces", "odata/", "Orders(%27a%20b%27)", "Orders(%27a%20b%27)"],
+        ["path key backslash", "odata/", "Orders(%27a%5Cb%27)", "Orders(%27a%5Cb%27)"],
+        [
+            "repeated literal spaces",
+            "odata/",
+            "Orders?$filter=Name%20eq%20%27a%20%20b%27",
+            "$filter=Name%20eq%20%27a%20%20b%27",
+        ],
+        [
+            "literal newline",
+            "odata/",
+            "Orders?$filter=Name%20eq%20%27a%0Ab%27",
+            "$filter=Name%20eq%20%27a%0Ab%27",
+        ],
+        [
+            "encoded dot-space path",
+            "odata/",
+            "a/.%20./.%20./foreign/Orders",
+            "a/.%20./.%20./foreign/",
+        ],
+        ["encoded newline path", "odata/", "%0A../Orders", "%0A../"],
+        ["Unicode service root", "caf%C3%A9/", "Orders?$filter=Name%20eq%20%27x%27", "café/"],
+        [
+            "space service root",
+            "my%20service/",
+            "Orders?$filter=Name%20eq%20%27x%27",
+            "my%20service/",
+        ],
+        [
+            "lowercase Unicode escapes",
+            "odata/",
+            "Orders?$filter=City%20eq%20%27K%c3%b6ln%27",
+            "$filter=City%20eq%20%27K%c3%b6ln%27",
+        ],
+        [
+            "readable Unicode",
+            "odata/",
+            "Orders?$filter=City%20eq%20%27K%C3%B6ln%27",
+            "$filter=City eq 'Köln'",
+        ],
+        [
+            "reserved punctuation",
+            "odata/",
+            "Orders?$filter=Name%20eq%20%27A%26B%23C%3FD%2FE%3DF%2BG%27",
+            "$filter=Name eq 'A%26B%23C%3FD%2FE%3DF%2BG'",
+        ],
+        [
+            "encoded punctuation",
+            "odata/",
+            "Orders?$filter=%28Price%20gt%201%29",
+            "$filter=%28Price%20gt%201%29",
+        ],
+    ]) {
+        test(`opens and Runs the exact generated request for ${name}`, async () => {
+            const requests: string[] = [];
+            const server = createServer((request, response) => {
+                requests.push(request.url!);
+                response.setHeader("Content-Type", "application/json");
+                response.end('{"value":[]}');
+            });
+            await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+            const baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}/${root}`;
+            const selected: Profile = {
+                name: "Local equivalence test",
+                baseUrl,
+                auth: { kind: AuthKind.None },
+                headers: {},
+            };
+            const context = {
+                globalState: {
+                    get: (key: string) =>
+                        key === globalStates.selectedProfile ? selected : undefined,
+                },
+            } as unknown as vscode.ExtensionContext;
+            const commands = new CommandProvider(
+                context,
+                new QueryRunner(new VSCodeFileReader()),
+                async () => selected,
+                false,
+            );
+            const tool = new OpenQueryTool(
+                async () => selected,
+                (query) => commands.openQuery(query),
+            );
+            try {
+                await tool.invoke({
+                    input: {
+                        query: ` GET ${baseUrl}${input}${input.includes("?") ? "&" : "?"}$format=json `,
+                    },
+                    toolInvocationToken: undefined,
+                });
+                assert.deepStrictEqual(requests, []);
+                assert.strictEqual(commands.resultDocument, undefined);
+                const editor = vscode.window.activeTextEditor!;
+                assert.strictEqual(editor.document.languageId, "odata");
+                assert.ok(editor.document.getText().includes(visible), editor.document.getText());
+
+                if (name === "Unicode service root") {
+                    const position = editor.document.positionAt(
+                        editor.document.getText().indexOf("Name"),
+                    );
+                    await vscode.commands.executeCommand(
+                        "vscode.executeCompletionItemProvider",
+                        editor.document.uri,
+                        position,
+                    );
+                    await vscode.commands.executeCommand(
+                        "vscode.executeHoverProvider",
+                        editor.document.uri,
+                        position,
+                    );
+                    await vscode.commands.executeCommand(
+                        "vscode.executeSignatureHelpProvider",
+                        editor.document.uri,
+                        position,
+                    );
+                    await vscode.commands.executeCommand("editor.action.formatDocument");
+                    assert.ok(vscode.extensions.getExtension("manuelseeger.odata")!.isActive);
+                    assert.ok(editor.document.getText().includes("café/"));
+                }
+
+                await commands.runEditorQuery();
+                assert.deepStrictEqual(requests, [
+                    `/${root}${input}${input.includes("?") ? "&" : "?"}$format=json`,
+                ]);
+                assert.ok(commands.resultDocument);
+            } finally {
+                commands.dispose();
+                server.closeAllConnections();
+                await new Promise<void>((resolve, reject) =>
+                    server.close((error) => (error ? reject(error) : resolve())),
+                );
+            }
+        });
+    }
+
+    test("opens readable queries without HTTP or results until the user runs one", async () => {
         let requests = 0;
         const server = createServer((_request, response) => {
             requests++;
@@ -295,6 +440,62 @@ suite("OData language model tools", () => {
         );
         const query = `${baseUrl}Orders?$top=1`;
         try {
+            for (const [input, expected] of [
+                [
+                    "Orders?$filter=Name%20eq%20%27Alice%20Smith%27",
+                    "Orders?$filter=Name eq 'Alice Smith'",
+                ],
+                [
+                    "Orders?$filter=Name%20eq%20%27M%C3%BCnchen%20%E6%9D%B1%E4%BA%AC%27",
+                    "Orders?$filter=Name eq 'München 東京'",
+                ],
+                [
+                    "Orders?$filter=Name%20eq%20%27bad%ZZ%27",
+                    "Orders?$filter=Name%20eq%20%27bad%ZZ%27",
+                ],
+                ["Orders?$filter=Name%20eq%20%27bad%27%", "Orders?$filter=Name%20eq%20%27bad%27%"],
+                ["Orders?$filter=Name%20eq%20%27%2520%27", "Orders?$filter=Name eq '%2520'"],
+                ["Orders?$filter=Name%20eq%20%27100%25%27", "Orders?$filter=Name eq '100%25'"],
+                [
+                    "Orders?$filter=Name%20eq%20%27bad%C3%28%27",
+                    "Orders?$filter=Name%20eq%20%27bad%C3%28%27",
+                ],
+                ["Orders?$filter=Name%20eq%20%27A+B%27", "Orders?$filter=Name eq 'A+B'"],
+                [
+                    "Orders?$filter=Name%20eq%20%27%26%3D%3F%23%2F%3A%3B%2B%24%2C%27",
+                    "Orders?$filter=Name eq '%26%3D%3F%23%2F%3A%3B%2B%24%2C'",
+                ],
+            ]) {
+                await tool.invoke({
+                    input: { query: `  GET ${baseUrl}${input}  ` },
+                    toolInvocationToken: undefined,
+                });
+                const editor = vscode.window.activeTextEditor;
+                assert.ok(editor);
+                assert.strictEqual(editor.document.languageId, "odata");
+                assert.strictEqual(combineODataUrl(editor.document.getText()), baseUrl + expected);
+                assert.ok(
+                    editor.document
+                        .getText()
+                        .includes(expected.slice(expected.indexOf("$filter="))),
+                    editor.document.getText(),
+                );
+                assert.strictEqual(requests, 0);
+                assert.strictEqual(commands.resultDocument, undefined);
+            }
+            for (const unsafePath of ["%2e%2e/foreign/Orders", " . ./foreign/Orders"]) {
+                const before = vscode.window.activeTextEditor!.document.getText();
+                await assert.rejects(
+                    () =>
+                        tool.invoke({
+                            input: { query: baseUrl + unsafePath },
+                            toolInvocationToken: undefined,
+                        }),
+                    /selected profile changed.*odata_getSchema/,
+                );
+                assert.strictEqual(vscode.window.activeTextEditor!.document.getText(), before);
+                assert.strictEqual(requests, 0);
+            }
             const result = await tool.invoke({
                 input: { query: `  GET ${query}  ` },
                 toolInvocationToken: undefined,
