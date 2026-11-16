@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import {
-    LocationRange, ParseResult, ParseSyntaxErrorHandler, SyntaxError, SyntaxLocation,
+    LocationRange, ParseResult, ParseSyntaxErrorHandler, SyntaxLocation,
 } from "./parser/syntaxparser";
 import { Profile } from "./contracts/types";
 import { getConfig, getSelectedPublicProfile } from "./configuration";
@@ -27,7 +27,7 @@ export class ODataDiagnosticProvider extends Disposable {
         this.subscriptions = [this._diagnostics];
     }
 
-    public handleSyntaxError: ParseSyntaxErrorHandler = (uri: vscode.Uri, error: SyntaxError) => {
+    public handleSyntaxError: ParseSyntaxErrorHandler = (uri, error) => {
         this.diagnostics.set(uri, [new vscode.Diagnostic(
             spanToRange(error.location),
             error.message,

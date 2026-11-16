@@ -1,0 +1,11 @@
+{
+  "root": "https://fixture.test/",
+  "sha256": {
+    "azuredevops.edmx": "2d62b065c6252f5499d12783cfc825cc26522746f50e505951300c2ce7f19107",
+    "generated.edmx": "71a721c5b020fa38e0a7f75f7cf97db2f6a601d6085abf66cbce96c56003a542",
+    "msgraph.edmx": "cae3d988e5255276dc496bba66be28c0f39d238c0d730caa6992a31d2d1a03af",
+    "northwind.edmx": "6730cde1b3da026cf059173ca9072a5620d5493742e105954f7e29106cccfbb0",
+    "odatav2.edmx": "e6cdd460315fb0d24b67bc0bd47eaac78f220af4b5a10951659cc0a49ba04c85",
+    "trippin.edmx": "9b4746762c78626e3451654c5b81ea5beebe907d2847338956a6054db1ea66c1"
+  }
+}
