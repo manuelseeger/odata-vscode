@@ -19,16 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Use the explicit `/odata` Copilot skill to draft queries. Enable `odata.chat.tools.enabled` to use its tools. (#22)
 - The metadata filter settings `odata.metadata.filterNs`, `odata.metadata.filterXPath`, and `odata.metadata.xpathDefaultNsPrefix` are removed. (#24)
-- The editor and Copilot use one metadata reader for OData V2 and V4. Metadata-aware completions, diagnostics, and hovers resolve qualified types and inherited members. Hovers show qualified type names. (#26)
-- The `odata_getSchema` tool shares the service root, OData version, and compact query schema. The `odata_openQuery` tool rejects queries for a different service root. (#24)
-- CI uses Node 24 actions and Ubuntu 24.04 runners. (#18)
-- The Copilot orders demo is updated.
+- Metadata-aware completions, diagnostics, and hovers resolve qualified types and inherited members in OData V2 and V4 services. Hovers show qualified type names. (#26)
+- Queries drafted by Copilot must use the selected service root before they can open for review. (#24)
 
 ### Fixed
 
 - Syntax and metadata diagnostics are available when an OData document opens, including documents already open when the extension activates. (#19)
 - Profile selection and deletion show extension error messages in Restricted Mode. Profile selection checks workspace trust before it opens the picker. (#21)
-- Metadata cache entries refresh when metadata content changes at the same service root. (#26)
+- Completions, diagnostics, and hovers use updated metadata when the schema changes at the same service root. (#26)
 
 ## [0.4.1] - 2026-11-13
 
