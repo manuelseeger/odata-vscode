@@ -1,0 +1,5121 @@
+[
+  {
+    "name": "URI with IPv4 address, path and trailing slash",
+    "rule": "odataUri",
+    "input": "http://127.0.0.1:8080/MyService/",
+    "fail": false
+  },
+  {
+    "name": "URI with IPv6 address, path and trailing slash",
+    "rule": "odataUri",
+    "input": "https://[2001:db8:85a3:8d3:1319:8a2e:370:7348]:8080/MyService/",
+    "fail": false
+  },
+  {
+    "name": "URI with IPvFuture address, path and trailing slash",
+    "rule": "odataUri",
+    "input": "https://[v7.0]/MyService/",
+    "fail": false
+  },
+  {
+    "name": "URI without schema separator",
+    "rule": "odataUri",
+    "input": "http//My.Org/",
+    "fail": true,
+    "failAt": 4
+  },
+  {
+    "name": "Binary with X",
+    "rule": "binaryLiteral",
+    "input": "X'1a2B3c4D'",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "Binary - empty",
+    "rule": "binaryLiteral",
+    "input": "binary''",
+    "fail": false
+  },
+  {
+    "name": "Binary - f",
+    "rule": "binaryLiteral",
+    "input": "binary'Zg=='",
+    "fail": false
+  },
+  {
+    "name": "Binary - f (pad character is optional)",
+    "rule": "binaryLiteral",
+    "input": "binary'Zg'",
+    "fail": false
+  },
+  {
+    "name": "Binary - fo",
+    "rule": "binaryLiteral",
+    "input": "binary'Zm8='",
+    "fail": false
+  },
+  {
+    "name": "Binary - fo (pad character is optional)",
+    "rule": "binaryLiteral",
+    "input": "binary'Zm8='",
+    "fail": false
+  },
+  {
+    "name": "Binary - foo",
+    "rule": "binaryLiteral",
+    "input": "binary'Zm9v'",
+    "fail": false
+  },
+  {
+    "name": "Binary - foob",
+    "rule": "binaryLiteral",
+    "input": "binary'Zm9vYg=='",
+    "fail": false
+  },
+  {
+    "name": "Binary - fooba",
+    "rule": "binaryLiteral",
+    "input": "binary'Zm9vYmE='",
+    "fail": false
+  },
+  {
+    "name": "Binary - foobar",
+    "rule": "binaryLiteral",
+    "input": "binary'Zm9vYmFy'",
+    "fail": false
+  },
+  {
+    "name": "Boolean - true",
+    "rule": "boolean",
+    "input": "true",
+    "fail": false
+  },
+  {
+    "name": "Boolean - false",
+    "rule": "boolean",
+    "input": "false",
+    "fail": false
+  },
+  {
+    "name": "Boolean - literals are case-insensitive",
+    "rule": "boolean",
+    "input": "tRUe",
+    "fail": false
+  },
+  {
+    "name": "Boolean - payload values are lowercase",
+    "rule": "booleanValue",
+    "input": "tRUe",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "Boolean - payload values are lowercase",
+    "rule": "booleanValue",
+    "input": "true",
+    "fail": false
+  },
+  {
+    "name": "Date in URL",
+    "rule": "date",
+    "input": "2012-09-03",
+    "fail": false
+  },
+  {
+    "name": "Date in body or DefaultValue",
+    "rule": "dateValue",
+    "input": "2012-09-10",
+    "fail": false
+  },
+  {
+    "name": "Date",
+    "rule": "date",
+    "input": "2012-09-20",
+    "fail": false
+  },
+  {
+    "name": "Date",
+    "rule": "date",
+    "input": "2012-09-03",
+    "fail": false
+  },
+  {
+    "name": "Date: year zero",
+    "rule": "date",
+    "input": "0000-01-01",
+    "fail": false
+  },
+  {
+    "name": "Date: negative",
+    "rule": "date",
+    "input": "-10000-04-01",
+    "fail": false
+  },
+  {
+    "name": "Date: negative Infinity",
+    "rule": "date",
+    "input": "-INF",
+    "fail": true,
+    "failAt": 1
+  },
+  {
+    "name": "Date: positive Infinity",
+    "rule": "date",
+    "input": "INF",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "DateTimeOffset: no seconds",
+    "rule": "dateTimeOffsetValue",
+    "input": "2012-09-03T13:52Z",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset: seconds",
+    "rule": "dateTimeOffsetValue",
+    "input": "2012-09-03T22:09:02Z",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset: leap second",
+    "rule": "dateTimeOffsetValue",
+    "input": "1972-06-30T23:59:60Z",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset: subseconds",
+    "rule": "dateTimeOffsetValue",
+    "input": "2012-08-31T18:19:22.1Z",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset: year zero",
+    "rule": "dateTimeOffsetValue",
+    "input": "0000-01-01T00:00Z",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset: negative",
+    "rule": "dateTimeOffsetValue",
+    "input": "-10000-04-01T00:00Z",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset: Midnight this day",
+    "rule": "dateTimeOffsetValue",
+    "input": "2011-12-31T24:00Z",
+    "fail": true,
+    "failAt": 12
+  },
+  {
+    "name": "DateTimeOffset: Midnight this day with seconds",
+    "rule": "dateTimeOffsetValue",
+    "input": "2011-12-31T24:00:00Z",
+    "fail": true,
+    "failAt": 12
+  },
+  {
+    "name": "DateTimeOffset: CEST",
+    "rule": "dateTimeOffsetValue",
+    "input": "2012-09-03T14:53+02:00",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset: UTC",
+    "rule": "dateTimeOffsetValue",
+    "input": "2012-09-03T12:53Z",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset: 24:00",
+    "rule": "dateTimeOffsetValue",
+    "input": "2012-09-03T24:00-03:00",
+    "fail": true,
+    "failAt": 12
+  },
+  {
+    "name": "DateTimeOffset: negative infinity",
+    "rule": "dateTimeOffsetValue",
+    "input": "-INF",
+    "fail": true,
+    "failAt": 1
+  },
+  {
+    "name": "DateTimeOffset: positive infinity",
+    "rule": "dateTimeOffsetValue",
+    "input": "INF",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "DateTimeOffset: no percent-encoding in payloads",
+    "rule": "dateTimeOffsetValue",
+    "input": "2012-09-03T23%3A59Z",
+    "fail": true,
+    "failAt": 13
+  },
+  {
+    "name": "DateTimeOffset: no percent-encoding in payloads",
+    "rule": "dateTimeOffsetValue",
+    "input": "2012-09-03T23:59+01%3A00",
+    "fail": true,
+    "failAt": 19
+  },
+  {
+    "name": "DateTimeOffset: with percent-encoding in URLs",
+    "rule": "dateTimeOffsetLiteral",
+    "input": "2012-09-03T23%3A59%2B01%3A00",
+    "fail": false
+  },
+  {
+    "name": "DateTimeOffset - legacy rule name for Temporal spec",
+    "rule": "dateTimeOffsetValueInUrl",
+    "input": "2012-09-03T23%3A59%2B01%3A00",
+    "fail": false
+  },
+  {
+    "name": "Decimal",
+    "rule": "decimalValue",
+    "input": "3.14",
+    "fail": false
+  },
+  {
+    "name": "Decimal - exponential notation",
+    "rule": "decimalValue",
+    "input": "-1.234567e3",
+    "fail": false
+  },
+  {
+    "name": "Decimal - exponential notation",
+    "rule": "decimalValue",
+    "input": "1e-101",
+    "fail": false
+  },
+  {
+    "name": "Decimal - negative infinity",
+    "rule": "decimalValue",
+    "input": "-INF",
+    "fail": false
+  },
+  {
+    "name": "Decimal - positive infinity",
+    "rule": "decimalValue",
+    "input": "INF",
+    "fail": false
+  },
+  {
+    "name": "Decimal - not a number",
+    "rule": "decimalValue",
+    "input": "NaN",
+    "fail": false
+  },
+  {
+    "name": "Duration",
+    "rule": "durationValue",
+    "input": "-P6DT23H59M59.9999S",
+    "fail": false
+  },
+  {
+    "name": "Duration - no plus allowed",
+    "rule": "durationValue",
+    "input": "+P6DT23H59M59.9999S",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "Duration in body - no years allowed",
+    "rule": "durationValue",
+    "input": "P1Y6DT23H59M59.9999S",
+    "fail": true,
+    "failAt": 2
+  },
+  {
+    "name": "Duration in body - no months allowed",
+    "rule": "durationValue",
+    "input": "P1M6DT23H59M59.9999S",
+    "fail": true,
+    "failAt": 2
+  },
+  {
+    "name": "Duration in URL",
+    "rule": "durationLiteral",
+    "input": "duration'P6DT23H59M59.9999S'",
+    "fail": false
+  },
+  {
+    "name": "Duration in URL without prefix",
+    "rule": "durationLiteral",
+    "input": "'P6DT23H59M59.9999S'",
+    "fail": false
+  },
+  {
+    "name": "Decimal - negative integer",
+    "rule": "decimalValue",
+    "input": "-2",
+    "fail": false
+  },
+  {
+    "name": "Decimal - positive integer in URL",
+    "rule": "primitiveLiteral",
+    "input": "%2B42",
+    "fail": false
+  },
+  {
+    "name": "Decimal - positive integer",
+    "rule": "decimalValue",
+    "input": "+42",
+    "fail": false
+  },
+  {
+    "name": "Decimal - trailing dot",
+    "rule": "decimalValue",
+    "input": "42.",
+    "fail": true,
+    "failAt": 3
+  },
+  {
+    "name": "Decimal: no digit before decimal point",
+    "rule": "decimalValue",
+    "input": ".1",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "Decimal in URL",
+    "rule": "decimalLiteral",
+    "input": "3.14",
+    "fail": false
+  },
+  {
+    "name": "Double",
+    "rule": "doubleValue",
+    "input": "3.14",
+    "fail": false
+  },
+  {
+    "name": "Double with exponent",
+    "rule": "doubleValue",
+    "input": "-0.314e1",
+    "fail": false
+  },
+  {
+    "name": "Double with at most one exponent",
+    "rule": "doubleValue",
+    "input": "-0.314e1e2",
+    "fail": true,
+    "failAt": 8
+  },
+  {
+    "name": "Negative infinity",
+    "rule": "doubleValue",
+    "input": "-INF",
+    "fail": false
+  },
+  {
+    "name": "Positive infinity",
+    "rule": "doubleValue",
+    "input": "INF",
+    "fail": false
+  },
+  {
+    "name": "Not a Number",
+    "rule": "doubleValue",
+    "input": "NaN",
+    "fail": false
+  },
+  {
+    "name": "Double in URL",
+    "rule": "doubleLiteral",
+    "input": "-0.314e1",
+    "fail": false
+  },
+  {
+    "name": "Single in URL",
+    "rule": "singleLiteral",
+    "input": "%2B0.314e%2B1",
+    "fail": false
+  },
+  {
+    "name": "Single",
+    "rule": "singleValue",
+    "input": "+0.314e+1",
+    "fail": false
+  },
+  {
+    "name": "Byte",
+    "rule": "byteValue",
+    "input": "255",
+    "fail": false
+  },
+  {
+    "name": "SByte in URL",
+    "rule": "sbyteLiteral",
+    "input": "%2B128",
+    "fail": false
+  },
+  {
+    "name": "SByte",
+    "rule": "sbyteValue",
+    "input": "-128",
+    "fail": false
+  },
+  {
+    "name": "Int16 in URL",
+    "rule": "int16Literal",
+    "input": "%2B32000",
+    "fail": false
+  },
+  {
+    "name": "Int16",
+    "rule": "int16Value",
+    "input": "+32000",
+    "fail": false
+  },
+  {
+    "name": "Int32 in URL",
+    "rule": "int32Literal",
+    "input": "%2B2000000000",
+    "fail": false
+  },
+  {
+    "name": "Int32",
+    "rule": "int32Value",
+    "input": "-2000000000",
+    "fail": false
+  },
+  {
+    "name": "Int64 in URL",
+    "rule": "int64Literal",
+    "input": "%2B1234567890123456789",
+    "fail": false
+  },
+  {
+    "name": "Int64",
+    "rule": "int64Value",
+    "input": "1234567890123456789",
+    "fail": false
+  },
+  {
+    "name": "Null: unqualified",
+    "rule": "null",
+    "input": "null",
+    "fail": false
+  },
+  {
+    "name": "String",
+    "rule": "stringLiteral",
+    "input": "'ABCDEFGHIHJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~!$&('')*+,;=:@'",
+    "fail": false
+  },
+  {
+    "name": "String",
+    "rule": "stringLiteral",
+    "input": "'O''Neil'",
+    "fail": false
+  },
+  {
+    "name": "String",
+    "rule": "stringLiteral",
+    "input": "%27O'%27Neil'",
+    "fail": false
+  },
+  {
+    "name": "String",
+    "rule": "stringLiteral",
+    "input": "'O'Neil'",
+    "fail": true,
+    "failAt": 3
+  },
+  {
+    "name": "String",
+    "rule": "stringLiteral",
+    "input": "'O%27Neil'",
+    "fail": true,
+    "failAt": 5
+  },
+  {
+    "name": "String",
+    "rule": "stringLiteral",
+    "input": "'%26%28'",
+    "fail": false
+  },
+  {
+    "name": "primitive value in request body - enumeration member",
+    "rule": "primitiveValue",
+    "input": "Yellow",
+    "fail": false
+  },
+  {
+    "name": "primitive value in request body - geo point",
+    "rule": "primitiveValue",
+    "input": "SRID=0;Point(142.1 64.1)",
+    "fail": false
+  },
+  {
+    "name": "primitive value in request body - integer",
+    "rule": "primitiveValue",
+    "input": "0123456789",
+    "fail": false
+  },
+  {
+    "name": "primitive value in request body - guid",
+    "rule": "primitiveValue",
+    "input": "01234567-89ab-cdef-0123-456789abcdef",
+    "fail": false
+  },
+  {
+    "name": "primitive value in request body - binary",
+    "rule": "primitiveValue",
+    "input": "a123456789abcdefABA=",
+    "fail": false
+  },
+  {
+    "name": "primitive value in request body - binary with line breaks and spaces",
+    "rule": "primitiveValue",
+    "input": "a1234567 89\rab\r\n              cdefABA",
+    "fail": true,
+    "failAt": 8
+  },
+  {
+    "name": "Resource Path - Entity Set",
+    "rule": "resourcePath",
+    "input": "Categories",
+    "fail": false
+  },
+  {
+    "name": "Resource Path - Entity",
+    "rule": "resourcePath",
+    "input": "Categories(11)",
+    "fail": false
+  },
+  {
+    "name": "Resource Path - Entity",
+    "rule": "resourcePath",
+    "input": "Categories(ID=1)",
+    "fail": false
+  },
+  {
+    "name": "Key",
+    "rule": "stringLiteral",
+    "input": "'Hugo''s%20Tavern'",
+    "fail": false
+  },
+  {
+    "name": "Resource Path - Entity",
+    "rule": "resourcePath",
+    "input": "Categories(ID=1,Size=5)",
+    "fail": false
+  },
+  {
+    "name": "Correct Guid",
+    "rule": "guid",
+    "input": "01234567-89ab-cdef-0123-456789abcdef",
+    "fail": false
+  },
+  {
+    "name": "Guid with wrong character",
+    "rule": "guid",
+    "input": "01234g67-89ab-cdef-0123-456789abcdef",
+    "fail": true,
+    "failAt": 5
+  },
+  {
+    "name": "Guid with less than 32 digits",
+    "rule": "guid",
+    "input": "01234567-89ab-cdef-456789abcdef",
+    "fail": true,
+    "failAt": 23
+  },
+  {
+    "name": "TimeOfDay",
+    "rule": "timeOfDayValue",
+    "input": "11:22:33",
+    "fail": false
+  },
+  {
+    "name": "TimeOfDay - percent-encoded colon",
+    "rule": "timeOfDayLiteral",
+    "input": "11%3A22%3a33",
+    "fail": false
+  },
+  {
+    "name": "TimeOfDay - no percent-encoding in payloads",
+    "rule": "timeOfDayValue",
+    "input": "11%3A22%3a33",
+    "fail": true,
+    "failAt": 2
+  },
+  {
+    "name": "TimeOfDay: no seconds",
+    "rule": "timeOfDayValue",
+    "input": "11:22",
+    "fail": false
+  },
+  {
+    "name": "TimeOfDay: fractional seconds",
+    "rule": "timeOfDayValue",
+    "input": "11:22:33.4444444",
+    "fail": false
+  },
+  {
+    "name": "TimeOfDay: 24:00",
+    "rule": "timeOfDayValue",
+    "input": "24:00:00",
+    "fail": true,
+    "failAt": 1
+  },
+  {
+    "name": "Identifier",
+    "rule": "odataIdentifier",
+    "input": "TheQuickBrownFoxSays42",
+    "fail": false
+  },
+  {
+    "name": "Identifier with leading underscores",
+    "rule": "odataIdentifier",
+    "input": "__ID",
+    "fail": false
+  },
+  {
+    "name": "Identifier: no starting digit",
+    "rule": "odataIdentifier",
+    "input": "0time",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "Identifier: no dots within",
+    "rule": "odataIdentifier",
+    "input": "No.Dot",
+    "fail": true,
+    "failAt": 2
+  },
+  {
+    "name": "Entity Set",
+    "rule": "resourcePath",
+    "input": "Products",
+    "fail": false
+  },
+  {
+    "name": "Inline Parameter Syntax",
+    "rule": "odataUri",
+    "input": "http://host/service/EmployeesByManager(ManagerID=3)",
+    "fail": false
+  },
+  {
+    "name": "Inline Parameter Syntax",
+    "rule": "odataUri",
+    "input": "http://host/service/EmployeesByManager(ManagerID=@p1)?@p1=3",
+    "fail": false
+  },
+  {
+    "name": "Inline Parameter Syntax",
+    "rule": "odataUri",
+    "input": "http://host/service/EmployeesByManager?ManagerID=3",
+    "fail": false
+  },
+  {
+    "name": "Inline Parameter Syntax",
+    "rule": "odataUri",
+    "input": "http://host/service/EmployeesByManager?@ManagerID=3",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - service root URL",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - service root directly at server root",
+    "rule": "odataUri",
+    "input": "http://My.Org:80/",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - resource path",
+    "rule": "resourcePath",
+    "input": "Categories(1)/Products",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - resource path",
+    "rule": "resourcePath",
+    "input": "Categories(1)/Products",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - key with key property alias",
+    "rule": "resourcePath",
+    "input": "Categories(KeyAlias=1)",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - key with parameter alias - short form",
+    "rule": "odataRelativeUri",
+    "input": "Categories(@key)?@key=1",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - key with parameter alias - long form",
+    "rule": "odataRelativeUri",
+    "input": "Categories(ID=@key)?@key=1",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - query options",
+    "rule": "queryOptions",
+    "input": "$top=2&$orderby=Name",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - resource path and query options",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products?$top=2&$orderby=Name",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - single quotes",
+    "rule": "odataRelativeUri",
+    "input": "Customers('O''Neil')",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - single quotes",
+    "rule": "odataRelativeUri",
+    "input": "Customers(%27O%27%27Neil%27)",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - unquoted single quotes",
+    "rule": "odataRelativeUri",
+    "input": "Customers('O%27Neil')",
+    "fail": true,
+    "failAt": 15
+  },
+  {
+    "name": "2 URL Components - parentheses",
+    "rule": "odataRelativeUri",
+    "input": "Customers%28%27O%27%27Neil%27%29",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - encoded forward slash",
+    "rule": "odataUri",
+    "input": "http://host/service/Categories('Smartphone%2FTablet')",
+    "fail": false
+  },
+  {
+    "name": "2 URL Components - unencoded forward slash",
+    "rule": "odataRelativeUri",
+    "input": "Categories('Smartphone/Tablet')",
+    "fail": true,
+    "failAt": 22
+  },
+  {
+    "name": "2 URL Components - empty query options",
+    "rule": "odataRelativeUri",
+    "input": "Customers?",
+    "fail": false
+  },
+  {
+    "name": "4.1 - Metadata URL",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$metadata",
+    "fail": false
+  },
+  {
+    "name": "4.1 - Metadata URL - CSDL JSON",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$metadata?$format=json",
+    "fail": false
+  },
+  {
+    "name": "4.1 - Metadata URL - CSDL XML",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$metadata?$format=xml",
+    "fail": false
+  },
+  {
+    "name": "4.1 - Metadata URL - allowed",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$metadata?$format=text/html",
+    "fail": false
+  },
+  {
+    "name": "4.1 - Metadata URL - allowed",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$metadata?$format=text/html&!special",
+    "fail": false
+  },
+  {
+    "name": "4.2 - Batch URL",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$batch",
+    "fail": false
+  },
+  {
+    "name": "4.2 - Batch URL - JSON batch response",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$batch?$format=json",
+    "fail": false
+  },
+  {
+    "name": "4.2 - Batch URL - multipart batch response",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$batch?$format=multipart/mixed",
+    "fail": false
+  },
+  {
+    "name": "4.2 - Batch URL - allowed",
+    "rule": "odataUri",
+    "input": "http://services.odata.org/OData/OData.svc/$batch?!special",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - entity set",
+    "rule": "entitySetName",
+    "input": "Products",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - entity set",
+    "rule": "odataRelativeUri",
+    "input": "Products",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - no trailing dot",
+    "rule": "odataRelativeUri",
+    "input": "Products.('foo')",
+    "fail": true,
+    "failAt": 8
+  },
+  {
+    "name": "4.3 Addressing entities - no leading dot",
+    "rule": "odataRelativeUri",
+    "input": ".Products('foo')",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "4.3 Addressing entities - function call",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCategoryId(categoryId=2)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - function call with subsequent key segment",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCategoryId(categoryId=2)(2)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - function call with alias",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCategoryId(categoryId=@cat)?@cat=2",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - function call with alias for expression",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCategoryId(categoryId=@cat)?@cat=Model.MostPopularCategory(Rank=2)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - function call with query parameter",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCategoryId(categoryId=2)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - function call with query parameter",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCategoryId?@categoryId=2",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - function parameter",
+    "rule": "functionParameter",
+    "input": "color='red'",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - top-level function call",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByColor(color='red')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - bound function call",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Model.ProductsByColor(color='red')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - bound function call with implicit parameter aliases",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Model.ProductsByColor?@color='red'",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (short)",
+    "rule": "resourcePath",
+    "input": "Categories(1)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (short)",
+    "rule": "odataRelativeUri",
+    "input": "Customers(1)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (long)",
+    "rule": "resourcePath",
+    "input": "Categories(ID=1)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (string)",
+    "rule": "resourcePath",
+    "input": "Categories('Tablet')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (string)",
+    "rule": "resourcePath",
+    "input": "Categories('7''''%20Tablet')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (string)",
+    "rule": "resourcePath",
+    "input": "Categories%28%27Tablet%27%29",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (string)",
+    "rule": "resourcePath",
+    "input": "Categories('Tablet%2FSlate')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (wrong)",
+    "rule": "resourcePath",
+    "input": "Categories('Tablet/Slate')",
+    "fail": true,
+    "failAt": 18
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (string)",
+    "rule": "resourcePath",
+    "input": "Categories('Tablet%20%28small%29')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (string)",
+    "rule": "resourcePath",
+    "input": "Categories('Tablet%20(small)')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (string)",
+    "rule": "resourcePath",
+    "input": "Categories('Tablet%20)small(')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (timestamp)",
+    "rule": "resourcePath",
+    "input": "Categories(2018-02-13T23:59:59Z)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (timestamp, percent-encoded colon)",
+    "rule": "resourcePath",
+    "input": "Categories(2018-02-13T23%3A59%3A59Z)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (time)",
+    "rule": "resourcePath",
+    "input": "Categories(23:59:59)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (time, percent-encoded colon)",
+    "rule": "resourcePath",
+    "input": "Categories(23%3A59%3A59)",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (wrong)",
+    "rule": "resourcePath",
+    "input": "Categories(ID=wrong)",
+    "fail": true,
+    "failAt": 19
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (multi-part key)",
+    "rule": "resourcePath",
+    "input": "OrderItems(OrderID=1,ItemID='a')",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single entity (wrong multi-part key)",
+    "rule": "resourcePath",
+    "input": "OrderItems(OrderID=1;ItemID='a')",
+    "fail": true,
+    "failAt": 20
+  },
+  {
+    "name": "4.3 Addressing entities - bound operation on entity set",
+    "rule": "resourcePath",
+    "input": "Products/Model.MostExpensive()",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - follow navigation property",
+    "rule": "resourcePath",
+    "input": "Products(1)/Supplier",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - follow navigation property and call function",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products/Model.AllOrders()",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - follow navigation property and call function, then count results",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products/Model.AllOrders()/$count",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - follow navigation property and call function - no parens",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products/Model.AllOrders",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - follow navigation property and call function - no namespace",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products/AllOrders",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - follow navigation property and call function",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products/Model.MostExpensive()",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - singleton entities",
+    "rule": "resourcePath",
+    "input": "SingletonEntity",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - single navigation property in complex type",
+    "rule": "resourcePath",
+    "input": "Customers(1)/Address/Country",
+    "fail": false
+  },
+  {
+    "name": "4.3 Addressing entities - collection navigation property in complex type",
+    "rule": "resourcePath",
+    "input": "Customers(1)/Address/Products",
+    "fail": false
+  },
+  {
+    "name": "4.3.1 Canonical URL",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products(1)",
+    "fail": false
+  },
+  {
+    "name": "4.3.4 $entity with OData URL",
+    "rule": "odataRelativeUri",
+    "input": "$entity?$id=http://host/path",
+    "fail": false
+  },
+  {
+    "name": "4.3.4 $entity with URN",
+    "rule": "odataRelativeUri",
+    "input": "$entity?$id=urn:some:id",
+    "fail": false
+  },
+  {
+    "name": "4.3.4 $entity with URN, id without $ prefix",
+    "rule": "odataRelativeUri",
+    "input": "$entity?id=urn:some:id",
+    "fail": false
+  },
+  {
+    "name": "4.3.4 $entity with OData URL, $select and $expand fails without type-cast",
+    "rule": "odataRelativeUri",
+    "input": "$entity?$id=http://myservice/Customers('ALFKI')&$select=CompanyName,ContactName&$expand=Orders",
+    "fail": true,
+    "failAt": 48
+  },
+  {
+    "name": "4.3.4 $entity with OData URL, $select and $expand",
+    "rule": "odataRelativeUri",
+    "input": "$entity/Model.Customer?$id=http://myservice/Customers('ALFKI')&$select=CompanyName,ContactName&$expand=Orders",
+    "fail": false
+  },
+  {
+    "name": "4.3.4 $entity without $id fails",
+    "rule": "odataRelativeUri",
+    "input": "$entity?$format=json",
+    "fail": true,
+    "failAt": 20
+  },
+  {
+    "name": "4.3.6  Key-as-Segment - single entity (numeric single-part key)",
+    "rule": "odataRelativeUri",
+    "input": "Customers/1",
+    "fail": false
+  },
+  {
+    "name": "4.3.6  Key-as-Segment - single entity (string single-part key)",
+    "rule": "resourcePath",
+    "input": "Employees/A1245",
+    "fail": false
+  },
+  {
+    "name": "4.3.6  Key-as-Segment - single entity (string single-part key)",
+    "rule": "resourcePath",
+    "input": "People/O'Neil",
+    "fail": false
+  },
+  {
+    "name": "4.3.6  Key-as-Segment - single entity (string single-part key)",
+    "rule": "resourcePath",
+    "input": "People/O%27Neil",
+    "fail": false
+  },
+  {
+    "name": "4.3.6  Key-as-Segment - single entity (string single-part key)",
+    "rule": "resourcePath",
+    "input": "Categories/Smartphone%2FTablet",
+    "fail": false
+  },
+  {
+    "name": "4.3.6  Key-as-Segment - single entity (multi-part key)",
+    "rule": "resourcePath",
+    "input": "OrderItems/2001/1",
+    "fail": false
+  },
+  {
+    "name": "4.3.6  Key-as-Segment - navigation (segment)",
+    "rule": "resourcePath",
+    "input": "Orders/1/Items",
+    "fail": false
+  },
+  {
+    "name": "4.3.6  Key-as-Segment - navigation (segment)",
+    "rule": "resourcePath",
+    "input": "Orders/1/Items/1",
+    "fail": false
+  },
+  {
+    "name": "4.4 Addressing Links between Entities",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products/$ref",
+    "fail": false
+  },
+  {
+    "name": "4.4 Addressing Links between Entities",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products/$ref?$id=Products(0)",
+    "fail": false
+  },
+  {
+    "name": "4.4 Addressing Links between Entities",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Category/$ref",
+    "fail": false
+  },
+  {
+    "name": "4.4 Addressing Links between Entities - count",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products/$ref/$count",
+    "fail": true,
+    "failAt": 27
+  },
+  {
+    "name": "4.4 Addressing Links between Entities",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products(2)/$ref",
+    "fail": false
+  },
+  {
+    "name": "4.4 Addressing Links between Entities",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Products(2)/$ref/$count",
+    "fail": true,
+    "failAt": 30
+  },
+  {
+    "name": "4.4 edge case: entity set as references",
+    "rule": "odataRelativeUri",
+    "input": "Categories/$ref",
+    "fail": false
+  },
+  {
+    "name": "4.4 edge case: top-level entity as reference",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/$ref",
+    "fail": false
+  },
+  {
+    "name": "4.5.1 Call unbound action via action import",
+    "rule": "odataRelativeUri",
+    "input": "Activation",
+    "fail": false
+  },
+  {
+    "name": "4.5.1 Call bound action",
+    "rule": "odataRelativeUri",
+    "input": "LeaveRequests(4)/Model.Rejection",
+    "fail": false
+  },
+  {
+    "name": "4.5.1 Call action at service root",
+    "rule": "odataRelativeUri",
+    "input": "Model.Rejection",
+    "fail": true,
+    "failAt": 5
+  },
+  {
+    "name": "4.5.2 Call function import",
+    "rule": "odataRelativeUri",
+    "input": "TheBestProduct()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call function import - no parentheses",
+    "rule": "odataRelativeUri",
+    "input": "TheBestProduct",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call function import - inline parameter",
+    "rule": "odataRelativeUri",
+    "input": "TheBestProduct(Size=3)",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call function import - only at service root",
+    "rule": "odataRelativeUri",
+    "input": "Categories/TheBestProduct()",
+    "fail": true,
+    "failAt": 27
+  },
+  {
+    "name": "4.5.2 Call complex function import",
+    "rule": "odataRelativeUri",
+    "input": "TheMostPopularAddress()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call complex collection function import",
+    "rule": "odataRelativeUri",
+    "input": "TheMostPopularAddresses()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call primitive function import",
+    "rule": "odataRelativeUri",
+    "input": "TheMostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call primitive function import",
+    "rule": "odataRelativeUri",
+    "input": "TheMostPopularName()/$value",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call primitive collection function import",
+    "rule": "odataRelativeUri",
+    "input": "TheMostPopularNames()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound complex function",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularAddress()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound complex collection function",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularAddresses()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound complex collection function",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularAddresses()/$count",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound complex collection function with cast",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularAddresses()/Model.AddressWithLocation",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound complex collection function with cast",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularAddresses()/Model.AddressWithLocation/$count",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound complex collection function with cast, no namespace",
+    "rule": "odataRelativeUri",
+    "input": "Customers/MostPopularAddresses()/AddressWithLocation/$count",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound complex collection function - multiple",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularAddresses()/Model.MostPopularNames()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound complex collection function - multiple, no namespace",
+    "rule": "odataRelativeUri",
+    "input": "Customers/MostPopularAddresses()/MostPopularNames()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound primitive function",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound primitive function",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularName()/$value",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound primitive collection function",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularNames()",
+    "fail": false
+  },
+  {
+    "name": "4.5.2 Call bound primitive collection function",
+    "rule": "odataRelativeUri",
+    "input": "Customers/Model.MostPopularNames()/$count",
+    "fail": false
+  },
+  {
+    "name": "4.6 Addressing a Property - primitive",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/ID",
+    "fail": false
+  },
+  {
+    "name": "4.6 Addressing a Property - complex",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Address",
+    "fail": false
+  },
+  {
+    "name": "4.6 Addressing a Property - complex path",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Address/Street",
+    "fail": false
+  },
+  {
+    "name": "4.6 Addressing a Property - complex path with type cast",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Address/Model.AddressWithLocation/Location",
+    "fail": false
+  },
+  {
+    "name": "4.6 Addressing a Property - stream",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Thumbnail",
+    "fail": false
+  },
+  {
+    "name": "4.6 Addressing a Property - collection of primitive",
+    "rule": "odataRelativeUri",
+    "input": "Suppliers(1)/EmailAddresses",
+    "fail": false
+  },
+  {
+    "name": "4.6 Addressing a Property - collection of complex",
+    "rule": "odataRelativeUri",
+    "input": "Suppliers(1)/Addresses",
+    "fail": false
+  },
+  {
+    "name": "4.7 Addressing a Property Value",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/ID/$value",
+    "fail": false
+  },
+  {
+    "name": "4.7 Addressing a Property Value - with $format",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/ID/$value?$format=json",
+    "fail": false
+  },
+  {
+    "name": "4.7 Addressing a Property Value - illegal suffix",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/ID/$value/foo",
+    "fail": true,
+    "failAt": 23
+  },
+  {
+    "name": "4.7 Addressing a Property Value - complex",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Address/$value",
+    "fail": true,
+    "failAt": 22
+  },
+  {
+    "name": "4.7 Addressing a Property Value - property of complex",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Address/Street/$value",
+    "fail": false
+  },
+  {
+    "name": "4.7 Named Stream Property - $value does not make sense here",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Thumbnail/$value",
+    "fail": true,
+    "failAt": 24
+  },
+  {
+    "name": "4.8 Addressing entities - entity set with $count",
+    "rule": "odataRelativeUri",
+    "input": "Products/$count",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing entities - entity set with $count",
+    "rule": "odataRelativeUri",
+    "input": "Products/$count?$filter=Price gt 5.00",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing entities - $count not last segment",
+    "rule": "odataRelativeUri",
+    "input": "Products/$count/foo",
+    "fail": true,
+    "failAt": 15
+  },
+  {
+    "name": "4.8 Addressing entities - entity set navigation with $count",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Items/$count",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing entities - collection property with $count",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Addresses/$count",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing entities - collection property with $count",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Sizes/$count",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing the Count - in $filter with navigation",
+    "rule": "filter",
+    "input": "$filter=Products/$count gt 0",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing the Count - in $filter with complex collection",
+    "rule": "filter",
+    "input": "$filter=Addresses/$count gt 0",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing the Count - in $filter with primitive collection",
+    "rule": "filter",
+    "input": "$filter=Sizes/$count gt 0",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing the Count - in $filter with filtered collection",
+    "rule": "filter",
+    "input": "$filter=Products/$count($filter=Price gt 5.00) gt 2",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing the Count - collection navigation property with $count in $orderby",
+    "rule": "orderby",
+    "input": "$orderby=Products/$count",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing the Count - collection property with $count in $orderby",
+    "rule": "orderby",
+    "input": "$orderby=Addresses/$count",
+    "fail": false
+  },
+  {
+    "name": "4.8 Addressing the Count - collection property with $count in $orderby",
+    "rule": "orderby",
+    "input": "$orderby=Sizes/$count",
+    "fail": false
+  },
+  {
+    "name": "4.10 Addressing a Member of an Ordered Primitive Collection",
+    "rule": "odataRelativeUri",
+    "input": "Suppliers(1)/EmailAddresses/1",
+    "fail": false
+  },
+  {
+    "name": "4.10 Addressing a Member of an Ordered Complex Collection",
+    "rule": "odataRelativeUri",
+    "input": "MainSupplier/Addresses/0",
+    "fail": false
+  },
+  {
+    "name": "4.10 Addressing a Member of an Ordered Complex Collection with type-cast",
+    "rule": "odataRelativeUri",
+    "input": "Suppliers(1)/Addresses/Model.AddressWithLocation/-1",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - set of subtypes",
+    "rule": "odataRelativeUri",
+    "input": "Products/Model.BestSellingProduct",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - set of subtypes, then key access",
+    "rule": "odataRelativeUri",
+    "input": "Products/Model.BestSellingProduct(1)",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - key access, then cast to subtype",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Model.BestSellingProduct",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - key access, then cast to subtype - only once",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Model.BestSellingProduct/Model.BestSellingProduct",
+    "fail": true,
+    "failAt": 61
+  },
+  {
+    "name": "4.11 Inheritance - complex type",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Address/Model.AddressWithLocation",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - complex type with property",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Address/Model.AddressWithLocation/Street",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - complex type with property, no namespace",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Address/AddressWithLocation/Street",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - collection of complex type",
+    "rule": "odataRelativeUri",
+    "input": "Products(1)/Addresses/Model.AddressWithLocation",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - expressions: complex type",
+    "rule": "propertyPathExpr",
+    "input": "Address/Model.AddressWithLocation",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - expressions: complex type with path",
+    "rule": "propertyPathExpr",
+    "input": "Address/Model.AddressWithLocation/Street",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - expressions: complex type with path, no namespace",
+    "rule": "propertyPathExpr",
+    "input": "Address/AddressWithLocation/Street",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - expressions: collection of complex type",
+    "rule": "propertyPathExpr",
+    "input": "Addresses/Model.AddressWithLocation",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - $expand",
+    "rule": "odataRelativeUri",
+    "input": "Categories?$expand=Products/Model.BestSellingProduct",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - $expand, no namespace",
+    "rule": "odataRelativeUri",
+    "input": "Categories?$expand=Products/BestSellingProduct",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - $expand",
+    "rule": "odataRelativeUri",
+    "input": "Products?$expand=Model.BestSellingProduct/Sales",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - $expand, no namespace",
+    "rule": "odataRelativeUri",
+    "input": "Products?$expand=BestSellingProduct/Sales",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - $expand",
+    "rule": "odataRelativeUri",
+    "input": "Categories?$expand=Products/Model.BestSellingProduct($select=Name)",
+    "fail": false
+  },
+  {
+    "name": "4.11 Inheritance - $expand on complex resource",
+    "rule": "odataRelativeUri",
+    "input": "TheMostPopularAddresses()?$expand=Model.AddressWithLocation/Country",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)?@foo=Age gt 3",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - expression",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(Age gt 3)",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - multiple",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/$filter(@bar)?@foo=Age gt 3&@bar=Price lt 5",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - multiple",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(Age gt 3)/$filter(Price lt 5)",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - with /$ref",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/$filter(@bar)/$ref?@foo=Age gt 3&@bar=Price lt 5",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - with /$count",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/$filter(@bar)/$count?@foo=Age gt 3&@bar=Price lt 5",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - with /$count and $filter query option",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/$filter(@bar)/$count?@foo=Age gt 3&@bar=Price lt 5&$filter=Price lt 6",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - multiple",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/Special.ProductsByColor(color='red')/$filter(@bar)?@foo=Age gt 3&@bar=Price lt 5",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - multiple, no namespace",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/ProductsByColor(color='red')/$filter(@bar)?@foo=Age gt 3&@bar=Price lt 5",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment - with action",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/Special.Cluster?@foo=Age gt 3",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter Path Segment followed by key predicate",
+    "rule": "propertyPathExpr",
+    "input": "Products/$filter(Age gt 3)(ID='Sugar')",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter expression in query",
+    "rule": "odataRelativeUri",
+    "input": "Categories?$filter=Products/$filter(Age gt 3)/$count lt 10",
+    "fail": false
+  },
+  {
+    "name": "4.12 Filter expression in query",
+    "rule": "filter",
+    "input": "$filter=Addresses/$filter(endswith(Street,'St'))/$count lt 10",
+    "fail": false
+  },
+  {
+    "name": "4.12 $each Path Segment",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/$each",
+    "fail": false
+  },
+  {
+    "name": "4.12 $each Path Segment - with action",
+    "rule": "odataRelativeUri",
+    "input": "Products/$filter(@foo)/$each/Special.Discount?@foo=Age gt 3",
+    "fail": false
+  },
+  {
+    "name": "4.14 Addressing a Media Resource",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/$value",
+    "fail": false
+  },
+  {
+    "name": "4.15 - Cross Join",
+    "rule": "odataRelativeUri",
+    "input": "$crossjoin(Customers,Countries)?$expand=Customers($select=Name),Countries($select=Name)&$filter=Customers/CountryCode eq Countries/CountryCode and Countries/Name eq 'USA'",
+    "fail": false
+  },
+  {
+    "name": "4.16 Addressing All Entities in a Service",
+    "rule": "odataRelativeUri",
+    "input": "$all?$search=red",
+    "fail": false
+  },
+  {
+    "name": "4.16 Addressing All Entities in a Service - with type cast",
+    "rule": "odataRelativeUri",
+    "input": "$all/Model.Customer?$filter=contains(Name,'red')",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - entity set",
+    "rule": "odataRelativeUri",
+    "input": "People/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - entity",
+    "rule": "odataRelativeUri",
+    "input": "People(42)/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - collection of complex",
+    "rule": "odataRelativeUri",
+    "input": "People(42)/Addresses/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - complex",
+    "rule": "odataRelativeUri",
+    "input": "People(42)/Address/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - collection of primitive",
+    "rule": "odataRelativeUri",
+    "input": "People(42)/EmailAddresses/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - primitive",
+    "rule": "odataRelativeUri",
+    "input": "People(42)/FirstName/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - bound function call",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Model.ProductsByColor(color=@c)/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - bound function call with implicit parameter aliases",
+    "rule": "odataRelativeUri",
+    "input": "Categories(1)/Model.ProductsByColor/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - function import with parameter",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByComplex(complex=@c)/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - function import - implicit parameter aliases",
+    "rule": "odataRelativeUri",
+    "input": "TheBestProduct/$query",
+    "fail": false
+  },
+  {
+    "name": "4.17 Passing Query Options in the Request Body - Cross Join",
+    "rule": "odataRelativeUri",
+    "input": "$crossjoin(Customers,Countries)/$query",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter",
+    "rule": "filter",
+    "input": "$filter=true",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 $ is optional",
+    "rule": "filter",
+    "input": "filter=true",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter: no spaces",
+    "rule": "filter",
+    "input": "$filter =true",
+    "fail": true,
+    "failAt": 7
+  },
+  {
+    "name": "5.1.1 Filter: no spaces",
+    "rule": "filter",
+    "input": "$filter= true",
+    "fail": true,
+    "failAt": 9
+  },
+  {
+    "name": "5.1.1 Filter",
+    "rule": "filter",
+    "input": "$filter=Completed",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions",
+    "rule": "firstMemberExpr",
+    "input": "Product",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - single navigation",
+    "rule": "firstMemberExpr",
+    "input": "Product/Supplier",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - single-complex",
+    "rule": "firstMemberExpr",
+    "input": "Product/Supplier/Address",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - single-complex-primitive",
+    "rule": "firstMemberExpr",
+    "input": "Product/Supplier/Address/Street",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - single-complex-single",
+    "rule": "firstMemberExpr",
+    "input": "Product/Supplier/Address/Country",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - single-complex-collection",
+    "rule": "firstMemberExpr",
+    "input": "Product/Supplier/Address/Products",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - stream",
+    "rule": "firstMemberExpr",
+    "input": "Product/Thumbnail",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - stream",
+    "rule": "firstMemberExpr",
+    "input": "Address/Thumbnail",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - stream",
+    "rule": "firstMemberExpr",
+    "input": "Thumbnail/Model.Available()",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - single-colComplex",
+    "rule": "firstMemberExpr",
+    "input": "Product/Supplier/Addresses",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - single-primitive",
+    "rule": "firstMemberExpr",
+    "input": "Product/Supplier/CompanyName",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - single-colPrimitive",
+    "rule": "firstMemberExpr",
+    "input": "Product/Supplier/EmailAddresses",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - collection navigation",
+    "rule": "firstMemberExpr",
+    "input": "Supplier/Products",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - collection navigation",
+    "rule": "firstMemberExpr",
+    "input": "Products",
+    "fail": false
+  },
+  {
+    "name": "5.1.1 Filter - member expressions - collection navigation - count",
+    "rule": "firstMemberExpr",
+    "input": "Products/$count",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals",
+    "rule": "boolCommonExpr",
+    "input": "true eq false",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 boolean - only true and false",
+    "rule": "boolean",
+    "input": "0",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "5.1.1.1.1 boolean - only true and false",
+    "rule": "boolean",
+    "input": "1",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "5.1.1.1.1 Equals - Property",
+    "rule": "firstMemberExpr",
+    "input": "Size",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals",
+    "rule": "boolCommonExpr",
+    "input": "Size eq true",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals - Literal",
+    "rule": "primitiveLiteral",
+    "input": "4.0",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals - Literal",
+    "rule": "primitiveLiteral",
+    "input": "'Huge'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals",
+    "rule": "boolCommonExpr",
+    "input": "Size eq 4.0",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals",
+    "rule": "boolCommonExpr",
+    "input": "Street eq 'Hugo'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals - property path argument",
+    "rule": "firstMemberExpr",
+    "input": "Address/Street",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals - property path argument",
+    "rule": "firstMemberExpr",
+    "input": "Address/Model.AddressWithLocation/Location",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 Equals",
+    "rule": "boolCommonExpr",
+    "input": "Address/Street eq 'Hugo'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.1 comparing complex types",
+    "rule": "filter",
+    "input": "$filter=Address eq {\"Street\":\"NE 40th\",\"City\":\"Redmond\",\"State\":\"WA\",\"ZipCode\":\"98052\"}",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.2 Not Equals",
+    "rule": "boolCommonExpr",
+    "input": "Name ne 'Milk'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.2 Not Equals",
+    "rule": "boolCommonExpr",
+    "input": "true ne false",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.3 Greater Than",
+    "rule": "boolCommonExpr",
+    "input": "Name gt 'Milk'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.4 Greater Than or Equal",
+    "rule": "boolCommonExpr",
+    "input": "Name ge 'Milk'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.5 Less Than",
+    "rule": "boolCommonExpr",
+    "input": "Name lt 'Milk'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.6 Less Than or Equal",
+    "rule": "boolCommonExpr",
+    "input": "Name le 'Milk'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.7 Logical And",
+    "rule": "boolCommonExpr",
+    "input": "true and false",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.8 Logical Or",
+    "rule": "boolCommonExpr",
+    "input": "true or false",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.9 Logical Negation",
+    "rule": "notExpr",
+    "input": "not false",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.12 Logical Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Name eq 'Milk'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.12 Logical Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Supplier/Name eq 'Milk'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.12 Logical Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Name EQ 'Milk' AND Price LT 2.55",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.12 Logical Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Name Eq 'Milk' OR Price Lt 2.55",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.12 Logical Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "not endswith(Name,'ilk')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.12 Logical Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "style has Sales.Pattern'Yellow'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.12 Logical Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Name in ('Milk', 'Cheese')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.1.12 Logical Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Name in [\"Milk\", \"Cheese\"]",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.1 Addition",
+    "rule": "commonExpr",
+    "input": "Price add 2.45",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.1 Addition",
+    "rule": "commonExpr",
+    "input": "(Price add 2.45) mod 2",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.2 Subtraction",
+    "rule": "commonExpr",
+    "input": "Price sub 0.55",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.3 Negate",
+    "rule": "commonExpr",
+    "input": "-Price",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.4 Multiplication",
+    "rule": "commonExpr",
+    "input": "Price mul 2",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.5 Division",
+    "rule": "commonExpr",
+    "input": "Price div 2",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.5 Division",
+    "rule": "commonExpr",
+    "input": "Price divby 2",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.6 Modulo",
+    "rule": "commonExpr",
+    "input": "Price mod 5",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.7 Arithmetic Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Price add 2.45 eq 5.00",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.7 Arithmetic Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Price sub 0.55 eq 2.00",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.7 Arithmetic Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Price mul 2.0 eq 5.10",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.7 Arithmetic Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Price div 2.55 eq 1",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.7 Arithmetic Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Rating divby 2 eq 2.5",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.2.7 Arithmetic Operator Examples",
+    "rule": "boolCommonExpr",
+    "input": "Rating mod 5 eq 0",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.3 Parenthesis",
+    "rule": "commonExpr",
+    "input": "(true)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.3 Parenthesis",
+    "rule": "boolCommonExpr",
+    "input": "( true )",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.3 Parenthesis",
+    "rule": "boolCommonExpr",
+    "input": "(Name eq 'Milk')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.3 Parenthesis",
+    "rule": "boolCommonExpr",
+    "input": "(false)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.3 Parenthesis",
+    "rule": "commonExpr",
+    "input": "(4 add 5) mod (4 sub 1)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.3 Parenthesis",
+    "rule": "boolcommonExpr",
+    "input": "(4 add 5) mod (4 sub 1) eq 0",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.1 concat",
+    "rule": "commonExpr",
+    "input": "concat(CompanyName, Name)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.1 concat",
+    "rule": "commonExpr",
+    "input": "concat(concat(Street,'-'),City)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.2 contains",
+    "rule": "boolCommonExpr",
+    "input": "contains(CompanyName,'lfreds')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.2 contains",
+    "rule": "boolCommonExpr",
+    "input": "contains(Names,[\"Fred\",\"George\"])",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.3 endswith",
+    "rule": "boolCommonExpr",
+    "input": "endswith(CompanyName,'Futterkiste')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.3 endswith",
+    "rule": "boolCommonExpr",
+    "input": "endswith([\"Fred\",\"George\",\"Ron\"],[\"George\",\"Ron\"])",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.3 indexof",
+    "rule": "commonExpr",
+    "input": "indexof(CompanyName,'lfreds')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.4 indexof",
+    "rule": "commonExpr",
+    "input": "indexof([\"Fred\",\"George\",\"Ron\"],[\"George\",\"Ron\"]) eq 1",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.5 length",
+    "rule": "boolCommonExpr",
+    "input": "length(CompanyName) eq 19",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.5 length",
+    "rule": "boolCommonExpr",
+    "input": "length([\"Fred\",\"George\",\"Ron\"]) eq 3",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.6 startswith",
+    "rule": "boolCommonExpr",
+    "input": "startswith(CompanyName,'Futterkiste')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.6 startswith",
+    "rule": "boolCommonExpr",
+    "input": "startswith(Supplier/Name,'Futterkiste')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.6 startswith",
+    "rule": "boolCommonExpr",
+    "input": "startswith([\"Fred\",\"George\",\"Ron\"],[\"Fred\",\"George\"])",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.7 substring",
+    "rule": "commonExpr",
+    "input": "substring(CompanyName, 5)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.5.7 substring with length",
+    "rule": "commonExpr",
+    "input": "substring(CompanyName,5,2)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.6.1 hassubset",
+    "rule": "boolCommonExpr",
+    "input": "hassubset(Names,[\"Milk\", \"Cheese\"])",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.6.1 hassubset",
+    "rule": "boolCommonExpr",
+    "input": "hassubset([\"Milk\", \"Cheese\"],Names)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.6.2 hassubsequence",
+    "rule": "boolCommonExpr",
+    "input": "hassubsequence([4,1,3],[4,3])",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.7.1 matchesPattern ^A.*e$",
+    "rule": "commonExpr",
+    "input": "matchesPattern(CompanyName,'%5EA.*e$')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.7.2 tolower",
+    "rule": "commonExpr",
+    "input": "tolower(CompanyName)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.7.3 toupper",
+    "rule": "commonExpr",
+    "input": "toupper(CompanyName)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.7.4 trim",
+    "rule": "commonExpr",
+    "input": "trim(CompanyName)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.1",
+    "rule": "commonExpr",
+    "input": "date(LifeTime)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.2",
+    "rule": "commonExpr",
+    "input": "day(BirthDate)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.3",
+    "rule": "commonExpr",
+    "input": "fractionalseconds(LifeTime)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.4",
+    "rule": "commonExpr",
+    "input": "hour(BirthDate)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.5",
+    "rule": "commonExpr",
+    "input": "maxdatetime()",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.5 - non-canonical percent-encoding",
+    "rule": "commonExpr",
+    "input": "maxdatetime%28%20%29",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.6",
+    "rule": "commonExpr",
+    "input": "mindatetime()",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.6 - non-canonical percent-encoding",
+    "rule": "commonExpr",
+    "input": "mindatetime%28%20%29",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.7",
+    "rule": "commonExpr",
+    "input": "minute(BirthDate)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.8",
+    "rule": "commonExpr",
+    "input": "month(BirthDate)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.9",
+    "rule": "commonExpr",
+    "input": "now()",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.9 - non-canonical percent-encoding",
+    "rule": "commonExpr",
+    "input": "now%28%20%29",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.10",
+    "rule": "commonExpr",
+    "input": "second(BirthDate)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.11",
+    "rule": "commonExpr",
+    "input": "time(ReleaseDate)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.12 - totaloffsetminutes",
+    "rule": "commonExpr",
+    "input": "totaloffsetminutes(ReleaseDate)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.13",
+    "rule": "commonExpr",
+    "input": "totalseconds(LifeTime)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.8.14 year",
+    "rule": "commonExpr",
+    "input": "year(BirthDate)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.9.1",
+    "rule": "commonExpr",
+    "input": "ceiling(Price)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.9.2",
+    "rule": "commonExpr",
+    "input": "floor(Price)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.9.3",
+    "rule": "commonExpr",
+    "input": "round(Price)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.1 cast(1)",
+    "rule": "commonExpr",
+    "input": "cast(Model.Customer)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.1 cast(1), no nanmespace",
+    "rule": "commonExpr",
+    "input": "cast(Customer)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.1 cast(2)",
+    "rule": "commonExpr",
+    "input": "cast(Category,Model.Customer)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.1 cast(2), no namespace",
+    "rule": "commonExpr",
+    "input": "cast(Category,Customer)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.1 cast(3)",
+    "rule": "commonExpr",
+    "input": "cast(Category,Edm.Boolean)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.2 isof(1)",
+    "rule": "isofExpr",
+    "input": "isof(Model.Customer)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.2 isof(1), no namespace",
+    "rule": "isofExpr",
+    "input": "isof(Customer)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.2 isof(2)",
+    "rule": "isofExpr",
+    "input": "isof(Category,Model.Customer)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.2 isof(2), no namespace",
+    "rule": "isofExpr",
+    "input": "isof(Category,Customer)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.10.2 isof(2)",
+    "rule": "isofExpr",
+    "input": "isof(Location,Edm.GeographyPoint)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.11.1 geo.distance",
+    "rule": "commonExpr",
+    "input": "geo.distance(Supplier/Location,Product/Location)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.11.3 geo.intersects",
+    "rule": "boolCommonExpr",
+    "input": "geo.intersects(Supplier/SalesArea,Product/Location)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.11.3 geo.length",
+    "rule": "commonExpr",
+    "input": "geo.length(Line)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.11.3 geo.length",
+    "rule": "commonExpr",
+    "input": "geo.length(geography'SRID=0;LineString(142.1 64.1,3.14 2.78)')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.12 case",
+    "rule": "compute",
+    "input": "$compute=case(X gt 0:1,X lt 0:-1,true:0) as SignumX",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.12 case - lots of unnecessary whitespace",
+    "rule": "compute",
+    "input": "$compute=case( X gt 0 : 1 , X lt 0 : -1 , true : 0) as SignumX",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13 Lambda Operators",
+    "rule": "firstMemberExpr",
+    "input": "lambda/Completed",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13 Lambda Operators",
+    "rule": "boolCommonExpr",
+    "input": "lambda/Name eq $it/Name",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any()",
+    "rule": "anyExpr",
+    "input": "any()",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any()",
+    "rule": "anyExpr",
+    "input": "any( )",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any()",
+    "rule": "anyExpr",
+    "input": "any(lambda:true)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any()",
+    "rule": "anyExpr",
+    "input": "any( lambda : true )",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any()",
+    "rule": "commonExpr",
+    "input": "Products/any(lambda:true)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any() - requires a path prefix",
+    "rule": "boolCommonExpr",
+    "input": "any()",
+    "fail": true,
+    "failAt": 3
+  },
+  {
+    "name": "5.1.1.13.1 any() - collection with type cast",
+    "rule": "commonExpr",
+    "input": "DirectReports/Sales.Manager/any()",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any()",
+    "rule": "commonExpr",
+    "input": "Supplier/Products/any(lambda:true)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any()",
+    "rule": "commonExpr",
+    "input": "Products/any(lambda:lambda/Completed)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.1 any()",
+    "rule": "commonExpr",
+    "input": "Products/any(lambda:$it/Completed)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.2 all()",
+    "rule": "boolCommonExpr",
+    "input": "Products/all(lambda:true)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.2 all() - requires path prefix",
+    "rule": "boolCommonExpr",
+    "input": "all(lambda:true)",
+    "fail": true,
+    "failAt": 3
+  },
+  {
+    "name": "5.1.1.13.2 all() - must contain a lambda expression",
+    "rule": "boolCommonExpr",
+    "input": "Products/all()",
+    "fail": true,
+    "failAt": 14
+  },
+  {
+    "name": "5.1.1.13.2 all()",
+    "rule": "commonExpr",
+    "input": "Products/all(lambda:true)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.13.2 all()",
+    "rule": "commonExpr",
+    "input": "EmailAddresses/all(lambda:true)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.1 primitive literal",
+    "rule": "filter",
+    "input": "$filter=ReleaseDate gt 2013-05-24",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 simple array",
+    "rule": "commonExpr",
+    "input": "FirstName in [\"Miller\",\"Smith\"]",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 array with single-quoted OData strings",
+    "rule": "commonExpr",
+    "input": "FirstName in [\"Miller\",'Smith']",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 empty array",
+    "rule": "commonExpr",
+    "input": "FirstName in []",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 array in array of arrays",
+    "rule": "boolCommonExpr",
+    "input": "[\"Joe\",\"Smith\"] in [[\"John\",\"Doe\"],[\"Jane\",\"Smith\"]]",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 array of properties in array of arrays",
+    "rule": "boolCommonExpr",
+    "input": "[FirstName,LastName] in [[\"John\",\"Doe\"],[\"Jane\",\"Smith\"]]",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 comparing arrays",
+    "rule": "boolCommonExpr",
+    "input": "[\"Milk\", \"Cheese\"] eq [\"Oranges\", \"Carrots\", \"Ginger\"]",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 mixed array",
+    "rule": "commonExpr",
+    "input": "[\"Hello\",42,true,false,null,'World']",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 array of property names",
+    "rule": "commonExpr",
+    "input": "[FirstName,LastName]",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 empty object",
+    "rule": "commonExpr",
+    "input": "{}",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 object with concrete values",
+    "rule": "commonExpr",
+    "input": "{\"FirstName\":\"John\",\"LastName\":\"Doe\",\"Sizes\":[\"Large\",\"Small\"]}",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 object with expression values",
+    "rule": "commonExpr",
+    "input": "{\"FirstName\":Customer/FirstName,\"LastName\":Manager/LastName,\"Sizes\":[1, 2 add 3]}",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.2 array with 'untyped' values",
+    "rule": "commonExpr",
+    "input": "[[],{},true,false,null,42,{\"no property name\":\"value\",\"@something\":true}]",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.4 $it",
+    "rule": "firstMemberExpr",
+    "input": "$it/Completed",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.4 $it",
+    "rule": "filter",
+    "input": "$filter=endswith($it,'.com')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.4 $it with alias for entity reference",
+    "rule": "queryOptions",
+    "input": "$filter=$it eq @ref&@ref={\"@odata.id\":\"http://host/service/ZqV5t\"}",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.4 $it with entity reference",
+    "rule": "queryOptions",
+    "input": "$filter=$it eq {\"@odata.id\":\"http://host/service/ZqV5t\"}",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.5 $root",
+    "rule": "odataRelativeUri",
+    "input": "Employees?$filter=LastName eq $root/Employees('A1245')/LastName",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.5 $root with function import",
+    "rule": "odataRelativeUri",
+    "input": "Employees?$filter=City eq $root/TheMostPopularAddress()/City",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.5 $root in array expression",
+    "rule": "odataRelativeUri",
+    "input": "ProductsOrderedBy(Customers=@c)?@c=[$root/Customers('ALFKI'),$root/Customers('BLAUS')]",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.5 $root with entity set",
+    "rule": "commonExpr",
+    "input": "$root/SalesOrganizations",
+    "fail": false
+  },
+  {
+    "name": "$root with bound function call",
+    "rule": "odataRelativeUri",
+    "input": "Suppliers?$filter=$root/Sales/Special.MostPopularCategory(Where=ZipCode) eq 'Food'",
+    "fail": false
+  },
+  {
+    "name": "$root with unbound function call",
+    "rule": "odataRelativeUri",
+    "input": "Suppliers?$filter=Special.MostPopularCategory(What=$root/Sales,Where=ZipCode) eq 'Food'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.6 $this",
+    "rule": "boolCommonExpr",
+    "input": "$this eq 'Hugo'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.6 $this",
+    "rule": "filter",
+    "input": "$filter=endswith($this,'.com')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.6 $this",
+    "rule": "odataRelativeUri",
+    "input": "Customers?$select=EmailAddresses($filter=endswith($this,'.com'))",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.6 $this",
+    "rule": "odataRelativeUri",
+    "input": "Customers?$select=Addresses($filter=endswith($this/Street,'gasse'))",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.14.6 $this",
+    "rule": "odataRelativeUri",
+    "input": "Customers?$select=Addresses(@a=$this;$filter=endswith(@a/Street,'gasse'))",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.15 Path expressions",
+    "rule": "commonExpr",
+    "input": "Items",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.15 Path expressions - key access after set navigation",
+    "rule": "commonExpr",
+    "input": "Items(1)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values",
+    "rule": "filter",
+    "input": "$filter=Price/@Measures.Currency eq 'EUR'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values, no namespace",
+    "rule": "filter",
+    "input": "$filter=Price/@Currency eq 'EUR'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values",
+    "rule": "orderBy",
+    "input": "$orderby=Price/@Measures.Currency",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values with qualifier",
+    "rule": "orderBy",
+    "input": "$orderby=Price/@Measures.Currency%23Reporting",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values with qualifier, no namespace",
+    "rule": "filter",
+    "input": "$filter=Price/@Currency%23Reporting eq 'EUR'",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values",
+    "rule": "filter",
+    "input": "$filter=@Core.Messages/any(m:m/severity eq 'error')",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values",
+    "rule": "compute",
+    "input": "$compute=@Core.Messages as CoreMessages",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values",
+    "rule": "queryOptions",
+    "input": "$compute=@Core.Messages as _at_Core_dot_Messages&$select=_at_Core_dot_Messages($top=5)",
+    "fail": false
+  },
+  {
+    "name": "5.1.1.16 Annotation Values",
+    "rule": "filter",
+    "input": "$filter=@Messages/any(m:m/severity eq 'error')",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - single navigation property",
+    "rule": "expand",
+    "input": "$expand=Items",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - $ is optional",
+    "rule": "expand",
+    "input": "expand=Items",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - single navigation property",
+    "rule": "expand",
+    "input": "$expand=Items/$ref",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - multiple navigation properties",
+    "rule": "expand",
+    "input": "$expand=Customer,Items",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - multiple navigation properties",
+    "rule": "expand",
+    "input": "$expand=Customer/$ref,Items",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - multiple navigation properties, nested",
+    "rule": "expand",
+    "input": "$expand=Customer,Items($expand=Product)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - multiple navigation properties, nested - no $ prefix",
+    "rule": "expand",
+    "input": "expand=Customer,Items(expand=Product)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - recursive expansion",
+    "rule": "expand",
+    "input": "$expand=Customer($levels=4)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - recursive expansion - no $ prefix",
+    "rule": "expand",
+    "input": "expand=Customer(levels=4)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - multiple navigation properties, nested",
+    "rule": "expand",
+    "input": "$expand=Customer,Items($expand=Product/$ref)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - no $level after $ref",
+    "rule": "expand",
+    "input": "$expand=Customer/$ref($levels=4)",
+    "fail": true,
+    "failAt": 22
+  },
+  {
+    "name": "5.1.2 Expand - no $select after $ref",
+    "rule": "expand",
+    "input": "$expand=Customer/$ref($select=Name)",
+    "fail": true,
+    "failAt": 22
+  },
+  {
+    "name": "5.1.2 Expand - no $expand after $ref",
+    "rule": "expand",
+    "input": "$expand=Customer,Items/$ref($expand=Product)",
+    "fail": true,
+    "failAt": 28
+  },
+  {
+    "name": "5.1.2 Expand - $count",
+    "rule": "expand",
+    "input": "$expand=Items($count=true)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - $count",
+    "rule": "expand",
+    "input": "$expand=Items/$count",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - $count",
+    "rule": "expand",
+    "input": "$expand=Items/$count($filter=Name eq 'Hugo')",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - $count - no $ prefix for query options, still required for path segment",
+    "rule": "expand",
+    "input": "expand=Items/$count(filter=Name eq 'Hugo')",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - $count",
+    "rule": "expand",
+    "input": "$expand=Items/$count($search=Hugo)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - $count",
+    "rule": "expand",
+    "input": "expand=Items/$count(search=Hugo)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - no $count after $count",
+    "rule": "expand",
+    "input": "$expand=Items/$count($count=true)",
+    "fail": true,
+    "failAt": 21
+  },
+  {
+    "name": "5.1.2 Expand - multiple nested options",
+    "rule": "expand",
+    "input": "$expand=Items($select=Quantity;$expand=Product($select=Name,Price);@c=15)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - navigation property in complex type",
+    "rule": "expand",
+    "input": "$expand=Address/Country",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - navigation property in collection of complex type",
+    "rule": "expand",
+    "input": "$expand=Addresses/Country",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - levels",
+    "rule": "expand",
+    "input": "$expand=Category($levels=4),Category($levels=max)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - levels without leading zeroes",
+    "rule": "expand",
+    "input": "$expand=Category($levels=04)",
+    "fail": true,
+    "failAt": 25
+  },
+  {
+    "name": "5.1.2 Expand - star",
+    "rule": "expand",
+    "input": "$expand=*,*/$ref,*($levels=2),Category",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - star on complex path",
+    "rule": "expand",
+    "input": "$expand=Address/*,Address/Address/*,Addresses/*,Address/Model.AddressWithLocation/*,Model.VipCustomer/Address/*",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - star on complex path with $ref and $levels",
+    "rule": "expand",
+    "input": "$expand=Address/*/$ref,Address/*($levels=max)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - stream property",
+    "rule": "expand",
+    "input": "$expand=$value,Thumbnail",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - annotation",
+    "rule": "expand",
+    "input": "$expand=@Namespace.EntityTerm",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - annotation with nested query options",
+    "rule": "expand",
+    "input": "$expand=@Namespace.EntityTerm($top=2)",
+    "fail": false
+  },
+  {
+    "name": "5.1.2 Expand - annotation with navigation property",
+    "rule": "expand",
+    "input": "$expand=@Namespace.SomeTerm/Products($top=2)",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - simple",
+    "rule": "select",
+    "input": "$select=Rating,ReleaseDate",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - $ is optional",
+    "rule": "select",
+    "input": "select=Rating,ReleaseDate",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - with star",
+    "rule": "select",
+    "input": "$select=*",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - with property of complex property",
+    "rule": "select",
+    "input": "$select=Address/Street",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - with property of complex property",
+    "rule": "select",
+    "input": "$select=Address/Country",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - with cast",
+    "rule": "select",
+    "input": "$select=Address/Model.AddressWithLocation",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - with cast and property of complex property",
+    "rule": "select",
+    "input": "$select=Address/Model.AddressWithLocation/Location",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - with cast and property of complex property, no namespace",
+    "rule": "select",
+    "input": "$select=Address/AddressWithLocation/Location",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select on complex resource - with cast and property of sub-type",
+    "rule": "select",
+    "input": "$select=Model.AddressWithLocation/Location",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select on complex resource - with cast and property of sub-type, no namespace",
+    "rule": "select",
+    "input": "$select=AddressWithLocation/Location",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - with expand",
+    "rule": "queryOptions",
+    "input": "$expand=Category($select=Name)",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - qualifiedEntityTypeName",
+    "rule": "select",
+    "input": "$select=Model.PreferredSupplier/Name",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - actions by namespace",
+    "rule": "select",
+    "input": "$select=Model.ActionName,Model.MostPopularName,Model.*",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - actions and functions with signature",
+    "rule": "select",
+    "input": "$select=Model.ActionName,Model.MostPopularName(Location,Kind)",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - actions and functions with signature, no  namespace",
+    "rule": "select",
+    "input": "$select=ActionName,MostPopularName(Location,Kind)",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - tricky",
+    "rule": "select",
+    "input": "$select=Namespace.PreferredSupplier/AccountRepresentative,Address/Street,Address/Namespace.AddressWithLocation/Location",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - tricky, no namespace",
+    "rule": "select",
+    "input": "$select=PreferredSupplier/AccountRepresentative,Address/Street,Address/AddressWithLocation/Location",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - nested select",
+    "rule": "select",
+    "input": "$select=Address($select=Street,City,Namespace.AddressWithLocation/Location)",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - nested filter etc.",
+    "rule": "queryOptions",
+    "input": "$select=Addresses($filter=startswith(City,'H');$top=5;$skip=0;$count=true;$orderby=$it;$search=blue;@c=15)&$expand=Addresses/Country",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - annotations",
+    "rule": "select",
+    "input": "$select=@Core.Messages($top=5)",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - annotations",
+    "rule": "select",
+    "input": "$select=Address/@Core.Messages($top=5)",
+    "fail": false
+  },
+  {
+    "name": "5.1.3 Select - annotations",
+    "rule": "select",
+    "input": "$select=@Measures.Currency,@Core.MayImplement($top=2)",
+    "fail": false
+  },
+  {
+    "name": "5.1.4 OrderBy",
+    "rule": "orderby",
+    "input": "$orderby=Name",
+    "fail": false
+  },
+  {
+    "name": "5.1.4 OrderBy - case-insensitive",
+    "rule": "orderby",
+    "input": "$OrderBy=Name",
+    "fail": false
+  },
+  {
+    "name": "5.1.4 OrderBy - $ is optional",
+    "rule": "orderby",
+    "input": "OrderBy=Name",
+    "fail": false
+  },
+  {
+    "name": "5.1.4 OrderBy asc",
+    "rule": "orderby",
+    "input": "$orderby=Name\tasc",
+    "fail": false
+  },
+  {
+    "name": "5.1.4 OrderBy mixed",
+    "rule": "orderby",
+    "input": "$orderby=Name asc,Rating,ReleaseDate desc",
+    "fail": false
+  },
+  {
+    "name": "5.1.4 OrderBy expression",
+    "rule": "orderby",
+    "input": "$orderby=Cost ge Revenue asc",
+    "fail": false
+  },
+  {
+    "name": "5.1.5 Top and Skip",
+    "rule": "queryOptions",
+    "input": "$top=5&$skip=10",
+    "fail": false
+  },
+  {
+    "name": "5.1.5 Top and Skip - $ is optional",
+    "rule": "queryOptions",
+    "input": "top=5&skip=10",
+    "fail": false
+  },
+  {
+    "name": "5.1.6 Inlinecount",
+    "rule": "queryOptions",
+    "input": "$count=true",
+    "fail": false
+  },
+  {
+    "name": "5.1.6 Inlinecount - $ is optional",
+    "rule": "queryOptions",
+    "input": "count=true",
+    "fail": false
+  },
+  {
+    "name": "5.1.6 Inlinecount",
+    "rule": "queryOptions",
+    "input": "$count=false",
+    "fail": false
+  },
+  {
+    "name": "5.1.6 Inlinecount",
+    "rule": "queryOptions",
+    "input": "$count",
+    "fail": true,
+    "failAt": 6
+  },
+  {
+    "name": "5.1.7 Search - simple term",
+    "rule": "queryOptions",
+    "input": "$search=blue",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term",
+    "rule": "queryOptions",
+    "input": "$search=1984",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term",
+    "rule": "queryOptions",
+    "input": "$search=2x4",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with dot",
+    "rule": "queryOptions",
+    "input": "$search=3.14",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with comma",
+    "rule": "queryOptions",
+    "input": "$search=9,81",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with dash",
+    "rule": "queryOptions",
+    "input": "$search=brand-new",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with quote",
+    "rule": "queryOptions",
+    "input": "$search=Daniel's",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with underscore",
+    "rule": "queryOptions",
+    "input": "$search=__FILE__",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with dollar",
+    "rule": "queryOptions",
+    "input": "$search=$search",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with slash",
+    "rule": "queryOptions",
+    "input": "$search=08/15",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with unencoded hash",
+    "rule": "queryOptions",
+    "input": "$search=#1",
+    "fail": true,
+    "failAt": 8
+  },
+  {
+    "name": "5.1.7 Search - simple term with percent-encoded hash (#)",
+    "rule": "queryOptions",
+    "input": "$search=%231",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with unencoded ampersand",
+    "rule": "queryOptions",
+    "input": "$search=more&more",
+    "fail": true,
+    "failAt": 17
+  },
+  {
+    "name": "5.1.7 Search - simple term with percent-encoded ampersand",
+    "rule": "queryOptions",
+    "input": "$search=more%26more",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple term with unencoded semicolon",
+    "rule": "queryOptions",
+    "input": "$search=a;b",
+    "fail": true,
+    "failAt": 9
+  },
+  {
+    "name": "5.1.7 Search - simple term with percent-encoded semicolon",
+    "rule": "queryOptions",
+    "input": "$search=a%3Bb",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - AND is a word here, not an operator",
+    "rule": "queryOptions",
+    "input": "$search=AND",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - OR is a word here, not an operator",
+    "rule": "queryOptions",
+    "input": "$search=OR",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - NOT is a word here, not an operator",
+    "rule": "queryOptions",
+    "input": "$search=NOT",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - NOT is an operator here, search for items that do not match blue",
+    "rule": "queryOptions",
+    "input": "$search=NOT blue",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - NOT is an operator here, search for items that do not match blue",
+    "rule": "queryOptions",
+    "input": "$search=NOT (blue green)",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - the first NOT is an operator, the second a word, search for items that do not match NOT",
+    "rule": "queryOptions",
+    "input": "$search=NOT NOT",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - AND and OR are words here, search for items that match both AND and OR",
+    "rule": "queryOptions",
+    "input": "$search=AND OR",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - AND and OR are words here, search for items that match both AND and OR",
+    "rule": "queryOptions",
+    "input": "$search=OR AND",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - AND and NOT are words here, search for items that match AND or NOT",
+    "rule": "queryOptions",
+    "input": "$search=AND OR NOT",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - $ is optional",
+    "rule": "queryOptions",
+    "input": "search=blue",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple phrase",
+    "rule": "queryOptions",
+    "input": "$search=\"blue%20green\"",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - simple phrase",
+    "rule": "search",
+    "input": "$search=\"blue green\"",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - phrase with unbalanced double-quotes",
+    "rule": "queryOptions",
+    "input": "$search='\"blue'",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - phrase with unbalanced double-quotes",
+    "rule": "search",
+    "input": "$search=\"blue",
+    "fail": true,
+    "failAt": 13
+  },
+  {
+    "name": "5.1.7 Search - phrase with unbalanced double-quotes",
+    "rule": "search",
+    "input": "$search=%22blue",
+    "fail": true,
+    "failAt": 15
+  },
+  {
+    "name": "5.1.7 Search - phrase with unbalanced double-quotes - still ok",
+    "rule": "queryOptions",
+    "input": "$search='\"blue\" \"green'",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - phrase with double-quote without whitespace",
+    "rule": "searchExpr",
+    "input": "\"blue%22green",
+    "fail": true,
+    "failAt": 8
+  },
+  {
+    "name": "5.1.7 Search - implicit AND",
+    "rule": "queryOptions",
+    "input": "$search=blue green",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - implicit AND, encoded",
+    "rule": "queryOptions",
+    "input": "$search=blue%20green",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - AND",
+    "rule": "queryOptions",
+    "input": "$search=blue AND green",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - OR",
+    "rule": "queryOptions",
+    "input": "$search=blue OR green",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - NOT",
+    "rule": "queryOptions",
+    "input": "$search=blue NOT green",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - only NOT",
+    "rule": "queryOptions",
+    "input": "$search=NOT blue",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - multiple",
+    "rule": "queryOptions",
+    "input": "$search=foo AND bar OR foo AND baz OR that AND bar OR that AND baz",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - multiple",
+    "rule": "searchExpr",
+    "input": "(foo OR that) AND (bar OR baz) AND NOT quux",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - grouping",
+    "rule": "queryOptions",
+    "input": "$search=foo AND (bar OR baz)",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - grouping",
+    "rule": "queryOptions",
+    "input": "$search=(foo AND bar) OR baz",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - grouping",
+    "rule": "queryOptions",
+    "input": "$search=(NOT foo) OR baz",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - grouping",
+    "rule": "queryOptions",
+    "input": "$search=(NOT foo)",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - UTF-8 characters: Greek Capital Letter Delta (Δ)",
+    "rule": "queryOptions",
+    "input": "$search=%CE%94",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - incomplete expressions",
+    "rule": "queryOptions",
+    "input": "$search='\"'",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - incomplete expressions",
+    "rule": "queryOptions",
+    "input": "$search='\"bl'",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - incomplete expressions",
+    "rule": "queryOptions",
+    "input": "$search='\"blue%20p'",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - incomplete expressions",
+    "rule": "queryOptions",
+    "input": "$search='('",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - nested $search may contain balanced parentheses",
+    "rule": "queryOptions",
+    "input": "$expand=Manager($search=(green))",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - nested $search must not contain unbalanced parentheses",
+    "rule": "queryOptions",
+    "input": "$expand=Manager($search=gr(een)",
+    "fail": true,
+    "failAt": 26
+  },
+  {
+    "name": "5.1.7 Search - nested $search must not contain unbalanced parentheses unless single-quoted",
+    "rule": "queryOptions",
+    "input": "$expand=Manager($search='gr(een')",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - nested $search simple term with percent-encoded semicolon",
+    "rule": "queryOptions",
+    "input": "$expand=Manager($search=a%3Bb)",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - nested $search simple term with percent-encoded semicolon",
+    "rule": "queryOptions",
+    "input": "$expand=Manager($search='a%3Bb')",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - on entity set",
+    "rule": "odataUri",
+    "input": "http://serviceRoot/Products?$search=blue",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - on entity container",
+    "rule": "odataUri",
+    "input": "http://serviceRoot/Model.Container/$all?$search=blue",
+    "fail": false
+  },
+  {
+    "name": "5.1.7 Search - on service",
+    "rule": "odataUri",
+    "input": "http://serviceRoot/$all?$search=blue",
+    "fail": false
+  },
+  {
+    "name": "5.1.8 Format",
+    "rule": "queryOptions",
+    "input": "$format=json&$Format=atom&$format=xml&$format=text/html",
+    "fail": false
+  },
+  {
+    "name": "5.1.8 Format - $ is optional",
+    "rule": "queryOptions",
+    "input": "format=json",
+    "fail": false
+  },
+  {
+    "name": "5.1.8 Format - value is case-insensitive",
+    "rule": "queryOptions",
+    "input": "$format=JSON&$format=Atom&$format=XML&$format=text/html",
+    "fail": false
+  },
+  {
+    "name": "5.1.8 Format - media type",
+    "rule": "queryOptions",
+    "input": "$format=text/html",
+    "fail": false
+  },
+  {
+    "name": "5.1.9 Index",
+    "rule": "queryOptions",
+    "input": "$index=42",
+    "fail": false
+  },
+  {
+    "name": "5.1.9 Index - $ is optional",
+    "rule": "queryOptions",
+    "input": "index=42",
+    "fail": false
+  },
+  {
+    "name": "5.1.9 Index - negative indexes allowed with V4.01",
+    "rule": "queryOptions",
+    "input": "index=-42",
+    "fail": false
+  },
+  {
+    "name": "5.1.9 Index",
+    "rule": "queryOptions",
+    "input": "$index=fortytwo",
+    "fail": true,
+    "failAt": 7
+  },
+  {
+    "name": "5.1.10 Compute",
+    "rule": "queryOptions",
+    "input": "$compute=Amount mul Product/TaxRate as Tax",
+    "fail": false
+  },
+  {
+    "name": "5.1.10 Compute - $ is optional",
+    "rule": "queryOptions",
+    "input": "compute=Amount mul Product/TaxRate as Tax",
+    "fail": false
+  },
+  {
+    "name": "5.1.10 Compute - many",
+    "rule": "queryOptions",
+    "input": "$compute=Amount mul Product/TaxRate as Tax,day(Time/Date) as WeekDay",
+    "fail": false
+  },
+  {
+    "name": "5.1.10 Compute - within $expand",
+    "rule": "queryOptions",
+    "input": "$expand=Sales($compute=Amount mul Product/TaxRate as Tax)",
+    "fail": false
+  },
+  {
+    "name": "Delta Link",
+    "rule": "deltatoken",
+    "input": "$deltatoken=A@Lot_Has:Changed?=Here!",
+    "fail": false
+  },
+  {
+    "name": "Next Link",
+    "rule": "skiptoken",
+    "input": "$skiptoken=Start@Next_Chunk:From?=Here!",
+    "fail": false
+  },
+  {
+    "name": "Next Link: no Ampersand",
+    "rule": "skiptoken",
+    "input": "$skiptoken=Not&this",
+    "fail": true,
+    "failAt": 14
+  },
+  {
+    "name": "5.2 Custom Query Option",
+    "rule": "customQueryOption",
+    "input": "find=O%27Neil",
+    "fail": false
+  },
+  {
+    "name": "5.2 Custom Query Option",
+    "rule": "customQueryOption",
+    "input": "!deltatoken='201208210403'",
+    "fail": false
+  },
+  {
+    "name": "5.2 Custom Query Option",
+    "rule": "customQueryOption",
+    "input": "!special",
+    "fail": false
+  },
+  {
+    "name": "5.2 Custom Query Option",
+    "rule": "queryOptions",
+    "input": "find=O%27Neil&!special",
+    "fail": false
+  },
+  {
+    "name": "5.2 Custom Query Option",
+    "rule": "queryOptions",
+    "input": "$orderby=Name&!deltatoken=0412312321",
+    "fail": false
+  },
+  {
+    "name": "5.3 Parameter Aliases",
+    "rule": "queryOptions",
+    "input": "$filter=contains(Title,@word)&@word='Black'",
+    "fail": false
+  },
+  {
+    "name": "5.3 Parameter Aliases",
+    "rule": "queryOptions",
+    "input": "$filter=Title eq @title&@title='Wizard%20of%20Oz'",
+    "fail": false
+  },
+  {
+    "name": "5.3 Parameter Aliases",
+    "rule": "odataRelativeUri",
+    "input": "Products/Model.WithIngredients(Ingredients=@i)?@i=[\"Carrots\",\"Ginger\",\"Oranges\"]",
+    "fail": false
+  },
+  {
+    "name": "5.3 Parameter Aliases",
+    "rule": "odataRelativeUri",
+    "input": "Categories?$expand=Products(@foo=$this;$filter=@foo/Price gt 3)",
+    "fail": false
+  },
+  {
+    "name": "5.3 Parameter Aliases",
+    "rule": "odataRelativeUri",
+    "input": "Employees?$expand=Manager(@m=$this;$expand=DirectReports($filter=@m/FirstName eq FirstName))",
+    "fail": false
+  },
+  {
+    "name": "function with complex parameter - no properties",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByComplex(complex=@c)?@c={}",
+    "fail": false
+  },
+  {
+    "name": "function with complex parameter - one property",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByComplex(complex=@c)?@c={\"Name\":\"Value\"}",
+    "fail": false
+  },
+  {
+    "name": "function with complex parameter - one property",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByComplex(complex=@c)?@c={\"@odata.type\":\"Model.Customer\",\"Name\":\"Value\"}",
+    "fail": false
+  },
+  {
+    "name": "function with complex parameter - three properties",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByComplex(complex=@c)?@c={\"Name\":false,\"Price\":3.14e0,\"Rating\":null}",
+    "fail": false
+  },
+  {
+    "name": "function with collection of primitive - zero",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByColor(colors=@c)?@c=[]",
+    "fail": false
+  },
+  {
+    "name": "function with collection of primitive - one",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByColor(colors=@c)?@c=[\"red\"]",
+    "fail": false
+  },
+  {
+    "name": "function with collection of primitive - two",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByColor(colors=@c)?@c=[\"red\",\"green\"]",
+    "fail": false
+  },
+  {
+    "name": "function with complex parameter - complex and collection properties",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByComplex(complex=@c)?@c={\"Names\":[\"Fred\",\"George\"],\"Address\":{\"Street\":\"MyWay\"}}",
+    "fail": false
+  },
+  {
+    "name": "function with rootExpr",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCustomer(customer=@c)?@c=$root/Customers(1)",
+    "fail": false
+  },
+  {
+    "name": "function with rootExpr - single navigation",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCustomer(customer=@c)?@c=$root/Customers(1)/Model.VipCustomer/AccountRepresentative",
+    "fail": false
+  },
+  {
+    "name": "function with rootExpr - array",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCustomer(customer=@c)?@c=[$root/Customers(1),$root/Customers(2)]",
+    "fail": false
+  },
+  {
+    "name": "function with rootExpr - complex with single navigation",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCustomer(customer=@c)?@c={\"Country\":$root/Countries('DE')}",
+    "fail": false
+  },
+  {
+    "name": "function with rootExpr - complex with collection navigation",
+    "rule": "odataRelativeUri",
+    "input": "ProductsByCustomer(customer=@c)?@c={\"Orders\":[$root/Orders(1)]}",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal in URI",
+    "rule": "enumLiteral",
+    "input": "Sales.Pattern'Yellow'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal in URI - without prefix",
+    "rule": "enumLiteral",
+    "input": "'Yellow'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal in URI - multiple flag values",
+    "rule": "enumLiteral",
+    "input": "Sales.Pattern'Solid,Yellow'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal in URI - multiple flag values",
+    "rule": "enumLiteral",
+    "input": "Sales.Pattern'Solid%2CYellow,%2B42'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal in URI - multiple flag values without prefix",
+    "rule": "enumLiteral",
+    "input": "'Solid,Yellow,-42'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal - in filter",
+    "rule": "filter",
+    "input": "$filter=style eq Sales.Pattern'Yellow'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal - in filter without prefix",
+    "rule": "filter",
+    "input": "$filter=style eq 'Yellow'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal - in filter with has",
+    "rule": "filter",
+    "input": "$filter=style has Sales.Pattern'Yellow'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal - undefined value as numeric constant",
+    "rule": "filter",
+    "input": "$filter=style has Sales.Pattern'32'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal - undefined value as numeric constant",
+    "rule": "odataRelativeUri",
+    "input": "Products?$filter=style eq Sales.Pattern'Yellow,32'",
+    "fail": false
+  },
+  {
+    "name": "Enumeration literal - undefined value as numeric constant",
+    "rule": "odataRelativeUri",
+    "input": "Products?$filter=style eq cast(eyeColor,Sales.Pattern)",
+    "fail": false
+  },
+  {
+    "name": "Enumeration value - multiple flag values",
+    "rule": "enumValue",
+    "input": "Solid,Yellow,+42",
+    "fail": false
+  },
+  {
+    "name": "Enumeration value - no percent-encoding",
+    "rule": "enumValue",
+    "input": "Solid%2CYellow",
+    "fail": true,
+    "failAt": 5
+  },
+  {
+    "name": "Enumeration value - no percent-encoding",
+    "rule": "enumValue",
+    "input": "%2B42",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "GeographyCollection",
+    "rule": "geographyCollection",
+    "input": "geography'SRID=0;GeometryCollection(LineString(142.1 64.1,3.14 2.78))'",
+    "fail": false
+  },
+  {
+    "name": "GeographyLineString",
+    "rule": "geographyLineString",
+    "input": "geography'SRID=0;LineString(142.1 64.1,3.14 2.78)'",
+    "fail": false
+  },
+  {
+    "name": "GeographyMultiLineString",
+    "rule": "geographyMultiLineString",
+    "input": "geography'SRID=0;MultiLineString((142.1 64.1,3.14 2.78),(142.1 64.1,3.14 2.78))'",
+    "fail": false
+  },
+  {
+    "name": "GeographyMultiPoint",
+    "rule": "geographyMultiPoint",
+    "input": "geography'SRID=0;MultiPoint()'",
+    "fail": false
+  },
+  {
+    "name": "GeographyMultiPoint",
+    "rule": "geographyMultiPoint",
+    "input": "geography'SRID=0;MultiPoint((142.1 64.1),(1 2))'",
+    "fail": false
+  },
+  {
+    "name": "GeographyMultiPolygon",
+    "rule": "geographyMultiPolygon",
+    "input": "geography'SRID=0;MultiPolygon(((1 1,1 1),(1 1,2 2,3 3,1 1)))'",
+    "fail": false
+  },
+  {
+    "name": "GeographyPoint",
+    "rule": "geographyPoint",
+    "input": "geography'SRID=0;Point(142.1 64.1)'",
+    "fail": false
+  },
+  {
+    "name": "GeographyPoint with elevation",
+    "rule": "geographyPoint",
+    "input": "geography'SRID=0;Point(142.1 64.1 10.0)'",
+    "fail": false
+  },
+  {
+    "name": "GeographyPoint with elevation and measure",
+    "rule": "geographyPoint",
+    "input": "geography'SRID=0;Point(142.1 64.1 10.0 -3.14)'",
+    "fail": false
+  },
+  {
+    "name": "GeographyPolygon",
+    "rule": "geographyPolygon",
+    "input": "geography'SRID=0;Polygon((1 1,1 1),(1 1,2 2,3 3,1 1))'",
+    "fail": false
+  },
+  {
+    "name": "GeometryCollection",
+    "rule": "geometryCollection",
+    "input": "geometry'SRID=0;GeometryCollection(LineString(142.1 64.1,3.14 2.78))'",
+    "fail": false
+  },
+  {
+    "name": "GeometryLineString",
+    "rule": "geometryLineString",
+    "input": "geometry'SRID=0;LineString(142.1 64.1,3.14 2.78)'",
+    "fail": false
+  },
+  {
+    "name": "GeometryMultiLineString",
+    "rule": "geometryMultiLineString",
+    "input": "geometry'SRID=0;MultiLineString((142.1 64.1,3.14 2.78),(142.1 64.1,3.14 2.78))'",
+    "fail": false
+  },
+  {
+    "name": "GeometryMultiPoint",
+    "rule": "geometryMultiPoint",
+    "input": "geometry'SRID=0;MultiPoint()'",
+    "fail": false
+  },
+  {
+    "name": "GeometryMultiPoint",
+    "rule": "geometryMultiPoint",
+    "input": "geometry'SRID=0;MultiPoint((142.1 64.1),(1 2))'",
+    "fail": false
+  },
+  {
+    "name": "GeometryMultiPolygon",
+    "rule": "geometryMultiPolygon",
+    "input": "geometry'SRID=0;MultiPolygon(((1 1,1 1),(1 1,2 2,3 3,1 1)))'",
+    "fail": false
+  },
+  {
+    "name": "GeometryPoint",
+    "rule": "geometryPoint",
+    "input": "geometry'SRID=0;Point(142.1 64.1)'",
+    "fail": false
+  },
+  {
+    "name": "GeometryPolygon",
+    "rule": "geometryPolygon",
+    "input": "geometry'SRID=0;Polygon((1 1,1 1),(1 1,2 2,3 3,1 1))'",
+    "fail": false
+  },
+  {
+    "name": "$filter with geometry",
+    "rule": "filter",
+    "input": "$filter=geo.intersects(geometry'SRID=0;Point(142.1 64.1)',geometry'SRID=0;Polygon((1 1,1 1),(1 1,2 2,3 3,1 1))')",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr",
+    "rule": "commonExpr",
+    "input": "Model.Available()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr",
+    "rule": "commonExpr",
+    "input": "Model.Available",
+    "fail": true,
+    "failAt": 15
+  },
+  {
+    "name": "Functions in commonExpr - directly call function",
+    "rule": "commonExpr",
+    "input": "Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - after collection navigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.Available()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - composed functions",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - composed functions, no namespace",
+    "rule": "commonExpr",
+    "input": "Products/BestProduct()/MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Name",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Model.BestSellingProduct/Name",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Name/Model.Available()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Address",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Address/Street",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Addresses",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Addresses/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/EmailAddresses",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - stream property",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/Thumbnail",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation with any",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/EmailAddresses/any()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singleNavigation with all",
+    "rule": "commonExpr",
+    "input": "Products/Model.BestProduct()/EmailAddresses/all(lambda:true)",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.ProductsByColor(color='green')/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.ProductsByColor(color='green')/Model.BestSellingProduct/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionNavigation",
+    "rule": "commonExpr",
+    "input": "Products/Model.ProductsByColor(color=@color)/Model.BestSellingProduct/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionNavigation with all",
+    "rule": "commonExpr",
+    "input": "Products/Model.ProductsByColor()/all(lambda:true)",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - complexPath",
+    "rule": "commonExpr",
+    "input": "Items/Model.MostPopularAddress()/Street",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - complexPath",
+    "rule": "commonExpr",
+    "input": "Items/Model.MostPopularAddress()/Address",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - complexPath",
+    "rule": "commonExpr",
+    "input": "Items/Model.MostPopularAddress()/Address/Model.Available()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionPath",
+    "rule": "commonExpr",
+    "input": "Items/Model.MostPopularAddresses()/$count",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionPath",
+    "rule": "commonExpr",
+    "input": "Items/Model.MostPopularAddresses()/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionPath",
+    "rule": "commonExpr",
+    "input": "Items/Model.MostPopularNames()/$count",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionPath",
+    "rule": "commonExpr",
+    "input": "Items/Model.MostPopularNames()/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collectionPath, no namespace",
+    "rule": "commonExpr",
+    "input": "Items/MostPopularNames()/MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singlePath",
+    "rule": "commonExpr",
+    "input": "Items/Model.MostPopularName()/Model.MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - singlePath, no namespace",
+    "rule": "commonExpr",
+    "input": "Items/MostPopularName()/MostPopularName()",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collection parameter in JSON",
+    "rule": "commonExpr",
+    "input": "Products/Model.ProductsByColor(colors=[\"red\",\"green\",\"blue\"])",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collection parameter in JSON with whitespace",
+    "rule": "commonExpr",
+    "input": "Products/Model.ProductsByColor(colors=[ \"red\", \"green\" , \"blue\" ])",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - collection parameter in JSON with whitespace",
+    "rule": "commonExpr",
+    "input": "Products/Model.ProductsByColor(colors=%5B%20\"red\",%20\"green\"%20,\"blue\"%20%5D)",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - complex JSON parameter",
+    "rule": "commonExpr",
+    "input": "Model.Available(complex={\"Name\":\"Value\"})",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - complex JSON parameter with whitespace",
+    "rule": "commonExpr",
+    "input": "Model.Available(complex={ \"Name\" : \"double quote (\\\") in value\" })",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - complex JSON parameter with whitespace",
+    "rule": "commonExpr",
+    "input": "Model.Available(complex=%7B %22Name%22 : \"double%20quote (%5C%22) in value\" %7D)",
+    "fail": false
+  },
+  {
+    "name": "Functions in commonExpr - property as parameter",
+    "rule": "commonExpr",
+    "input": "Model.PhoneticallySimilar(Word1=Name,Word2=Supplier/Name)",
+    "fail": false
+  },
+  {
+    "name": "in operator with list of primitives",
+    "rule": "commonExpr",
+    "input": "FirstName in ('Miller','Smith')",
+    "fail": false
+  },
+  {
+    "name": "lists can only contain primitive literals",
+    "rule": "commonExpr",
+    "input": "FirstName in (FirstName,LastName)",
+    "fail": true,
+    "failAt": 23
+  },
+  {
+    "name": "right operand is not a list, it's a complicated way of writing FirstName",
+    "rule": "commonExpr",
+    "input": "FirstName in (FirstName)",
+    "fail": false
+  },
+  {
+    "name": "in operator with empty literal list",
+    "rule": "commonExpr",
+    "input": "FirstName in ()",
+    "fail": false
+  },
+  {
+    "name": "common expression cannot be empty",
+    "rule": "commonExpr",
+    "input": "",
+    "fail": true,
+    "failAt": 0
+  },
+  {
+    "name": "lists only allowed right of in operator",
+    "rule": "commonExpr",
+    "input": "EmailAddresses eq ('Miller','Smith')",
+    "fail": true,
+    "failAt": 27
+  },
+  {
+    "name": "Functions in filter - alias as parameter",
+    "rule": "queryOptions",
+    "input": "$filter=Model.PhoneticallySimilar(Word=@expression)&@expression=5 add 3",
+    "fail": false
+  },
+  {
+    "name": "Functions in filter - expression as parameter",
+    "rule": "queryOptions",
+    "input": "$filter=Model.PhoneticallySimilar(Number=5 add 3)",
+    "fail": false
+  },
+  {
+    "name": "Functions in filter - $it as prefix",
+    "rule": "queryOptions",
+    "input": "$filter=$it/Model.PhoneticallySimilar(Number=5 add 3)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set",
+    "rule": "odataUri",
+    "input": "http://host/service/$metadata#Customers",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select",
+    "rule": "odataRelativeUri",
+    "input": "$metadata#Customers(Address,Orders)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select",
+    "rule": "context",
+    "input": "#Customers(Address/Street,Orders)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select",
+    "rule": "context",
+    "input": "#Customers(Address/Country)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select and type-cast",
+    "rule": "context",
+    "input": "#Customers(Address/Model.AddressWithLocation,Orders)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select and type-cast, qualifier is required",
+    "rule": "context",
+    "input": "#Customers(Address/AddressWithLocation,Orders)",
+    "fail": true,
+    "failAt": 38
+  },
+  {
+    "name": "Context URL - Entity set with $select",
+    "rule": "context",
+    "input": "#Customers(Address/Name,Orders)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select",
+    "rule": "context",
+    "input": "#Customers/Model.VipCustomer(Orders(ID))",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select and type cast",
+    "rule": "context",
+    "input": "#Customers(Name,Address/Country,Model.VipCustomer/Rating)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select and $expand",
+    "rule": "context",
+    "input": "#Customers/Model.VipCustomer(Name,Address/Country,Model.*)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select and $expand with nested select",
+    "rule": "context",
+    "input": "#Customers/Model.VipCustomer(Name,Address/Country(Code,Model.ActionName,Model.MostPopularAddress))",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select and $expand",
+    "rule": "context",
+    "input": "#Customers/Model.VipCustomer(Orders,Orders())",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with $select and $expand with nested select",
+    "rule": "context",
+    "input": "#Customers/Model.VipCustomer(Orders,Orders(ID,Items(Price)))",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity with $select and $expand with nested select",
+    "rule": "context",
+    "input": "#Customers/Model.VipCustomer(*,Orders(ID))/$entity",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with cast, $select and recursive $expand",
+    "rule": "context",
+    "input": "#Employees(Title,DirectReports+(FirstName,LastName))",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Collection of structured type with $select and recursive $expand",
+    "rule": "context",
+    "input": "#Collection(Model.Employee)(Title,DirectReports+(FirstName,LastName))",
+    "fail": false
+  },
+  {
+    "name": "Context URL - annotations in select",
+    "rule": "context",
+    "input": "#Employees(@Core.Messages,Title,DirectReports+(@Core.Messages,FirstName,LastName))",
+    "fail": false
+  },
+  {
+    "name": "Context URL - annotations in select - cleartext #",
+    "rule": "context",
+    "input": "#Employees(@Core.Messages/code,@Core.Messages/message,Title,DirectReports+(@Core.Messages#second,FirstName,LastName))",
+    "fail": false
+  },
+  {
+    "name": "Context URL - annotations in select - # must be cleartext, not percent-encoded",
+    "rule": "context",
+    "input": "#Employees(@Core.Messages/code,@Core.Messages/message,Title,DirectReports+(@Core.Messages%23second,FirstName,LastName))",
+    "fail": true,
+    "failAt": 89
+  },
+  {
+    "name": "Context URL - annotations in expand",
+    "rule": "context",
+    "input": "#Employees(@Namespace.EntityTerm(FirstName,LastName))",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity set with type cast",
+    "rule": "context",
+    "input": "#Customers/Model.VipCustomer",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity",
+    "rule": "context",
+    "input": "#Customers/$entity",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Singleton",
+    "rule": "context",
+    "input": "#SingletonEntity",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Singleton with containment",
+    "rule": "context",
+    "input": "#SingletonEntity/Orders",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Singleton with containment",
+    "rule": "context",
+    "input": "#SingletonEntity/Orders(3)/Items",
+    "fail": false
+  },
+  {
+    "name": "Context URL - collection with containment",
+    "rule": "context",
+    "input": "#Customers('ALFKI')/Orders",
+    "fail": false
+  },
+  {
+    "name": "Context URL - containment",
+    "rule": "context",
+    "input": "#Customers('ALFKI')/Orders/$entity",
+    "fail": false
+  },
+  {
+    "name": "Context URL - collection with containment - multi-level",
+    "rule": "context",
+    "input": "#Customers('ALFKI')/Orders(1)/Items",
+    "fail": false
+  },
+  {
+    "name": "Context URL - containment - multi-level with $select",
+    "rule": "context",
+    "input": "#Customers('ALFKI')/Orders(1)/Items(Product)/$entity",
+    "fail": false
+  },
+  {
+    "name": "Context URL - containment with type cast",
+    "rule": "context",
+    "input": "#Customers('ALFKI')/Model.VipCustomer/Address/Orders",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Singleton with $select",
+    "rule": "context",
+    "input": "#SingletonEntity(Address,Orders)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity with $select",
+    "rule": "context",
+    "input": "#Customers(Address,Orders)/$entity",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity with type cast",
+    "rule": "context",
+    "input": "#Customers/Model.VipCustomer/$entity",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity property value",
+    "rule": "context",
+    "input": "#Customers(1)/Addresses",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Entity property value with $select",
+    "rule": "context",
+    "input": "#Customers(1)/Addresses(Country)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Individual value",
+    "rule": "context",
+    "input": "#Model.MonetaryAmount",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Individual collection value",
+    "rule": "context",
+    "input": "#Collection(Edm.String)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Reference collection",
+    "rule": "context",
+    "input": "#Collection($ref)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Reference",
+    "rule": "context",
+    "input": "#$ref",
+    "fail": false
+  },
+  {
+    "name": "Context URL - $all",
+    "rule": "context",
+    "input": "#Collection(Edm.EntityType)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - $crossjoin",
+    "rule": "context",
+    "input": "#Collection(Edm.ComplexType)",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Delta",
+    "rule": "context",
+    "input": "#Customers/$delta",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Delta - deleted context",
+    "rule": "context",
+    "input": "#Orders/$deletedEntity",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Delta - link",
+    "rule": "context",
+    "input": "#Customers/$link",
+    "fail": false
+  },
+  {
+    "name": "Context URL - Delta - deleted link",
+    "rule": "context",
+    "input": "#Orders/$deletedLink",
+    "fail": false
+  },
+  {
+    "name": "Header - AsyncResult",
+    "rule": "header",
+    "input": "AsyncResult: 200",
+    "fail": false
+  },
+  {
+    "name": "Header - content-id",
+    "rule": "header",
+    "input": "content-id: 1",
+    "fail": false
+  },
+  {
+    "name": "Batch Request - request identifier",
+    "rule": "request-id",
+    "input": "First-Insert~Customer_1.1",
+    "fail": false
+  },
+  {
+    "name": "Batch Request - request identifier",
+    "rule": "request-id",
+    "input": "group1",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-entityid",
+    "rule": "header",
+    "input": "odata-entityid: ralf:handl",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-entityid",
+    "rule": "header",
+    "input": "odata-entityID: empty-path:/",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-entityid",
+    "rule": "header",
+    "input": "odata-entityId:strange:ÿ/",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-error",
+    "rule": "header",
+    "input": "OData-error: {\"code\":\"err123\",\"message\":\"Unsupported functionality\",\"target\":\"query\",\"details\":[{\"code\":\"fourtytwo\",\"target\":\"$search\",\"message\":\"$search query option not supported\"}]}",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-isolation",
+    "rule": "header",
+    "input": "odata-isolation:sNapShoT",
+    "fail": false
+  },
+  {
+    "name": "Header - isolation",
+    "rule": "header",
+    "input": "isolation:sNapShoT",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-maxversion",
+    "rule": "header",
+    "input": "odata-maxversion: 4.0",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-maxversion next",
+    "rule": "header",
+    "input": "odata-maxversion: 4.01",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-maxversion",
+    "rule": "header",
+    "input": "odata-maxversion:06.2831852000",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-version",
+    "rule": "header",
+    "input": "odata-version: 4.0",
+    "fail": false
+  },
+  {
+    "name": "Header - odata-version",
+    "rule": "header",
+    "input": "odata-version: 4.01",
+    "fail": false
+  },
+  {
+    "name": "Preferences - allow entity references and maximum page size",
+    "rule": "prefer",
+    "input": "Prefer: odata.allow-entityreferences,odata.maxpagesize=20",
+    "fail": false
+  },
+  {
+    "name": "Preferences - allow entity references and maximum page size - no prefix",
+    "rule": "prefer",
+    "input": "Prefer: allow-entityreferences,maxpagesize=20",
+    "fail": false
+  },
+  {
+    "name": "Preferences - callback",
+    "rule": "preference",
+    "input": "odata.callback;url=\"please://call/me?back#here\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - callback",
+    "rule": "preference",
+    "input": "odata.callback;url=\"http://myserver/notfication/token/12345\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - callback",
+    "rule": "preference",
+    "input": "odata.callback;url=\"some:where\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - callback",
+    "rule": "preference",
+    "input": "odata.callback;url=\"some:/where\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - without prefix",
+    "rule": "preference",
+    "input": "callback;url=\"some:/where\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - continue on error",
+    "rule": "preference",
+    "input": "odata.continue-on-error",
+    "fail": false
+  },
+  {
+    "name": "Preferences - continue on error - no prefix",
+    "rule": "preference",
+    "input": "continue-on-error",
+    "fail": false
+  },
+  {
+    "name": "Preferences - continue on error with value true",
+    "rule": "preference",
+    "input": "odata.continue-on-error=true",
+    "fail": false
+  },
+  {
+    "name": "Preferences - continue on error with value true",
+    "rule": "preference",
+    "input": "continue-on-error=true",
+    "fail": false
+  },
+  {
+    "name": "Preferences - continue on error with value false",
+    "rule": "preference",
+    "input": "odata.continue-on-error=false",
+    "fail": false
+  },
+  {
+    "name": "Preferences - continue on error with value false",
+    "rule": "preference",
+    "input": "continue-on-error=false",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - all",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"*\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - all with a given qualifier",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"*#qualified\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - none",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"-*\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - none with a given qualifier",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"-*#qualified\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - all in namespace",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"Namespace.*\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - all in namespace with given qualifier",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"Namespace.*#quali\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - namespace must be suffixed with .*",
+    "rule": "includeAnnotationsPreference",
+    "input": "odata.include-annotations=\"Namespace\"",
+    "fail": true,
+    "failAt": 36
+  },
+  {
+    "name": "Preferences - include annotations - namespace must be suffixed with .*",
+    "rule": "includeAnnotationsPreference",
+    "input": "odata.include-annotations=\"Namespace.\"",
+    "fail": true,
+    "failAt": 37
+  },
+  {
+    "name": "Preferences - include annotations - nothing from namespace",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"-Namespace.*\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - nothing from namespace",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"-Namespace.*#quali\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - only a special term",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"Namespace.SomeTerm\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - only a special term",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"Namespace.SomeTerm#qual\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - everything except a special term",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"-Namespace.SomeTerm\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - only a special term",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"-Namespace.SomeTerm#qual\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - several",
+    "rule": "preference",
+    "input": "odata.include-annotations=\"Namespace.SomeTerm,Model.AnotherTerm,Namespace.*\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - include annotations - no prefix",
+    "rule": "preference",
+    "input": "include-annotations=\"*\"",
+    "fail": false
+  },
+  {
+    "name": "Preferences - maxpagesize - ok",
+    "rule": "preference",
+    "input": "odata.maxpagesize=50",
+    "fail": false
+  },
+  {
+    "name": "Preferences - maxpagesize - no prefix",
+    "rule": "preference",
+    "input": "maxpagesize=50",
+    "fail": false
+  },
+  {
+    "name": "Preferences - maxpagesize - not zero",
+    "rule": "maxpagesizePreference",
+    "input": "odata.maxpagesize=0",
+    "fail": true,
+    "failAt": 18
+  },
+  {
+    "name": "Preferences - maxpagesize - not negative",
+    "rule": "maxpagesizePreference",
+    "input": "odata.maxpagesize=-1",
+    "fail": true,
+    "failAt": 18
+  },
+  {
+    "name": "Preferences - omit-values - defaults",
+    "rule": "preference",
+    "input": "omit-values=defaults",
+    "fail": false
+  },
+  {
+    "name": "Preferences - omit-values - nulls",
+    "rule": "preference",
+    "input": "omit-values=nulls",
+    "fail": false
+  },
+  {
+    "name": "Preferences - return minimal",
+    "rule": "preference",
+    "input": "return=minimal",
+    "fail": false
+  },
+  {
+    "name": "Preferences - return representation",
+    "rule": "preference",
+    "input": "return=representation",
+    "fail": false
+  },
+  {
+    "name": "Preferences - respond async",
+    "rule": "preference",
+    "input": "respond-async",
+    "fail": false
+  },
+  {
+    "name": "Preferences - track changes",
+    "rule": "preference",
+    "input": "odata.track-changes",
+    "fail": false
+  },
+  {
+    "name": "Preferences - track changes - no prefix",
+    "rule": "preference",
+    "input": "track-changes",
+    "fail": false
+  },
+  {
+    "name": "Preferences - wait",
+    "rule": "preference",
+    "input": "wait=0",
+    "fail": false
+  },
+  {
+    "name": "Preferences - wait with bad whitespace",
+    "rule": "preference",
+    "input": "wait = 0",
+    "fail": false
+  },
+  {
+    "name": "Schema Version - numeric",
+    "rule": "systemQueryOption",
+    "input": "$schemaversion=0001",
+    "fail": false
+  },
+  {
+    "name": "Schema Version - alphanumeric",
+    "rule": "systemQueryOption",
+    "input": "schemaversion=second",
+    "fail": false
+  },
+  {
+    "name": "Schema Version - semantic",
+    "rule": "systemQueryOption",
+    "input": "schemaversion=1.42.2",
+    "fail": false
+  },
+  {
+    "name": "Schema Version - latest",
+    "rule": "systemQueryOption",
+    "input": "$schemaversion=*",
+    "fail": false
+  },
+  {
+    "name": "ODATA-633 hex pair bug",
+    "rule": "stringInUrl",
+    "input": "\"b%75g\"",
+    "fail": false
+  }
+]

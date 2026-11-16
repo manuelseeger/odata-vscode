@@ -204,9 +204,7 @@
     "test": "npm run validate && npm run test:host",
     "clean": "rimraf out dist",
     "vsce-latest": "vsce package -o odata-vscode-latest.vsix",
-    "abnf": "abnf_gen -o src/parser/odata.peggy src/parser/odata.abnf",
-    "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
-    "peggy-1line": "peggy -m --trace --dts -o src/parser/parser.js src/parser/odata.peggy",
+    "peggy-compile": "peggy --dts -o src/parser/parser.js src/parser/odata.peggy",
     "coverage": "vscode-test --coverage --coverage-reporter json --coverage-output ../../coverage --reporter ../../node_modules/@vscode/test-cli/out/fullJsonStreamReporter.cjs",
     "buildtokenizer": "ts-node src/tools/buildtokenizer.ts",
     "typecheck": "tsc --noEmit",
@@ -215,10 +213,11 @@
     "check:vsix": "vsce package --no-dependencies -o odata-validation.vsix && node scripts/check-vsix.mjs odata-validation.vsix && node scripts/test-vsix.mjs odata-validation.vsix",
     "watch:esbuild": "node esbuild.mjs --watch",
     "watch:tsc": "tsc --noEmit --watch -p .",
-    "watch:peggy": "peggy --watch --dts -o src/parser/parser.js src/parser/odata-multiline.peggy",
+    "watch:peggy": "peggy --watch --dts -o src/parser/parser.js src/parser/odata.peggy",
     "watch:tests": "tsc -p . --outDir out --watch"
   },
   "devDependencies": {
+    "@types/mocha": "10.0.10",
     "@types/node": "24.19.2",
     "@types/vscode": "1.145.0",
     "@types/vscode-webview": "1.57.5",
@@ -228,8 +227,9 @@
     "@vscode/test-cli": "0.0.15",
     "@vscode/test-electron": "3.1.0",
     "@vscode/vsce": "4.1.0",
-    "abnf": "5.0.5",
+    "esbuild": "0.28.2",
     "eslint": "10.14.0",
+    "mocha": "12.0.3",
     "peggy": "5.1.1",
     "pegjs-backtrace": "0.2.1",
     "prettier": "3.9.10",
@@ -237,10 +237,7 @@
     "tiktoken": "1.0.22",
     "ts-mockito": "2.6.1",
     "ts-node": "10.9.2",
-    "typescript": "6.0.3",
-    "mocha": "12.0.3",
-    "@types/mocha": "10.0.10",
-    "esbuild": "0.28.2"
+    "typescript": "6.0.3"
   },
   "overrides": {
     "minimatch": "11.0.7",

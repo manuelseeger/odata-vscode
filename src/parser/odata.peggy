@@ -1,1748 +1,662 @@
-dummyStartRule
-  = odataUri
-  / header
-  / primitiveValue
-
-odataUri
-  = serviceRoot odataRelativeUri?
-
-header
-  = content_id
-  / isolation
-  / odata_entityid
-  / odata_error
-  / odata_maxversion
-  / odata_version
-  / prefer
-
-primitiveValue
-  = booleanValue
-  / guidValue
-  / durationValue
-  / dateTimeOffsetValue
-  / dateValue
-  / timeOfDayValue
-  / enumValue
-  / fullCollectionLiteral
-  / fullLineStringLiteral
-  / fullMultiPointLiteral
-  / fullMultiLineStringLiteral
-  / fullMultiPolygonLiteral
-  / fullPointLiteral
-  / fullPolygonLiteral
-  / decimalValue
-  / doubleValue
-  / singleValue
-  / sbyteValue
-  / byteValue
-  / int16Value
-  / int32Value
-  / int64Value
-  / binaryValue
-
-serviceRoot
-  = ("https"i / "http"i) "://" host (":" port)? "/" (segment_nz "/")*
-
-odataRelativeUri
-  = "$batch"i ("?" batchOptions)?
-  / "$entity"i "?" entityOptions
-  / "$entity"i "/" optionallyQualifiedEntityTypeName "?" entityCastOptions
-  / "$metadata"i ("?" metadataOptions)? context?
-  / resourcePath ("?" queryOptions)?
-
-content_id
-  = "Content-ID"i ":" OWS request_id
-
-isolation
-  = "OData-"i? "Isolation"i ":" OWS "snapshot"i
-
-odata_entityid
-  = "OData-EntityID"i ":" OWS IRI_in_header
-
-odata_error
-  = "OData-Error"i ":" OWS "{%x22code%x22:"i (VCHAR / SP)*
-
-odata_maxversion
-  = "OData-MaxVersion"i ":" OWS DIGIT+ "." DIGIT+
-
-odata_version
-  = "OData-Version"i ":" OWS "4.0" oneToNine?
-
-prefer
-  = "Prefer"i ":" OWS preference (OWS "," OWS preference)*
-
-booleanValue
-  = "true"i
-  / "false"i
-
-guidValue
-  = HEXDIG|8| "-" HEXDIG|4| "-" HEXDIG|4| "-" HEXDIG|4| "-" HEXDIG|12|
-
-durationValue
-  = SIGN? "P"i (DIGIT+ "D"i)? ("T"i (DIGIT+ "H"i)? (DIGIT+ "M"i)? (DIGIT+ ("." DIGIT+)? "S"i)?)?
-
-dateTimeOffsetValue
-  = year "-" month "-" day "T"i timeOfDayValue ("Z"i / SIGN hour ":" minute)
-
-dateValue
-  = year "-" month "-" day
-
-timeOfDayValue
-  = hour ":" minute (":" second ("." fractionalSeconds)?)?
-
-enumValue
-  = singleEnumValue (COMMA singleEnumValue)*
-
-fullCollectionLiteral
-  = sridLiteral collectionLiteral
-
-fullLineStringLiteral
-  = sridLiteral lineStringLiteral
-
-fullMultiPointLiteral
-  = sridLiteral multiPointLiteral
-
-fullMultiLineStringLiteral
-  = sridLiteral multiLineStringLiteral
-
-fullMultiPolygonLiteral
-  = sridLiteral multiPolygonLiteral
-
-fullPointLiteral
-  = sridLiteral pointLiteral
-
-fullPolygonLiteral
-  = sridLiteral polygonLiteral
-
-decimalValue
-  = SIGN? DIGIT+ ("." DIGIT+)? ("e"i SIGN? DIGIT+)?
-  / nanInfinity
-
-doubleValue
-  = decimalValue
-
-singleValue
-  = decimalValue
-
-sbyteValue
-  = SIGN? DIGIT|1..3|
-
-byteValue
-  = DIGIT|1..3|
-
-int16Value
-  = SIGN? DIGIT|1..5|
-
-int32Value
-  = SIGN? DIGIT|1..10|
-
-int64Value
-  = SIGN? DIGIT|1..19|
-
-binaryValue
-  = (base64char|4|)* (base64b16 / base64b8)?
-
-host
-  = IP_literal
-  / IPv4address
-  / reg_name
-
-port
-  = DIGIT*
-
-segment_nz
-  = pchar+
-
-batchOptions
-  = batchOption ("&" batchOption)*
-
-entityOptions
-  = (entityIdOption "&")* id ("&" entityIdOption)*
-
-optionallyQualifiedEntityTypeName
-  = (namespace ".")? entityTypeName
-
-entityCastOptions
-  = (entityCastOption "&")* id ("&" entityCastOption)*
-
-metadataOptions
-  = metadataOption ("&" metadataOption)*
-
-context
-  = "#" contextFragment
-
-resourcePath
-  = entitySetName collectionNavigation?
-  / singletonEntity singleNavigation?
-  / actionImportCall
-  / entityColFunctionImportCall collectionNavigation?
-  / entityFunctionImportCall singleNavigation?
-  / complexColFunctionImportCall complexColPath?
-  / complexFunctionImportCall complexPath?
-  / primitiveColFunctionImportCall primitiveColPath?
-  / primitiveFunctionImportCall primitivePath?
-  / functionImportCallNoParens querySegment?
-  / crossjoin querySegment?
-  / "$all"i ("/" optionallyQualifiedEntityTypeName)?
-
-queryOptions
-  = queryOption ("&" queryOption)*
-
-OWS
-  = (SP / HTAB)*
-
-request_id
-  = unreserved+
-
-IRI_in_header
-  = (VCHAR / obs_text)+
-
-VCHAR
-  = [\x21-\x7e]
-
-SP
-  = " "
-
-DIGIT
-  = [\x30-\x39]
-
-oneToNine
-  = "1"
-  / "2"
-  / "3"
-  / "4"
-  / "5"
-  / "6"
-  / "7"
-  / "8"
-  / "9"
-
-preference
-  = allowEntityReferencesPreference
-  / callbackPreference
-  / continueOnErrorPreference
-  / includeAnnotationsPreference
-  / maxpagesizePreference
-  / respondAsyncPreference
-  / returnPreference
-  / trackChangesPreference
-  / waitPreference
-
-HEXDIG
-  = DIGIT
-  / A_to_F
-
-SIGN
-  = "+"
-  / "%2B"i
-  / "-"
-
-year
-  = "-"? ("0" DIGIT|3| / oneToNine DIGIT|3..|)
-
-month
-  = "0" oneToNine
-  / "1" ("0" / "1" / "2")
-
-day
-  = "0" oneToNine
-  / ("1" / "2") DIGIT
-  / "3" ("0" / "1")
-
-hour
-  = ("0" / "1") DIGIT
-  / "2" ("0" / "1" / "2" / "3")
-
-minute
-  = zeroToFiftyNine
-
-second
-  = zeroToFiftyNine
-  / "60"
-
-fractionalSeconds
-  = DIGIT|1..12|
-
-singleEnumValue
-  = enumerationMember
-  / enumMemberValue
-
-COMMA
-  = ","
-  / "%2C"i
-
-sridLiteral
-  = "SRID"i EQ DIGIT|1..5| SEMI
-
-collectionLiteral
-  = "Collection("i geoLiteral (COMMA geoLiteral)* CLOSE
-
-lineStringLiteral
-  = "LineString"i lineStringData
-
-multiPointLiteral
-  = "MultiPoint("i (pointData (COMMA pointData)*)? CLOSE
-
-multiLineStringLiteral
-  = "MultiLineString("i (lineStringData (COMMA lineStringData)*)? CLOSE
-
-multiPolygonLiteral
-  = "MultiPolygon("i (polygonData (COMMA polygonData)*)? CLOSE
-
-pointLiteral
-  = "Point"i pointData
-
-polygonLiteral
-  = "Polygon"i polygonData
-
-nanInfinity
-  = "NaN"i
-  / "-INF"i
-  / "INF"i
-
-base64char
-  = ALPHA
-  / DIGIT
-  / "-"
-  / "_"
-
-base64b16
-  = base64char|2| ("A"i / "E"i / "I"i / "M"i / "Q"i / "U"i / "Y"i / "c"i / "g"i / "k"i / "o"i / "s"i / "w"i / "0" / "4" / "8") "="?
-
-base64b8
-  = base64char ("A"i / "Q"i / "g"i / "w"i) "=="?
-
-IP_literal
-  = "[" (IPv6address / IPvFuture) "]"
-
-IPv4address
-  = dec_octet "." dec_octet "." dec_octet "." dec_octet
-
-reg_name
-  = (unreserved / pct_encoded / sub_delims)*
-
-pchar
-  = unreserved
-  / pct_encoded
-  / sub_delims
-  / ":"
-  / "@"
-
-batchOption
-  = format
-  / customQueryOption
-
-entityIdOption
-  = format
-  / customQueryOption
-
-id
-  = ("$id"i / "id"i) EQ IRI_in_query
-
-namespace
-  = namespacePart ("." namespacePart)*
-
-entityTypeName
-  = odataIdentifier
-
-entityCastOption
-  = entityIdOption
-  / expand
-  / select
-
-metadataOption
-  = format
-  / customQueryOption
-
-contextFragment
-  = "Collection($ref)"i
-  / "$ref"i
-  / "Collection(Edm.EntityType)"i
-  / "Collection(Edm.ComplexType)"i
-  / singletonEntity (navigation (containmentNavigation)* ("/" qualifiedEntityTypeName)?)? selectList?
-  / qualifiedTypeName selectList?
-  / entitySet ("/$deletedEntity"i / "/$link"i / "/$deletedLink"i)
-  / entitySet keyPredicate "/" contextPropertyPath selectList?
-  / entitySet selectList? ("/$entity"i / "/$delta"i)?
-
-entitySetName
-  = odataIdentifier
-
-collectionNavigation
-  = ("/" optionallyQualifiedEntityTypeName)? collectionNavPath?
-
-singletonEntity
-  = odataIdentifier
-
-singleNavigation
-  = ("/" optionallyQualifiedEntityTypeName)? ("/" propertyPath / boundOperation / ref / value / querySegment)?
-
-actionImportCall
-  = actionImport
-
-entityColFunctionImportCall
-  = entityColFunctionImport functionParameters
-
-entityFunctionImportCall
-  = entityFunctionImport functionParameters
-
-complexColFunctionImportCall
-  = complexColFunctionImport functionParameters
-
-complexColPath
-  = ordinalIndex
-  / ("/" optionallyQualifiedComplexTypeName)? (count / boundOperation / querySegment)?
-
-complexFunctionImportCall
-  = complexFunctionImport functionParameters
-
-complexPath
-  = ("/" optionallyQualifiedComplexTypeName)? ("/" propertyPath / boundOperation / querySegment)?
-
-primitiveColFunctionImportCall
-  = primitiveColFunctionImport functionParameters
-
-primitiveColPath
-  = count
-  / boundOperation
-  / ordinalIndex
-  / querySegment
-
-primitiveFunctionImportCall
-  = primitiveFunctionImport functionParameters
-
-primitivePath
-  = value
-  / boundOperation
-  / querySegment
-
-functionImportCallNoParens
-  = entityFunctionImport
-  / entityColFunctionImport
-  / complexFunctionImport
-  / complexColFunctionImport
-  / primitiveFunctionImport
-  / primitiveColFunctionImport
-
-querySegment
-  = "/$query"i
-
-crossjoin
-  = "$crossjoin"i OPEN entitySetName (COMMA entitySetName)* CLOSE
-
-queryOption
-  = systemQueryOption
-  / aliasAndValue
-  / nameAndValue
-  / customQueryOption
-
-HTAB
-  = "\t"
-
-unreserved
-  = ALPHA
-  / DIGIT
-  / "-"
-  / "."
-  / "_"
-  / "~"
-
-obs_text
-  = [\x80-\xff]
-
-allowEntityReferencesPreference
-  = "odata."i? "allow-entityreferences"i
-
-callbackPreference
-  = "odata."i? "callback"i OWS ";" OWS "url"i EQ_h DQUOTE URI DQUOTE
-
-continueOnErrorPreference
-  = "odata."i? "continue-on-error"i (EQ_h booleanValue)?
-
-includeAnnotationsPreference
-  = "odata."i? "include-annotations"i EQ_h DQUOTE annotationsList DQUOTE
-
-maxpagesizePreference
-  = "odata."i? "maxpagesize"i EQ_h oneToNine DIGIT*
-
-respondAsyncPreference
-  = "respond-async"i
-
-returnPreference
-  = "return"i EQ_h ("representation"i / "minimal"i)
-
-trackChangesPreference
-  = "odata."i? "track-changes"i
-
-waitPreference
-  = "wait"i EQ_h DIGIT+
-
-A_to_F
-  = "A"i
-  / "B"i
-  / "C"i
-  / "D"i
-  / "E"i
-  / "F"i
-
-zeroToFiftyNine
-  = ("0" / "1" / "2" / "3" / "4" / "5") DIGIT
-
-enumerationMember
-  = odataIdentifier
-
-enumMemberValue
-  = int64Value
-
-EQ
-  = "="
-
-SEMI
-  = ";"
-  / "%3B"i
-
-geoLiteral
-  = collectionLiteral
-  / lineStringLiteral
-  / multiPointLiteral
-  / multiLineStringLiteral
-  / multiPolygonLiteral
-  / pointLiteral
-  / polygonLiteral
-
-CLOSE
-  = ")"
-  / "%29"
-
-lineStringData
-  = OPEN positionLiteral (COMMA positionLiteral)+ CLOSE
-
-pointData
-  = OPEN positionLiteral CLOSE
-
-polygonData
-  = OPEN ringLiteral (COMMA ringLiteral)* CLOSE
-
-ALPHA
-  = [\x41-\x5a]
-  / [\x61-\x7a]
-
-IPv6address
-  = (h16 ":")|6| ls32
-  / "::" (h16 ":")|5| ls32
-  / h16? "::" (h16 ":")|4| ls32
-  / ((h16 ":")? h16)? "::" (h16 ":")|3| ls32
-  / ((h16 ":")|..2| h16)? "::" (h16 ":")|2| ls32
-  / ((h16 ":")|..3| h16)? "::" h16 ":" ls32
-  / ((h16 ":")|..4| h16)? "::" ls32
-  / ((h16 ":")|..5| h16)? "::" h16
-  / ((h16 ":")|..6| h16)? "::"
-
-IPvFuture
-  = "v"i HEXDIG+ "." (unreserved / sub_delims / ":")+
-
-dec_octet
-  = "1" DIGIT|2|
-  / "2" [\x30-\x34] DIGIT
-  / "25" [\x30-\x35]
-  / [\x31-\x39] DIGIT
-  / DIGIT
-
-pct_encoded
-  = "%" HEXDIG HEXDIG
-
-sub_delims
-  = "$"
-  / "&"
-  / "'"
-  / "="
-  / other_delims
-
-format
-  = ("$format"i / "format"i) EQ ("atom"i / "json"i / "xml"i / pchar+ "/" pchar+)
-
-customQueryOption
-  = customName (EQ customValue)?
-
-IRI_in_query
-  = qchar_no_AMP+
-
-namespacePart
-  = odataIdentifier
-
-odataIdentifier
-  = identifierLeadingCharacter identifierCharacter|..127|
-
-expand
-  = ("$expand"i / "expand"i) EQ expandItem (COMMA expandItem)*
-
-select
-  = ("$select"i / "select"i) EQ selectItem (COMMA selectItem)*
-
-navigation
-  = ("/" complexProperty ("/" qualifiedComplexTypeName)?)* "/" navigationProperty
-
-containmentNavigation
-  = keyPredicate ("/" qualifiedEntityTypeName)? navigation
-
-qualifiedEntityTypeName
-  = namespace "." entityTypeName
-
-selectList
-  = OPEN (selectListItem (COMMA selectListItem)*)? CLOSE
-
-qualifiedTypeName
-  = singleQualifiedTypeName
-  / "Collection"i OPEN singleQualifiedTypeName CLOSE
-
-entitySet
-  = entitySetName (containmentNavigation)* ("/" qualifiedEntityTypeName)?
-
-keyPredicate
-  = simpleKey
-  / compoundKey
-  / keyPathSegments
-
-contextPropertyPath
-  = primitiveProperty
-  / primitiveColProperty
-  / complexColProperty
-  / complexProperty (("/" qualifiedComplexTypeName)? "/" contextPropertyPath)?
-
-collectionNavPath
-  = keyPredicate singleNavigation?
-  / filterInPath collectionNavigation?
-  / each boundOperation?
-  / boundOperation
-  / count
-  / ref
-  / querySegment
-
-propertyPath
-  = entityColNavigationProperty collectionNavigation?
-  / entityNavigationProperty singleNavigation?
-  / complexColProperty complexColPath?
-  / complexProperty complexPath?
-  / primitiveColProperty primitiveColPath?
-  / primitiveProperty primitivePath?
-  / streamProperty boundOperation?
-
-boundOperation
-  = "/" (boundActionCall / boundEntityColFunctionCall collectionNavigation? / boundEntityFunctionCall singleNavigation? / boundComplexColFunctionCall complexColPath? / boundComplexFunctionCall complexPath? / boundPrimitiveColFunctionCall primitiveColPath? / boundPrimitiveFunctionCall primitivePath? / boundFunctionCallNoParens querySegment?)
-
-ref
-  = "/$ref"i
-
-value
-  = "/$value"i
-
-actionImport
-  = odataIdentifier
-
-entityColFunctionImport
-  = odataIdentifier
-
-functionParameters
-  = OPEN (functionParameter (COMMA functionParameter)*)? CLOSE
-
-entityFunctionImport
-  = odataIdentifier
-
-complexColFunctionImport
-  = odataIdentifier
-
-ordinalIndex
-  = "/" DIGIT+
-
-optionallyQualifiedComplexTypeName
-  = (namespace ".")? complexTypeName
-
-count
-  = "/$count"i
-
-complexFunctionImport
-  = odataIdentifier
-
-primitiveColFunctionImport
-  = odataIdentifier
-
-primitiveFunctionImport
-  = odataIdentifier
-
-OPEN
-  = "("
-  / "%28"
-
-systemQueryOption
-  = compute
-  / deltatoken
-  / expand
-  / filter
-  / format
-  / id
-  / inlinecount
-  / orderby
-  / schemaversion
-  / search
-  / select
-  / skip
-  / skiptoken
-  / top
-  / index
-
-aliasAndValue
-  = parameterAlias EQ parameterValue
-
-nameAndValue
-  = parameterName EQ parameterValue
-
-EQ_h
-  = BWS_h EQ BWS_h
-
-DQUOTE
-  = "\""
-
-URI
-  = scheme ":" hier_part ("?" query)? ("#" fragment)?
-
-annotationsList
-  = annotationIdentifier ("," annotationIdentifier)*
-
-positionLiteral
-  = doubleValue SP doubleValue (SP doubleValue)? (SP doubleValue)?
-
-ringLiteral
-  = OPEN positionLiteral (COMMA positionLiteral)* CLOSE
-
-h16
-  = HEXDIG|1..4|
-
-ls32
-  = (h16 ":" h16)
-  / IPv4address
-
-other_delims
-  = "!"
-  / "("
-  / ")"
-  / "*"
-  / "+"
-  / ","
-  / ";"
-
-customName
-  = qchar_no_AMP_EQ_AT_DOLLAR (qchar_no_AMP_EQ)*
-
-customValue
-  = (qchar_no_AMP)*
-
-qchar_no_AMP
-  = unreserved
-  / pct_encoded
-  / other_delims
-  / ":"
-  / "@"
-  / "/"
-  / "?"
-  / "$"
-  / "'"
-  / "="
-
-identifierLeadingCharacter
-  = ALPHA
-  / "_"
-
-identifierCharacter
-  = ALPHA
-  / "_"
-  / DIGIT
-
-expandItem
-  = "$value"i
-  / expandPath
-  / optionallyQualifiedEntityTypeName "/" expandPath
-
-selectItem
-  = STAR
-  / allOperationsInSchema
-  / selectProperty
-  / optionallyQualifiedActionName
-  / optionallyQualifiedFunctionName
-  / (optionallyQualifiedEntityTypeName / optionallyQualifiedComplexTypeName) "/" (selectProperty / optionallyQualifiedActionName / optionallyQualifiedFunctionName)
-
-complexProperty
-  = odataIdentifier
-
-qualifiedComplexTypeName
-  = namespace "." complexTypeName
-
-navigationProperty
-  = entityNavigationProperty
-  / entityColNavigationProperty
-
-selectListItem
-  = STAR
-  / allOperationsInSchema
-  / ((qualifiedEntityTypeName / qualifiedComplexTypeName) "/")? (qualifiedActionName / qualifiedFunctionName / selectListProperty)
-
-singleQualifiedTypeName
-  = qualifiedEntityTypeName
-  / qualifiedComplexTypeName
-  / qualifiedTypeDefinitionName
-  / qualifiedEnumTypeName
-  / primitiveTypeName
-
-simpleKey
-  = OPEN (parameterAlias / keyPropertyValue) CLOSE
-
-compoundKey
-  = OPEN keyValuePair (COMMA keyValuePair)* CLOSE
-
-keyPathSegments
-  = ("/" keyPathLiteral)+
-
-primitiveProperty
-  = primitiveKeyProperty
-  / primitiveNonKeyProperty
-
-primitiveColProperty
-  = odataIdentifier
-
-complexColProperty
-  = odataIdentifier
-
-filterInPath
-  = "/$filter"i OPEN boolCommonExpr CLOSE
-
-each
-  = "/$each"i
-
-entityColNavigationProperty
-  = odataIdentifier
-
-entityNavigationProperty
-  = odataIdentifier
-
-streamProperty
-  = odataIdentifier
-
-boundActionCall
-  = (namespace ".")? action
-
-boundEntityColFunctionCall
-  = (namespace ".")? entityColFunction functionParameters
-
-boundEntityFunctionCall
-  = (namespace ".")? entityFunction functionParameters
-
-boundComplexColFunctionCall
-  = (namespace ".")? complexColFunction functionParameters
-
-boundComplexFunctionCall
-  = (namespace ".")? complexFunction functionParameters
-
-boundPrimitiveColFunctionCall
-  = (namespace ".")? primitiveColFunction functionParameters
-
-boundPrimitiveFunctionCall
-  = (namespace ".")? primitiveFunction functionParameters
-
-boundFunctionCallNoParens
-  = (namespace ".")? entityFunction
-  / (namespace ".")? entityColFunction
-  / (namespace ".")? complexFunction
-  / (namespace ".")? complexColFunction
-  / (namespace ".")? primitiveFunction
-  / (namespace ".")? primitiveColFunction
-
-functionParameter
-  = parameterName EQ (parameterAlias / primitiveLiteral)
-
-complexTypeName
-  = odataIdentifier
-
-compute
-  = ("$compute"i / "compute"i) EQ computeItem (COMMA computeItem)*
-
-deltatoken
-  = "$deltatoken"i EQ (qchar_no_AMP)+
-
-filter
-  = ("$filter"i / "filter"i) EQ boolCommonExpr
-
-inlinecount
-  = ("$count"i / "count"i) EQ booleanValue
-
-orderby
-  = ("$orderby"i / "orderby"i) EQ orderbyItem (COMMA orderbyItem)*
-
-schemaversion
-  = ("$schemaversion"i / "schemaversion"i) EQ (STAR / unreserved+)
-
-search
-  = ("$search"i / "search"i) EQ BWS (searchExpr / searchExpr_incomplete)
-
-skip
-  = ("$skip"i / "skip"i) EQ DIGIT+
-
-skiptoken
-  = "$skiptoken"i EQ (qchar_no_AMP)+
-
-top
-  = ("$top"i / "top"i) EQ DIGIT+
-
-index
-  = ("$index"i / "index"i) EQ DIGIT+
-
-parameterAlias
-  = AT odataIdentifier
-
-parameterValue
-  = arrayOrObject
-  / commonExpr
-
-parameterName
-  = odataIdentifier
-
-BWS_h
-  = (SP / HTAB)*
-
-scheme
-  = ALPHA (ALPHA / DIGIT / "+" / "-" / ".")*
-
-hier_part
-  = "//" authority path_abempty
-  / path_absolute
-  / path_rootless
-
-query
-  = (pchar / "/" / "?")*
+// OData URL grammar (V2 and V4 / V4.01 request URLs).
+//
+// Hand-written PEG grammar producing the AST declared in ./ast.ts. It replaces a mechanical
+// conversion of the OASIS ABNF, which PEG's ordered choice cannot express faithfully.
+//
+// Design notes
+// - One grammar serves both protocol versions. Version specific constructs (V2 literals such
+//   as datetime'..', V4 lambdas, $apply) are all accepted syntactically.
+// - Whitespace, including line breaks and %20, is allowed around all delimiters so that
+//   queries can be laid out over several lines in the editor.
+// - The grammar does not know where the service root ends. It parses every path segment and
+//   leaves the split into service root and resource path to ./parse.ts.
+// - `options.tolerant` enables recovery productions (missing operands, unclosed parentheses,
+//   trailing garbage). They embed `missing` and `junk` nodes into the tree instead of
+//   failing, so that a best-effort tree is available for completions and metadata
+//   diagnostics while the user is typing. Strict mode never produces those nodes.
+
+{
+  const tolerant = options.tolerant === true;
+
+  // System query options whose value has a dedicated grammar.
+  const TYPED = new Set([
+    "filter", "orderby", "select", "expand", "compute", "apply", "search",
+    "top", "skip", "index", "count", "inlinecount", "levels",
+  ]);
+  // System query options that are parsed as raw text.
+  const RAW = new Set(["format", "skiptoken", "deltatoken", "id", "schemaversion"]);
+  // Options that are treated as system query options even without the "$" prefix (4.01).
+  // Others fall back to custom query options when their value does not parse.
+  const BARE_STRICT = new Set(["filter", "orderby", "select", "expand", "compute", "apply"]);
+
+  const TYPED_LITERALS = new Set([
+    "datetime", "datetimeoffset", "time", "guid", "duration", "binary", "x",
+    "geography", "geometry", "date", "timeofday",
+  ]);
+
+  // Transformations with a grammar of their own; anything else is parsed as a function.
+  const STANDARD_TRANSFORMATIONS = new Set([
+    "aggregate", "groupby", "filter", "search", "compute", "orderby", "concat", "expand",
+    "join", "outerjoin", "nest", "addnested", "identity",
+  ]);
+
+  function span() {
+    const l = location();
+    return { start: l.start, end: l.end };
+  }
+
+  function node(type, props) {
+    return Object.assign({ type }, props, { span: span() });
+  }
+
+  function chain(head, tail) {
+    return tail.reduce(
+      (left, t) => ({
+        type: "binary",
+        op: t.op.toLowerCase(),
+        left,
+        right: t.right,
+        span: { start: left.span.start, end: t.right.span.end },
+      }),
+      head,
+    );
+  }
+
+  function option(name, value, extra) {
+    return node("option", Object.assign(
+      { kind: "system", name: name.name, nameSpan: name.span, dollar: name.dollar, value },
+      extra,
+    ));
+  }
+}
+
+root
+  = _ uri:uri _ { return uri; }
+
+uri
+  = origin:origin segments:segments query:query? fragment:fragment? junk:junkAll?
+    {
+      return node("uri", {
+        origin,
+        segments,
+        query: query ?? undefined,
+        fragment: fragment ?? undefined,
+        junk: junk ?? undefined,
+      });
+    }
+
+origin
+  = $([A-Za-z] [A-Za-z0-9+.-]* "://" [^/?# \t\r\n]+)
+    { return node("origin", { text: text() }); }
 
 fragment
-  = (pchar / "/" / "?")*
+  = _ "#" text:$[^ \t\r\n]* { return text; }
 
-annotationIdentifier
-  = excludeOperator? (STAR / namespace "." (termName / STAR)) ("#" odataIdentifier)?
+junkAll
+  = &{ return tolerant; } _ text:$.+ { return node("junk", { text }); }
 
-qchar_no_AMP_EQ_AT_DOLLAR
-  = unreserved
-  / pct_encoded
-  / other_delims
-  / ":"
-  / "/"
-  / "?"
-  / "'"
+// ---------------------------------------------------------------------------------------
+// Path
+// ---------------------------------------------------------------------------------------
 
-qchar_no_AMP_EQ
-  = unreserved
-  / pct_encoded
-  / other_delims
-  / ":"
-  / "@"
-  / "/"
-  / "?"
-  / "$"
-  / "'"
+segments
+  = (_ "/" _ @(segment / emptySegment))*
 
-expandPath
-  = ((complexProperty / complexColProperty / optionallyQualifiedComplexTypeName / complexAnnotationInQuery) "/")* (STAR (ref / OPEN levels CLOSE)? / streamProperty / (navigationProperty / entityAnnotationInQuery) ("/" optionallyQualifiedEntityTypeName)? (ref (OPEN expandRefOption (SEMI expandRefOption)* CLOSE)? / count (OPEN expandCountOption (SEMI expandCountOption)* CLOSE)? / OPEN expandOption (SEMI expandOption)* CLOSE)?)
-
-STAR
-  = "*"
-  / "%2A"i
-
-allOperationsInSchema
-  = namespace "." STAR
-
-selectProperty
-  = primitiveProperty
-  / primitiveAnnotationInQuery
-  / (primitiveColProperty / primitiveColAnnotationInQuery) (OPEN selectOptionPC (SEMI selectOptionPC)* CLOSE)?
-  / navigationProperty
-  / selectPath (OPEN selectOption (SEMI selectOption)* CLOSE / "/" selectProperty)?
-
-optionallyQualifiedActionName
-  = (namespace ".")? action
-
-optionallyQualifiedFunctionName
-  = (namespace ".")? function (OPEN parameterNames CLOSE)?
-
-qualifiedActionName
-  = namespace "." action
-
-qualifiedFunctionName
-  = namespace "." function (OPEN parameterNames CLOSE)?
-
-selectListProperty
-  = primitiveProperty
-  / primitiveColProperty
-  / (navigationProperty / entityAnnotationInFragment) "+"? selectList?
-  / (complexProperty / complexColProperty / complexAnnotationInFragment) ("/" qualifiedComplexTypeName)? ("/" selectListProperty)?
-
-qualifiedTypeDefinitionName
-  = namespace "." typeDefinitionName
-
-qualifiedEnumTypeName
-  = namespace "." enumerationTypeName
-
-primitiveTypeName
-  = "Edm."i ("Binary"i / "Boolean"i / "Byte"i / "Date"i / "DateTimeOffset"i / "Decimal"i / "Double"i / "Duration"i / "Guid"i / "Int16"i / "Int32"i / "Int64"i / "SByte"i / "Single"i / "Stream"i / "String"i / "TimeOfDay"i / abstractSpatialTypeName concreteSpatialTypeName?)
-
-keyPropertyValue
-  = primitiveLiteral
-
-keyValuePair
-  = (primitiveKeyProperty / keyPropertyAlias) EQ (parameterAlias / keyPropertyValue)
-
-keyPathLiteral
-  = pchar*
-
-primitiveKeyProperty
-  = odataIdentifier
-
-primitiveNonKeyProperty
-  = odataIdentifier
-
-boolCommonExpr
-  = commonExpr
-
-action
-  = odataIdentifier
-
-entityColFunction
-  = odataIdentifier
-
-entityFunction
-  = odataIdentifier
-
-complexColFunction
-  = odataIdentifier
-
-complexFunction
-  = odataIdentifier
-
-primitiveColFunction
-  = odataIdentifier
-
-primitiveFunction
-  = odataIdentifier
-
-primitiveLiteral
-  = nullValue
-  / booleanValue
-  / guidValue
-  / dateTimeOffsetValueInUrl
-  / dateValue
-  / timeOfDayValueInUrl
-  / decimalValue
-  / doubleValue
-  / singleValue
-  / sbyteValue
-  / byteValue
-  / int16Value
-  / int32Value
-  / int64Value
-  / string
-  / duration
-  / enum
-  / binary
-  / geographyCollection
-  / geographyLineString
-  / geographyMultiLineString
-  / geographyMultiPoint
-  / geographyMultiPolygon
-  / geographyPoint
-  / geographyPolygon
-  / geometryCollection
-  / geometryLineString
-  / geometryMultiLineString
-  / geometryMultiPoint
-  / geometryMultiPolygon
-  / geometryPoint
-  / geometryPolygon
-
-computeItem
-  = commonExpr RWS "as"i RWS computedProperty
-
-orderbyItem
-  = commonExpr (RWS ("asc"i / "desc"i))?
-
-BWS
-  = (SP / HTAB / "%20" / "%09")*
-
-searchExpr
-  = (searchParenExpr / searchNegateExpr / searchPhrase / searchWord) (searchOrExpr / searchAndExpr)?
-
-searchExpr_incomplete
-  = SQUOTE (SQUOTE_in_string / qchar_no_AMP_SQUOTE / quotation_mark / SP)* SQUOTE
-
-AT
-  = "@"
-  / "%40"
-
-arrayOrObject
-  = array
-  / object
-
-commonExpr
-  = (primitiveLiteral / arrayOrObject / rootExpr / firstMemberExpr / functionExpr / negateExpr / methodCallExpr / parenExpr / castExpr / isofExpr / notExpr) (addExpr / subExpr / mulExpr / divExpr / divbyExpr / modExpr)? (eqExpr / neExpr / ltExpr / leExpr / gtExpr / geExpr / hasExpr / inExpr)? (andExpr / orExpr)?
-
-authority
-  = (userinfo "@")? host (":" port)?
-
-path_abempty
-  = ("/" segment)*
-
-path_absolute
-  = "/" (segment_nz ("/" segment)*)?
-
-path_rootless
-  = segment_nz ("/" segment)*
-
-excludeOperator
-  = "-"
-
-termName
-  = odataIdentifier
-
-complexAnnotationInQuery
-  = annotationInQuery
-
-levels
-  = ("$levels"i / "levels"i) EQ (oneToNine DIGIT* / "max"i)
-
-entityAnnotationInQuery
-  = annotationInQuery
-
-expandRefOption
-  = expandCountOption
-  / orderby
-  / skip
-  / top
-  / inlinecount
-
-expandCountOption
-  = filter
-  / search
-
-expandOption
-  = expandRefOption
-  / select
-  / expand
-  / compute
-  / levels
-  / aliasAndValue
-
-primitiveAnnotationInQuery
-  = annotationInQuery
-
-primitiveColAnnotationInQuery
-  = annotationInQuery
-
-selectOptionPC
-  = filter
-  / search
-  / inlinecount
-  / orderby
-  / skip
-  / top
-
-selectPath
-  = (complexProperty / complexColProperty / complexAnnotationInQuery) ("/" optionallyQualifiedComplexTypeName)?
-
-selectOption
-  = selectOptionPC
-  / compute
-  / select
-  / aliasAndValue
-
-function
-  = entityFunction
-  / entityColFunction
-  / complexFunction
-  / complexColFunction
-  / primitiveFunction
-  / primitiveColFunction
-
-parameterNames
-  = parameterName (COMMA parameterName)*
-
-entityAnnotationInFragment
-  = annotationInFragment
-
-complexAnnotationInFragment
-  = annotationInFragment
-
-typeDefinitionName
-  = odataIdentifier
-
-enumerationTypeName
-  = odataIdentifier
-
-abstractSpatialTypeName
-  = "Geography"i
-  / "Geometry"i
-
-concreteSpatialTypeName
-  = "Collection"i
-  / "LineString"i
-  / "MultiLineString"i
-  / "MultiPoint"i
-  / "MultiPolygon"i
-  / "Point"i
-  / "Polygon"i
-
-keyPropertyAlias
-  = odataIdentifier
-
-nullValue
-  = "null"i
-
-dateTimeOffsetValueInUrl
-  = year "-" month "-" day "T"i timeOfDayValueInUrl ("Z"i / SIGN hour COLON minute)
-
-timeOfDayValueInUrl
-  = hour COLON minute (COLON second ("." fractionalSeconds)?)?
-
-string
-  = SQUOTE (SQUOTE_in_string / pchar_no_SQUOTE)* SQUOTE
-
-duration
-  = "duration"i? SQUOTE durationValue SQUOTE
-
-enum
-  = qualifiedEnumTypeName? SQUOTE enumValue SQUOTE
-
-binary
-  = "binary"i SQUOTE binaryValue SQUOTE
-
-geographyCollection
-  = geographyPrefix SQUOTE fullCollectionLiteral SQUOTE
-
-geographyLineString
-  = geographyPrefix SQUOTE fullLineStringLiteral SQUOTE
-
-geographyMultiLineString
-  = geographyPrefix SQUOTE fullMultiLineStringLiteral SQUOTE
-
-geographyMultiPoint
-  = geographyPrefix SQUOTE fullMultiPointLiteral SQUOTE
-
-geographyMultiPolygon
-  = geographyPrefix SQUOTE fullMultiPolygonLiteral SQUOTE
-
-geographyPoint
-  = geographyPrefix SQUOTE fullPointLiteral SQUOTE
-
-geographyPolygon
-  = geographyPrefix SQUOTE fullPolygonLiteral SQUOTE
-
-geometryCollection
-  = geometryPrefix SQUOTE fullCollectionLiteral SQUOTE
-
-geometryLineString
-  = geometryPrefix SQUOTE fullLineStringLiteral SQUOTE
-
-geometryMultiLineString
-  = geometryPrefix SQUOTE fullMultiLineStringLiteral SQUOTE
-
-geometryMultiPoint
-  = geometryPrefix SQUOTE fullMultiPointLiteral SQUOTE
-
-geometryMultiPolygon
-  = geometryPrefix SQUOTE fullMultiPolygonLiteral SQUOTE
-
-geometryPoint
-  = geometryPrefix SQUOTE fullPointLiteral SQUOTE
-
-geometryPolygon
-  = geometryPrefix SQUOTE fullPolygonLiteral SQUOTE
-
-RWS
-  = (SP / HTAB / "%20" / "%09")+
-
-computedProperty
-  = odataIdentifier
-
-searchParenExpr
-  = OPEN BWS searchExpr BWS CLOSE
-
-searchNegateExpr
-  = "NOT"i RWS searchExpr
-
-searchPhrase
-  = quotation_mark (qchar_no_AMP_DQUOTE / SP)+ quotation_mark
-
-searchWord
-  = searchChar (searchChar / SQUOTE)*
-
-searchOrExpr
-  = RWS "OR"i RWS searchExpr
-
-searchAndExpr
-  = RWS ("AND"i RWS)? searchExpr
-
-SQUOTE
-  = "'"
-  / "%27"
-
-SQUOTE_in_string
-  = SQUOTE SQUOTE
-
-qchar_no_AMP_SQUOTE
-  = unreserved
-  / pct_encoded
-  / other_delims
-  / ":"
-  / "@"
-  / "/"
-  / "?"
-  / "$"
-  / "="
-
-quotation_mark
-  = DQUOTE
-  / "%22"
-
-array
-  = begin_array (valueInUrl (value_separator valueInUrl)*)? end_array
-
-object
-  = begin_object (member (value_separator member)*)? end_object
-
-rootExpr
-  = "$root/"i (entitySetName keyPredicate / singletonEntity) singleNavigationExpr?
-
-firstMemberExpr
-  = memberExpr
-  / inscopeVariableExpr ("/" memberExpr)?
-
-functionExpr
-  = (namespace ".")? (entityColFunction functionExprParameters collectionNavigationExpr? / entityFunction functionExprParameters singleNavigationExpr? / complexColFunction functionExprParameters complexColPathExpr? / complexFunction functionExprParameters complexPathExpr? / primitiveColFunction functionExprParameters collectionPathExpr? / primitiveFunction functionExprParameters primitivePathExpr?)
-
-negateExpr
-  = "-" BWS commonExpr
-
-methodCallExpr
-  = indexOfMethodCallExpr
-  / toLowerMethodCallExpr
-  / toUpperMethodCallExpr
-  / trimMethodCallExpr
-  / substringMethodCallExpr
-  / concatMethodCallExpr
-  / lengthMethodCallExpr
-  / matchesPatternMethodCallExpr
-  / yearMethodCallExpr
-  / monthMethodCallExpr
-  / dayMethodCallExpr
-  / hourMethodCallExpr
-  / minuteMethodCallExpr
-  / secondMethodCallExpr
-  / fractionalsecondsMethodCallExpr
-  / totalsecondsMethodCallExpr
-  / dateMethodCallExpr
-  / timeMethodCallExpr
-  / roundMethodCallExpr
-  / floorMethodCallExpr
-  / ceilingMethodCallExpr
-  / distanceMethodCallExpr
-  / geoLengthMethodCallExpr
-  / totalOffsetMinutesMethodCallExpr
-  / minDateTimeMethodCallExpr
-  / maxDateTimeMethodCallExpr
-  / nowMethodCallExpr
-  / caseMethodCallExpr
-  / boolMethodCallExpr
-
-parenExpr
-  = OPEN BWS commonExpr BWS CLOSE
-
-castExpr
-  = "cast"i OPEN BWS (commonExpr BWS COMMA BWS)? optionallyQualifiedTypeName BWS CLOSE
-
-isofExpr
-  = "isof"i OPEN BWS (commonExpr BWS COMMA BWS)? optionallyQualifiedTypeName BWS CLOSE
-
-notExpr
-  = "not"i RWS boolCommonExpr
-
-addExpr
-  = RWS "add"i RWS commonExpr
-
-subExpr
-  = RWS "sub"i RWS commonExpr
-
-mulExpr
-  = RWS "mul"i RWS commonExpr
-
-divExpr
-  = RWS "div"i RWS commonExpr
-
-divbyExpr
-  = RWS "divby"i RWS commonExpr
-
-modExpr
-  = RWS "mod"i RWS commonExpr
-
-eqExpr
-  = RWS "eq"i RWS commonExpr
-
-neExpr
-  = RWS "ne"i RWS commonExpr
-
-ltExpr
-  = RWS "lt"i RWS commonExpr
-
-leExpr
-  = RWS "le"i RWS commonExpr
-
-gtExpr
-  = RWS "gt"i RWS commonExpr
-
-geExpr
-  = RWS "ge"i RWS commonExpr
-
-hasExpr
-  = RWS "has"i RWS enum
-
-inExpr
-  = RWS "in"i RWS (listExpr / commonExpr)
-
-andExpr
-  = RWS "and"i RWS boolCommonExpr
-
-orExpr
-  = RWS "or"i RWS boolCommonExpr
-
-userinfo
-  = (unreserved / pct_encoded / sub_delims / ":")*
+emptySegment
+  = "" { return node("segment", { kind: "empty", name: "" }); }
 
 segment
-  = pchar*
-
-annotationInQuery
-  = AT (namespace ".")? termName (HASH annotationQualifier)?
-
-annotationInFragment
-  = AT (namespace ".")? termName ("#" annotationQualifier)?
-
-COLON
-  = ":"
-  / "%3A"i
-
-pchar_no_SQUOTE
-  = unreserved
-  / pct_encoded_no_SQUOTE
-  / other_delims
-  / "$"
-  / "&"
-  / "="
-  / ":"
-  / "@"
-
-geographyPrefix
-  = "geography"i
-
-geometryPrefix
-  = "geometry"i
-
-qchar_no_AMP_DQUOTE
-  = unreserved
-  / pct_encoded_no_DQUOTE
-  / other_delims
-  / ":"
-  / "@"
-  / "/"
-  / "?"
-  / "$"
-  / "'"
-  / "="
-
-searchChar
-  = unreserved
-  / pct_encoded_no_DQUOTE
-  / "!"
-  / "*"
-  / "+"
-  / ","
-  / ":"
-  / "@"
-  / "/"
-  / "?"
-  / "$"
-  / "="
-
-begin_array
-  = BWS ("[" / "%5B"i) BWS
-
-valueInUrl
-  = stringInUrl
-  / commonExpr
-
-value_separator
-  = BWS COMMA BWS
-
-end_array
-  = BWS ("]" / "%5D"i)
-
-begin_object
-  = BWS ("{" / "%7B"i) BWS
-
-member
-  = stringInUrl name_separator valueInUrl
-
-end_object
-  = BWS ("}" / "%7D"i)
-
-singleNavigationExpr
-  = "/" memberExpr
-
-memberExpr
-  = directMemberExpr
-  / (optionallyQualifiedEntityTypeName / optionallyQualifiedComplexTypeName) "/" directMemberExpr
-
-inscopeVariableExpr
-  = implicitVariableExpr
-  / parameterAlias
-  / lambdaVariableExpr
-
-functionExprParameters
-  = OPEN (functionExprParameter (COMMA functionExprParameter)*)? CLOSE
-
-collectionNavigationExpr
-  = ("/" optionallyQualifiedEntityTypeName)? (collectionPathExpr / keyPredicate singleNavigationExpr? / filterExpr collectionNavigationExpr?)
-
-complexColPathExpr
-  = collectionPathExpr
-  / "/" optionallyQualifiedComplexTypeName collectionPathExpr?
-
-complexPathExpr
-  = "/" directMemberExpr
-  / "/" optionallyQualifiedComplexTypeName ("/" directMemberExpr)?
-
-collectionPathExpr
-  = count (OPEN expandCountOption (SEMI expandCountOption)* CLOSE)?
-  / filterExpr collectionPathExpr?
-  / "/" anyExpr
-  / "/" allExpr
-  / "/" boundFunctionExpr
-  / "/" annotationExpr
-
-primitivePathExpr
-  = "/" (annotationExpr / boundFunctionExpr)?
-
-indexOfMethodCallExpr
-  = "indexof"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-toLowerMethodCallExpr
-  = "tolower"i OPEN BWS commonExpr BWS CLOSE
-
-toUpperMethodCallExpr
-  = "toupper"i OPEN BWS commonExpr BWS CLOSE
-
-trimMethodCallExpr
-  = "trim"i OPEN BWS commonExpr BWS CLOSE
-
-substringMethodCallExpr
-  = "substring"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS (COMMA BWS commonExpr BWS)? CLOSE
-
-concatMethodCallExpr
-  = "concat"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-lengthMethodCallExpr
-  = "length"i OPEN BWS commonExpr BWS CLOSE
-
-matchesPatternMethodCallExpr
-  = "matchesPattern"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-yearMethodCallExpr
-  = "year"i OPEN BWS commonExpr BWS CLOSE
-
-monthMethodCallExpr
-  = "month"i OPEN BWS commonExpr BWS CLOSE
-
-dayMethodCallExpr
-  = "day"i OPEN BWS commonExpr BWS CLOSE
-
-hourMethodCallExpr
-  = "hour"i OPEN BWS commonExpr BWS CLOSE
-
-minuteMethodCallExpr
-  = "minute"i OPEN BWS commonExpr BWS CLOSE
-
-secondMethodCallExpr
-  = "second"i OPEN BWS commonExpr BWS CLOSE
-
-fractionalsecondsMethodCallExpr
-  = "fractionalseconds"i OPEN BWS commonExpr BWS CLOSE
-
-totalsecondsMethodCallExpr
-  = "totalseconds"i OPEN BWS commonExpr BWS CLOSE
-
-dateMethodCallExpr
-  = "date"i OPEN BWS commonExpr BWS CLOSE
-
-timeMethodCallExpr
-  = "time"i OPEN BWS commonExpr BWS CLOSE
-
-roundMethodCallExpr
-  = "round"i OPEN BWS commonExpr BWS CLOSE
-
-floorMethodCallExpr
-  = "floor"i OPEN BWS commonExpr BWS CLOSE
-
-ceilingMethodCallExpr
-  = "ceiling"i OPEN BWS commonExpr BWS CLOSE
-
-distanceMethodCallExpr
-  = "geo.distance"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-geoLengthMethodCallExpr
-  = "geo.length"i OPEN BWS commonExpr BWS CLOSE
-
-totalOffsetMinutesMethodCallExpr
-  = "totaloffsetminutes"i OPEN BWS commonExpr BWS CLOSE
-
-minDateTimeMethodCallExpr
-  = "mindatetime"i OPEN BWS CLOSE
-
-maxDateTimeMethodCallExpr
-  = "maxdatetime"i OPEN BWS CLOSE
-
-nowMethodCallExpr
-  = "now"i OPEN BWS CLOSE
-
-caseMethodCallExpr
-  = "case"i OPEN BWS boolCommonExpr BWS COLON BWS commonExpr BWS (COMMA BWS boolCommonExpr BWS COLON BWS commonExpr BWS)* CLOSE
-
-boolMethodCallExpr
-  = endsWithMethodCallExpr
-  / startsWithMethodCallExpr
-  / containsMethodCallExpr
-  / intersectsMethodCallExpr
-  / hasSubsetMethodCallExpr
-  / hasSubsequenceMethodCallExpr
-
-optionallyQualifiedTypeName
-  = singleQualifiedTypeName
-  / "Collection"i OPEN singleQualifiedTypeName CLOSE
-  / singleTypeName
-  / "Collection"i OPEN singleTypeName CLOSE
-
-listExpr
-  = OPEN BWS primitiveLiteral BWS (COMMA BWS primitiveLiteral BWS)* CLOSE
-
-HASH
-  = "%23"
-
-annotationQualifier
-  = odataIdentifier
-
-pct_encoded_no_SQUOTE
-  = "%" ("0" / "1" / "3" / "4" / "5" / "6" / "8" / "9" / A_to_F) HEXDIG
-  / "%" "2" ("0" / "1" / "2" / "3" / "4" / "5" / "6" / "8" / "9" / A_to_F)
-
-pct_encoded_no_DQUOTE
-  = "%" ("0" / "1" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / A_to_F) HEXDIG
-  / "%" "2" ("0" / "1" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / A_to_F)
-
-stringInUrl
-  = quotation_mark charInJSON* quotation_mark
-
-name_separator
-  = BWS COLON BWS
-
-directMemberExpr
-  = propertyPathExpr
-  / boundFunctionExpr
-  / annotationExpr
-
-implicitVariableExpr
-  = "$it"i
-  / "$this"i
-
-lambdaVariableExpr
-  = odataIdentifier
-
-functionExprParameter
-  = parameterName EQ (parameterAlias / parameterValue)
-
-filterExpr
-  = "/$filter"i OPEN boolCommonExpr CLOSE
-
-anyExpr
-  = "any"i OPEN BWS (lambdaVariableExpr BWS COLON BWS lambdaPredicateExpr)? BWS CLOSE
-
-allExpr
-  = "all"i OPEN BWS lambdaVariableExpr BWS COLON BWS lambdaPredicateExpr BWS CLOSE
-
-boundFunctionExpr
-  = functionExpr
-
-annotationExpr
-  = annotationInQuery (collectionPathExpr / singleNavigationExpr / complexPathExpr / primitivePathExpr)?
-
-endsWithMethodCallExpr
-  = "endswith"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-startsWithMethodCallExpr
-  = "startswith"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-containsMethodCallExpr
-  = "contains"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-intersectsMethodCallExpr
-  = "geo.intersects"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-hasSubsetMethodCallExpr
-  = "hassubset"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-hasSubsequenceMethodCallExpr
-  = "hassubsequence"i OPEN BWS commonExpr BWS COMMA BWS commonExpr BWS CLOSE
-
-singleTypeName
-  = entityTypeName
-  / complexTypeName
-  / typeDefinitionName
-  / enumerationTypeName
-
-charInJSON
-  = qchar_unescaped
-  / qchar_JSON_special
-  / escape (quotation_mark / escape / ("/" / "%2F"i) / "b"i / "f"i / "n"i / "r"i / "t"i / "u"i HEXDIG|4|)
-
-propertyPathExpr
-  = (entityColNavigationProperty collectionNavigationExpr? / entityNavigationProperty singleNavigationExpr? / complexColProperty complexColPathExpr? / complexProperty complexPathExpr? / primitiveColProperty collectionPathExpr? / primitiveProperty primitivePathExpr? / streamProperty primitivePathExpr?)
-
-lambdaPredicateExpr
-  = boolCommonExpr
-
-qchar_unescaped
-  = unreserved
-  / pct_encoded_unescaped
-  / other_delims
-  / ":"
-  / "@"
-  / "/"
-  / "?"
-  / "$"
-  / "'"
-  / "="
-
-qchar_JSON_special
-  = SP
-  / ":"
-  / "{"
-  / "}"
-  / "["
-  / "]"
-
-escape
-  = "\\"
-  / "%5C"i
-
-pct_encoded_unescaped
-  = "%" ("0" / "1" / "3" / "4" / "6" / "7" / "8" / "9" / A_to_F) HEXDIG
-  / "%" "2" ("0" / "1" / "3" / "4" / "5" / "6" / "7" / "8" / "9" / A_to_F)
-  / "%" "5" (DIGIT / "A"i / "B"i / "D"i / "E"i / "F"i)
-
+  = systemSegment
+  / @nameSegment &segmentEnd
+  / @keySegment &segmentEnd
+  / rawSegment
+
+segmentEnd
+  = _ ("/" / "?" / "#" / !.)
+
+systemSegment
+  = name:systemName args:segmentArgs?
+    { return node("segment", { kind: "system", name: name.name, nameSpan: name.span, args: args ?? undefined }); }
+
+nameSegment
+  = name:qualifiedNameNode args:segmentArgs? key:segmentArgs?
+    {
+      return node("segment", {
+        kind: "name",
+        name: name.name,
+        nameSpan: name.span,
+        args: args ?? undefined,
+        key: key ?? undefined,
+      });
+    }
+
+keySegment
+  = value:literal
+    { return node("segment", { kind: "key", name: text(), value }); }
+
+// Not for what looks like a resource with an unclosed key predicate: let that be reported.
+rawSegment
+  = !(qualifiedName OPEN) text:$[^/?# \t\r\n]+
+    { return node("segment", { kind: "raw", name: text }); }
+
+segmentArgs
+  = OPEN args:arg|.., COMMA| close { return args; }
+
+arg
+  = name:identifierNode _ EQ _ value:expr { return node("arg", { name, value }); }
+  // condition:value pairs of the case() function
+  / condition:expr _ COLON _ value:expr { return node("arg", { condition, value }); }
+  / value:expr { return node("arg", { value }); }
+
+// ---------------------------------------------------------------------------------------
+// Query options
+// ---------------------------------------------------------------------------------------
+
+query
+  = _ "?" _ options:(option?)|.., AMP| { return options.filter(Boolean); }
+
+option
+  = o:typedOption &{ return o.dollar; } junk:junk?
+    { if (junk) { o.junk = junk; o.span = span(); } return o; }
+  / rawOption
+  / incompleteOption
+  / aliasOption
+  / o:typedOption &{ return BARE_STRICT.has(o.name.slice(1)); } junk:junk?
+    { if (junk) { o.junk = junk; o.span = span(); } return o; }
+  / @typedOption &optionEnd
+  / customOption
+
+optionEnd
+  = _ ("&" / "#" / !.)
+
+// Options allowed inside the parentheses of $expand and $select items, separated by ";".
+nestedOption
+  = o:(typedOption / nestedRawOption / incompleteOption / nestedAliasOption) junk:junk?
+    { if (junk) { o.junk = junk; o.span = span(); } return o; }
+
+optionName "query option"
+  = dollar:DOLLAR? id:$[A-Za-z]+
+    { return { name: "$" + id.toLowerCase(), key: id.toLowerCase(), dollar: dollar !== null, span: span() }; }
+
+typedOption
+  = name:optionName &{ return TYPED.has(name.key); } _ EQ _
+    value:(
+        &{ return name.key === "filter"; } @expr
+      / &{ return name.key === "orderby"; } @orderby
+      / &{ return name.key === "select"; } @select
+      / &{ return name.key === "expand"; } @expand
+      / &{ return name.key === "compute"; } @compute
+      / &{ return name.key === "apply"; } @apply
+      / &{ return name.key === "search"; } @search
+      / &{ return name.key === "top" || name.key === "skip" || name.key === "index"; } @(integer / alias)
+      / &{ return name.key === "count"; } @boolean
+      / &{ return name.key === "inlinecount"; } @inlinecount
+      / &{ return name.key === "levels"; } @levels
+    )
+    { return option(name, value); }
+
+rawOption
+  = name:optionName &{ return name.dollar && !TYPED.has(name.key); } _ EQ _ value:rawValue
+    { return option(name, value, { unknown: !RAW.has(name.key) }); }
+
+nestedRawOption
+  = name:optionName &{ return !TYPED.has(name.key); } _ EQ _ value:nestedRawValue
+    { return option(name, value, { unknown: !RAW.has(name.key) }); }
+
+// A system query option that is still being typed: "$", "$fil", "$filter" without value,
+// or a typed option whose value does not parse at all. Tolerant mode only.
+incompleteOption
+  = &{ return tolerant; } DOLLAR id:$[A-Za-z]* value:(_ EQ _ @nestedRawValue)?
+    {
+      return node("option", {
+        kind: "system",
+        name: "$" + id.toLowerCase(),
+        nameSpan: span(),
+        dollar: true,
+        value: value ?? undefined,
+        incomplete: true,
+      });
+    }
+
+aliasOption
+  = AT name:$identifier _ EQ _ value:(@expr &optionEnd / rawValue)
+    { return node("option", { kind: "alias", name: "@" + name, value }); }
+
+nestedAliasOption
+  = AT name:$identifier _ EQ _ value:(@expr &(_ (";" / ")" / "%3B"i / "%29")) / nestedRawValue)
+    { return node("option", { kind: "alias", name: "@" + name, value }); }
+
+customOption "query option"
+  = name:$([^=&#$@ \t\r\n] [^=&# \t\r\n]*) value:(_ EQ @rawValue)?
+    { return node("option", { kind: "custom", name, value: value ?? undefined }); }
+
+rawValue
+  = text:$[^&]* { return node("raw", { text: text.trim() }); }
+
+nestedRawValue
+  = text:$[^&;)]* { return node("raw", { text: text.trim() }); }
+
+// Unparseable remainder of an option value. Tolerant mode only.
+junk
+  = &{ return tolerant; } _ @(text:$(!ws [^&;)] [^&;)]*) { return node("junk", { text }); })
+
+integer "integer"
+  = digits:$[0-9]+ { return node("literal", { kind: "int", text: digits }); }
+
+boolean
+  = value:$("true"i / "false"i) !identifierPart { return node("literal", { kind: "boolean", text: value }); }
+
+inlinecount
+  = value:$("allpages"i / "none"i) !identifierPart { return node("raw", { text: value }); }
+
+levels
+  = integer
+  / value:$"max"i !identifierPart { return node("raw", { text: value }); }
+
+// --- $orderby ---------------------------------------------------------------------------
+
+orderby
+  = items:orderbyItem|1.., COMMA| { return node("orderby", { items }); }
+
+orderbyItem
+  = expr:expr direction:(__ @$("asc"i / "desc"i) !identifierPart)?
+    { return node("orderbyItem", { expr, direction: direction ? direction.toLowerCase() : undefined }); }
+
+// --- $select ----------------------------------------------------------------------------
+
+select
+  = items:selectItem|1.., COMMA| { return node("select", { items }); }
+
+selectItem
+  = STAR { return node("selectItem", { path: [], star: true }); }
+  / ns:qualifiedNameNode ".*" { return node("selectItem", { path: [ns], star: true }); }
+  // bound operation with parameter names to pick an overload: NS.Func(a,b)
+  / path:itemPath OPEN signature:identifierNode|1.., COMMA| CLOSE
+    { return node("selectItem", { path, signature }); }
+  / path:itemPath options:nestedOptions?
+    { return node("selectItem", { path, options: options ?? undefined }); }
+
+// --- $expand ----------------------------------------------------------------------------
+
+expand
+  = items:expandItem|1.., COMMA| { return node("expand", { items }); }
+
+expandItem
+  = path:(@itemName "/")* STAR suffix:("/" DOLLAR @$"ref"i)? options:nestedOptions?
+    {
+      return node("expandItem", {
+        path,
+        star: true,
+        suffix: suffix ? "$" + suffix.toLowerCase() : undefined,
+        options: options ?? undefined,
+      });
+    }
+  // media stream of the entity
+  / DOLLAR "value"i !identifierPart
+    { return node("expandItem", { path: [], suffix: "$value" }); }
+  / path:itemPath suffix:("/" DOLLAR @$("ref"i / "count"i))? options:nestedOptions?
+    {
+      return node("expandItem", {
+        path,
+        suffix: suffix ? "$" + suffix.toLowerCase() : undefined,
+        options: options ?? undefined,
+      });
+    }
+
+itemPath
+  = first:(itemName / missing) rest:("/" @(itemName / missingAfterSlash))*
+    { return [first, ...rest]; }
+
+itemName
+  = qualifiedNameNode
+  / name:annotationName { return node("name", { name }); }
+
+missingAfterSlash
+  = !DOLLAR !STAR @missing
+
+nestedOptions
+  = OPEN options:(nestedOption / &{ return tolerant; } "" { return null; })|1.., SEMI| close
+    { return options.filter(Boolean); }
+
+// --- $compute ---------------------------------------------------------------------------
+
+compute
+  = items:computeItem|1.., COMMA| { return node("compute", { items }); }
+
+computeItem
+  = expr:expr alias:asAlias { return node("computeItem", { expr, alias: alias ?? undefined }); }
+
+asAlias
+  = __ "as"i __ @identifierNode
+  / &{ return tolerant; } (__ "as"i)? { return null; }
+
+// --- $search ----------------------------------------------------------------------------
+
+search
+  = expr:searchOr { return node("search", { expr }); }
+
+searchOr
+  = head:searchAnd tail:(__ op:"OR" __ right:searchAnd { return { op, right }; })*
+    { return chain(head, tail); }
+
+searchAnd
+  = head:searchNot tail:((__ "AND" __ / __ !("OR" __)) right:searchNot { return { op: "and", right }; })*
+    { return chain(head, tail); }
+
+searchNot
+  = "NOT" __ operand:searchPrimary { return node("unary", { op: "not", operand }); }
+  / searchPrimary
+
+searchPrimary
+  = OPEN expr:searchOr close { return node("paren", { expr }); }
+  / DQUOTE text:$(!DQUOTE .)* (DQUOTE / &{ return tolerant; }) { return node("searchTerm", { text, phrase: true }); }
+  // not in the specification, but in wide use
+  / "'" text:$[^'&]* "'" { return node("searchTerm", { text, phrase: true }); }
+  / !ws text:$([^&;()"] (!ws [^&;()])*) { return node("searchTerm", { text }); }
+
+// --- $apply -----------------------------------------------------------------------------
+
+apply
+  = transformations:transformation|1.., _ "/" _| { return node("apply", { transformations }); }
+
+transformation
+  = "aggregate"i OPEN items:aggregateItem|1.., COMMA| close
+    { return node("transformation", { name: "aggregate", aggregates: items }); }
+  / "groupby"i OPEN OPEN properties:expr|.., COMMA| close then:(COMMA @apply)? close
+    { return node("transformation", { name: "groupby", args: properties, then: then ?? undefined }); }
+  / "filter"i OPEN expr:expr close
+    { return node("transformation", { name: "filter", args: [expr] }); }
+  / "search"i OPEN expr:search close
+    { return node("transformation", { name: "search", search: expr }); }
+  / "compute"i OPEN items:computeItem|1.., COMMA| close
+    { return node("transformation", { name: "compute", computes: items }); }
+  / "orderby"i OPEN items:orderbyItem|1.., COMMA| close
+    { return node("transformation", { name: "orderby", orderby: items }); }
+  / "concat"i OPEN sequences:apply|1.., COMMA| close
+    { return node("transformation", { name: "concat", sequences }); }
+  / "expand"i OPEN path:expr nested:(COMMA @transformation)* close
+    { return node("transformation", { name: "expand", args: [path], nested }); }
+  / name:$("join"i / "outerjoin"i / "nest"i / "addnested"i) OPEN path:expr alias:asAlias then:(COMMA @apply)? close
+    { return node("transformation", { name: name.toLowerCase(), args: [path], alias: alias ?? undefined, then: then ?? undefined }); }
+  / "identity"i !identifierPart
+    { return node("transformation", { name: "identity" }); }
+  / name:$qualifiedName &{ return !STANDARD_TRANSFORMATIONS.has(name.toLowerCase()); }
+    OPEN args:expr|.., COMMA| close
+    { return node("transformation", { name, args }); }
+
+aggregateItem
+  // Sales(Amount with sum as Total): aggregation along a navigation path
+  = path:pathExpr OPEN items:aggregateItem|1.., COMMA| CLOSE &(_ ("," / ")" / "%2C"i / "%29"))
+    { return node("aggregateItem", { path, items }); }
+  / expr:expr method:(__ "with"i __ @$qualifiedName)? from:(__ "from"i __ @expr __ "with"i __ $qualifiedName)*
+    alias:(__ "as"i __ @identifierNode)?
+    &{ return tolerant || alias !== null || method === null; }
+    {
+      return node("aggregateItem", {
+        expr,
+        method: method ?? undefined,
+        from: from.length ? from.map((f) => f[0]) : undefined,
+        alias: alias ?? undefined,
+      });
+    }
+
+// ---------------------------------------------------------------------------------------
+// Expressions ($filter, $orderby, $compute, parameter values)
+//
+// Precedence follows OData 4.01 URL conventions 5.1.1.17, lowest first:
+// or, and, eq/ne, gt/ge/lt/le, add/sub, mul/div/divby/mod, not/-, has/in, primary.
+// ---------------------------------------------------------------------------------------
+
+expr
+  = orExpr
+
+orExpr
+  = head:andExpr tail:(__ op:"or"i __ right:andExpr { return { op, right }; })*
+    { return chain(head, tail); }
+
+andExpr
+  = head:equalityExpr tail:(__ op:"and"i __ right:equalityExpr { return { op, right }; })*
+    { return chain(head, tail); }
+
+equalityExpr
+  = head:relationalExpr tail:(__ op:("eq"i / "ne"i) __ right:relationalExpr { return { op, right }; })*
+    { return chain(head, tail); }
+
+relationalExpr
+  = head:additiveExpr tail:(__ op:("gt"i / "ge"i / "lt"i / "le"i) __ right:additiveExpr { return { op, right }; })*
+    { return chain(head, tail); }
+
+additiveExpr
+  = head:multiplicativeExpr tail:(__ op:("add"i / "sub"i) __ right:multiplicativeExpr { return { op, right }; })*
+    { return chain(head, tail); }
+
+multiplicativeExpr
+  = head:unaryExpr tail:(__ op:("mul"i / "divby"i / "div"i / "mod"i) __ right:unaryExpr { return { op, right }; })*
+    { return chain(head, tail); }
+
+unaryExpr
+  = "not"i (__ / &"(" / &"%28") operand:unaryExpr { return node("unary", { op: "not", operand }); }
+  / "-" !([0-9] / "INF") _ operand:unaryExpr { return node("unary", { op: "neg", operand }); }
+  / membershipExpr
+
+membershipExpr
+  = head:primaryExpr tail:(__ op:("has"i / "in"i) __ right:primaryExpr { return { op, right }; })*
+    { return chain(head, tail); }
+
+primaryExpr
+  = literal
+  / jsonArray
+  / jsonObject
+  / alias
+  / parenExpr
+  / pathExpr
+  / missing
+
+missing
+  = &{ return tolerant; } "" { return node("missing", {}); }
+
+parenExpr
+  = OPEN items:expr|.., COMMA| close
+    {
+      return items.length === 1
+        ? node("paren", { expr: items[0] })
+        : node("list", { items });
+    }
+
+alias
+  = AT name:$qualifiedName !"/" !"%23" { return node("alias", { name: "@" + name }); }
+
+// --- Member paths, function calls, lambdas ----------------------------------------------
+
+pathExpr
+  = first:pathSegment rest:("/" @(pathSegment / missingMember))*
+    { return node("path", { segments: [first, ...rest] }); }
+
+missingMember
+  = m:missing { return node("member", { name: "", nameSpan: m.span, missing: true }); }
+
+pathSegment
+  = lambda
+  / DOLLAR "filter"i OPEN filter:expr close key:callArgs?
+    { return node("system", { name: "$filter", filter, key: key ?? undefined }); }
+  / name:systemName options:nestedOptions?
+    { return node("system", { name: name.name, options: options ?? undefined }); }
+  / name:annotationName
+    { return node("annotation", { name }); }
+  / name:qualifiedNameNode args:callArgs? key:callArgs?
+    // all() without a predicate is no function call either
+    &{ return tolerant || args === null || name.name.toLowerCase() !== "all"; }
+    {
+      return node("member", {
+        name: name.name,
+        nameSpan: name.span,
+        args: args ?? undefined,
+        key: key ?? undefined,
+      });
+    }
+
+lambda
+  = op:$("any"i / "all"i) OPEN body:(variable:identifierNode _ COLON _ predicate:expr { return { variable, predicate }; })? close
+    &{ return tolerant || body !== null || op.toLowerCase() === "any"; }
+    {
+      return node("lambda", {
+        op: op.toLowerCase(),
+        variable: body ? body.variable : undefined,
+        predicate: body ? body.predicate : undefined,
+      });
+    }
+
+callArgs
+  = OPEN args:arg|.., COMMA| close { return args; }
+
+// --- Literals ---------------------------------------------------------------------------
+
+literal "literal"
+  = dateTimeLiteral
+  / dateLiteral
+  / timeLiteral
+  / guidLiteral
+  / numberLiteral
+  / stringLiteral
+  / typedLiteral
+  / keywordLiteral
+
+dateTimeLiteral
+  = calendarDate "T"i DIGIT|2| (":" / "%3A"i) DIGIT|2|
+    ((":" / "%3A"i) DIGIT|2| ("." DIGIT+)?)?
+    zone:("Z"i / ([-+] / "%2B"i) DIGIT|2| (":" / "%3A"i) DIGIT|2|)? !identifierPart
+    { return node("literal", { kind: zone ? "dateTimeOffset" : "dateTime", text: text() }); }
+
+dateLiteral
+  = calendarDate !identifierPart
+    { return node("literal", { kind: "date", text: text() }); }
+
+calendarDate
+  = "-"? DIGIT|4| "-" month:$DIGIT|2| "-" day:$DIGIT|2|
+    &{ return +month >= 1 && +month <= 12 && +day >= 1 && +day <= 31; }
+
+timeLiteral
+  = DIGIT|2| COLON DIGIT|2| (COLON DIGIT|2| ("." DIGIT+)?)? !identifierPart
+    { return node("literal", { kind: "timeOfDay", text: text() }); }
+
+guidLiteral
+  = HEXDIG|8| "-" HEXDIG|4| "-" HEXDIG|4| "-" HEXDIG|4| "-" HEXDIG|12| !identifierPart
+    { return node("literal", { kind: "guid", text: text() }); }
+
+numberLiteral
+  = ([-+] / "%2B"i)? DIGIT+ fraction:("." DIGIT+)? exponent:("e"i ([-+] / "%2B"i)? DIGIT+)? suffix:[LMFD]i? !identifierPart
+    {
+      const s = suffix ? suffix.toLowerCase() : "";
+      const kind = s === "l" ? "int"
+        : s === "m" ? "decimal"
+        : s === "f" || s === "d" || exponent ? "double"
+        : fraction ? "decimal" : "int";
+      return node("literal", { kind, text: text() });
+    }
+
+stringLiteral
+  = value:quoted { return node("literal", { kind: "string", text: text(), unterminated: value.unterminated || undefined }); }
+
+// datetime'2024-01-01T00:00', guid'..', duration'P1D', binary'..', X'..', geography'..',
+// and enum literals such as Namespace.Color'Red,Green'.
+typedLiteral
+  = prefix:$qualifiedName quoted
+    {
+      const p = prefix.toLowerCase();
+      return node("literal", {
+        kind: TYPED_LITERALS.has(p) ? (p === "x" ? "binary" : p) : "enum",
+        typeName: prefix,
+        text: text(),
+      });
+    }
+
+keywordLiteral
+  = value:$("null" / "true"i / "false"i / "-INF" / "INF" / "NaN") !identifierPart
+    {
+      const v = value.toLowerCase();
+      return node("literal", {
+        kind: v === "null" ? "null" : v === "true" || v === "false" ? "boolean" : "double",
+        text: value,
+      });
+    }
+
+quoted
+  = SQUOTE (SQUOTE SQUOTE / !SQUOTE .)* end:(SQUOTE / &{ return tolerant; })
+    { return { unterminated: end === undefined }; }
+
+// JSON-style collection and complex values, e.g. as function parameters or "in" operands.
+jsonArray
+  = ("[" / "%5B"i) _ items:jsonValue|.., COMMA| _ ("]" / "%5D"i) { return node("array", { items }); }
+
+jsonObject
+  = ("{" / "%7B"i) _ members:jsonMember|.., COMMA| _ ("}" / "%7D"i) { return node("object", { members }); }
+
+jsonMember
+  = key:jsonString _ COLON _ value:jsonValue { return node("jsonMember", { key: key.text, value }); }
+
+jsonValue
+  = jsonString
+  / expr
+
+jsonString
+  = DQUOTE (("\\" / "%5C"i) (DQUOTE / .) / !DQUOTE .)* DQUOTE { return node("literal", { kind: "string", text: text(), json: true }); }
+
+// ---------------------------------------------------------------------------------------
+// Tokens
+// ---------------------------------------------------------------------------------------
+
+// @Namespace.Term with optional qualifier: @Measures.Currency%23Reporting
+annotationName
+  = AT name:$(qualifiedName ("%23" identifier)?) { return "@" + name; }
+
+systemName
+  = DOLLAR id:$identifier { return { name: "$" + id, span: span() }; }
+
+qualifiedNameNode "name"
+  = name:$qualifiedName { return node("name", { name }); }
+
+identifierNode "name"
+  = name:$identifier { return node("name", { name }); }
+
+qualifiedName
+  = identifier ("." identifier)*
+
+identifier
+  = [A-Za-z_\u0080-￿] [A-Za-z0-9_\u0080-￿]*
+
+identifierPart
+  = [A-Za-z0-9_\u0080-￿]
+
+DIGIT = [0-9]
+HEXDIG = [0-9A-Fa-f]
+
+DOLLAR = "$" / "%24"
+AT = "@" / "%40"
+STAR = "*" / "%2A"i
+EQ = "=" / "%3D"i
+COLON = ":" / "%3A"i
+SQUOTE = "'" / "%27"
+DQUOTE = '"' / "%22"
+
+OPEN = ("(" / "%28") _
+CLOSE = _ (")" / "%29")
+COMMA = _ ("," / "%2C"i) _
+SEMI = _ (";" / "%3B"i) _
+AMP = _ "&" _
+
+// A closing parenthesis, which may be missing in tolerant mode.
+close
+  = CLOSE
+  / &{ return tolerant; }
+
+// "+" stands for a space in URLs copied from a browser's address bar
+ws
+  = [ \t\r\n+]
+  / "%20"
+  / "%09"
+  / "%0A"i
+  / "%0D"i
+
+// optional and mandatory whitespace
+_ "whitespace" = ws*
+__ "whitespace" = ws+

@@ -27,7 +27,8 @@ export interface ISyntaxParser {
      * Processes the document immediately and returns the parsing result.
      * @param document - The text document to process.
      * @param force - Optional flag to force processing even if not required.
-     * @returns The result of the parsing operation, or null if parsing failed.
+     * @returns The result of the parsing operation, or null if the text could not be parsed
+     * even tolerantly. Check `error` on the result for syntax errors.
      */
     process(document: vscode.TextDocument, force?: boolean): ParseResult | null;
 

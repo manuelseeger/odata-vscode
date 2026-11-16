@@ -7,6 +7,8 @@ import {
     NavPropBindingType,
     PropertyModel,
 } from "./odata2ts/data-model/DataTypeModel";
+import { spanToRange } from "./diagnostics";
+import { resolvedSiteAt } from "./language/completion";
 import { Disposable } from "./provider";
 import { formatFunctionLabel } from "./signatures";
 import { combineODataUrl, getBaseUrl } from "./util";
@@ -71,6 +73,21 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
             const entityContainer = metadata.getEntityContainer();
             if (!entityContainer) {
                 return;
+            }
+
+            // A property, wherever it occurs: in a path, a nested $expand, a lambda, ...
+            const site = resolvedSiteAt(document.getText(), document.offsetAt(position), {
+                model: metadata,
+                baseUrl: getBaseUrl(profile.baseUrl),
+            });
+            if (site?.resolved?.kind === "property") {
+                const { property, owner } = site.resolved;
+                return new vscode.Hover(
+                    new vscode.MarkdownString(
+                        `**Property**: ${property.odataName}\n\n**Type**: ${property.odataType}\n\n**On type**: ${owner.fqName}`,
+                    ),
+                    spanToRange(site.span),
+                );
             }
 
             const matchingMember = Object.values(entityContainer.entitySets).find(
