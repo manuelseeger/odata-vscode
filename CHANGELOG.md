@@ -29,6 +29,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A syntax error stayed in the Problems view after it was fixed, if no profile was selected.
 - Operator precedence in `$filter` expressions follows the specification.
 
+## [0.5.0] - 2026-11-16
+
+### Added
+
+- `odata.chat.schema.maxTokens`, with a default of `32000`, limits the schema size. Summaries above the maximum return no schema. The profile editor shows the summary size and whether it fits. (#24)
+- Built-in function hovers show overload signatures, descriptions, and parameters, including when no endpoint profile is selected. (#20)
+
+### Changed
+
+- Use the explicit `/odata` Copilot skill to draft queries. Enable `odata.chat.tools.enabled` to use its tools. (#22)
+- The metadata filter settings `odata.metadata.filterNs`, `odata.metadata.filterXPath`, and `odata.metadata.xpathDefaultNsPrefix` are removed. (#24)
+- Metadata-aware completions, diagnostics, and hovers resolve qualified types and inherited members in OData V2 and V4 services. Hovers show qualified type names. (#26)
+- Queries drafted by Copilot must use the selected service root before they can open for review. (#24)
+
+### Fixed
+
+- Syntax and metadata diagnostics are available when an OData document opens, including documents already open when the extension activates. (#19)
+- Profile selection and deletion show extension error messages in Restricted Mode. Profile selection checks workspace trust before it opens the picker. (#21)
+- Completions, diagnostics, and hovers use updated metadata when the schema changes at the same service root. (#26)
+
 ## [0.4.1] - 2026-11-13
 
 ### Breaking changes

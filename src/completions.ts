@@ -1,6 +1,4 @@
 import * as vscode from "vscode";
-import { DataModel } from "./odata2ts/data-model/DataModel";
-import { ODataVersion, PropertyModel } from "./odata2ts/data-model/DataTypeModel";
 
 import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
@@ -8,32 +6,33 @@ import { odata } from "./contracts/types";
 import { CompletionContext, completionContext, EntryKind } from "./language/completion";
 import { EXPAND_OPTIONS, OPERATORS, reference } from "./language/reference";
 import { Disposable } from "./provider";
+import { Csdl, formatTypeRef, Member, memberType } from "./schema";
 import { getBaseUrl } from "./util";
 
 /**
  * What can be written at a position, according to the syntax of the query up to there and,
  * if a profile with metadata is selected, the model of its service.
  */
-async function contextAt(
+function contextAt(
     document: vscode.TextDocument,
     position: vscode.Position,
     context: vscode.ExtensionContext,
     metadataService: IMetadataModelService,
-): Promise<{ completion: CompletionContext; model?: DataModel }> {
+): { completion: CompletionContext; csdl?: Csdl } {
     const profile = getSelectedPublicProfile(context);
-    let model: DataModel | undefined;
+    let csdl: Csdl | undefined;
     if (profile) {
         try {
-            model = await metadataService.getModel(profile);
+            csdl = metadataService.getCsdl(profile);
         } catch {
             // complete without metadata
         }
     }
     const completion = completionContext(document.getText(), document.offsetAt(position), {
-        model,
+        csdl,
         baseUrl: profile ? getBaseUrl(profile.baseUrl) : undefined,
     });
-    return { completion, model };
+    return { completion, csdl };
 }
 
 /**
@@ -85,7 +84,7 @@ export class DefaultCompletionItemProvider
             ]);
         }
 
-        const { completion, model } = await contextAt(
+        const { completion, csdl } = contextAt(
             document,
             position,
             this.context,
@@ -114,7 +113,7 @@ export class DefaultCompletionItemProvider
         }
 
         const functions: odata.Function[] = [...reference.v2.functions];
-        if (model?.getODataVersion() === ODataVersion.V4) {
+        if (csdl?.version.startsWith("4")) {
             functions.push(...reference.v4.functions);
         }
         const seen = new Set<string>();
@@ -233,20 +232,20 @@ export class MetadataCompletionItemProvider
         position: vscode.Position,
         token: vscode.CancellationToken,
     ): Promise<vscode.CompletionList<vscode.CompletionItem> | null | undefined> {
-        const { completion, model } = await contextAt(
+        const { completion, csdl } = contextAt(
             document,
             position,
             this.context,
             this.metadataService,
         );
-        if (!model || !completion.entries.length) {
+        if (!csdl || !completion.entries.length) {
             return null;
         }
         const items = completion.entries.map((entry, index) => {
             const item = new vscode.CompletionItem(entry.label, ITEM_KINDS[entry.kind]);
             item.detail = entry.detail;
-            if (entry.property) {
-                item.documentation = getPropertyDoc(entry.property);
+            if (entry.member) {
+                item.documentation = getPropertyDoc(entry.member);
             }
             // keep the order of the metadata document
             item.sortText = String(index).padStart(4, "0");
@@ -256,8 +255,8 @@ export class MetadataCompletionItemProvider
     }
 }
 
-export function getPropertyDoc(property: PropertyModel): vscode.MarkdownString {
+export function getPropertyDoc(member: Member): vscode.MarkdownString {
     return new vscode.MarkdownString(
-        `**Name**: ${property.odataName}\n\n**Type**: ${property.odataType}`,
+        `**Name**: ${member.record.name}\n\n**Type**: ${formatTypeRef(memberType(member))}`,
     );
 }

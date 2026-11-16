@@ -2,14 +2,10 @@ import * as vscode from "vscode";
 import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { odata, Profile } from "./contracts/types";
-import {
-    EntitySetType,
-    NavPropBindingType,
-    PropertyModel,
-} from "./odata2ts/data-model/DataTypeModel";
 import { spanToRange } from "./diagnostics";
 import { resolvedSiteAt } from "./language/completion";
 import { Disposable } from "./provider";
+import { Csdl, EntitySet, findRoot, findType, formatTypeRef, members, memberType } from "./schema";
 import { formatFunctionLabel } from "./signatures";
 import { combineODataUrl, getBaseUrl } from "./util";
 
@@ -68,55 +64,48 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
             return;
         }
 
-        const metadata = await this.metadataService.getModel(profile);
+        let metadata: Csdl | undefined;
+        try {
+            metadata = this.metadataService.getCsdl(profile);
+        } catch {
+            return new vscode.Hover(this.getSelectedProfileHover(document, profile));
+        }
         if (metadata) {
-            const entityContainer = metadata.getEntityContainer();
-            if (!entityContainer) {
-                return;
-            }
-
-            // A property, wherever it occurs: in a path, a nested $expand, a lambda, ...
             const site = resolvedSiteAt(document.getText(), document.offsetAt(position), {
-                model: metadata,
+                csdl: metadata,
                 baseUrl: getBaseUrl(profile.baseUrl),
             });
             if (site?.resolved?.kind === "property") {
-                const { property, owner } = site.resolved;
+                const { member, owner } = site.resolved;
                 return new vscode.Hover(
                     new vscode.MarkdownString(
-                        `**Property**: ${property.odataName}\n\n**Type**: ${property.odataType}\n\n**On type**: ${owner.fqName}`,
+                        `**Property**: ${member.record.name}\n\n**Type**: ${formatTypeRef(memberType(member))}\n\n**On type**: ${owner.qname}`,
                     ),
                     spanToRange(site.span),
                 );
             }
 
-            const matchingMember = Object.values(entityContainer.entitySets).find(
-                (member) => member.odataName === word,
-            );
-            if (matchingMember) {
-                const hover = this.getEntityTypeHover(matchingMember);
-                return new vscode.Hover(hover, wordRange);
+            const found = findRoot(metadata, word);
+            if (found.kind === "found" && found.value.kind === "set") {
+                return new vscode.Hover(
+                    this.getEntityTypeHover(metadata, found.value.record),
+                    wordRange,
+                );
             }
         }
-        // default show the selected profile and URL
         return new vscode.Hover(this.getSelectedProfileHover(document, profile));
     }
 
-    private getEntityTypeHover(member: EntitySetType): vscode.MarkdownString {
-        let hoverText = `**Entity Set**: ${member.odataName}\n\n`;
-
-        if (member.navPropBinding) {
-            hoverText += `**Navigation Property Binding**: ${member.navPropBinding.map((binding: NavPropBindingType) => `${binding.path} -> ${binding.target}`).join(", ")}\n\n`;
+    private getEntityTypeHover(metadata: Csdl, set: EntitySet): vscode.MarkdownString {
+        let hoverText = `**Entity Set**: ${set.name}\n\n`;
+        if (set.bindings.size) {
+            hoverText += `**Navigation Property Binding**: ${[...set.bindings].map(([path, target]) => `${path} -> ${target}`).join(", ")}\n\n`;
         }
-
-        if (member.entityType) {
-            hoverText += `**Entity Type**: ${member.entityType.odataName}\n\n`;
-
-            if (member.entityType.props) {
-                hoverText += `**Properties**: \n - ${member.entityType.props.map((prop: PropertyModel) => `${prop.odataName} (${prop.odataType})`).join("\n - ")}\n\n`;
-            }
+        const type = findType(metadata, set.type);
+        if (type) {
+            hoverText += `**Entity Type**: ${type.qname}\n\n`;
+            hoverText += `**Properties**: \n - ${members(metadata, type).map((member) => `${member.record.name} (${formatTypeRef(memberType(member))})`).join("\n - ")}\n\n`;
         }
-
         return new vscode.MarkdownString(hoverText);
     }
 

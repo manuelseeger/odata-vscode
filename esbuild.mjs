@@ -45,6 +45,7 @@ const common = {
     minify: production,
     sourcemap: !production,
     sourcesContent: false,
+    metafile: true,
     logLevel: "silent",
 };
 
@@ -82,5 +83,16 @@ if (watch) {
     await Promise.all(contexts.map((context) => context.dispose()));
     if (results.some((result) => result.status === "rejected")) {
         process.exit(1);
+    }
+    for (const result of results) {
+        if (result.status !== "fulfilled") {
+            continue;
+        }
+        const removedInputs = Object.keys(result.value.metafile.inputs).filter((input) =>
+            /(?:^|\/)(?:odata2ts|xml2js)(?:\/|$)|(?:^|\/)@odata2ts\/odata-core(?:\/|$)/.test(input),
+        );
+        if (removedInputs.length) {
+            throw new Error(`Removed metadata reader in bundle inputs: ${removedInputs.join(", ")}`);
+        }
     }
 }

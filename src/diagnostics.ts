@@ -5,8 +5,8 @@ import { ParseResult, ParseSyntaxErrorHandler, SyntaxError } from "./parser/synt
 import { getConfig, getSelectedPublicProfile } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { analyze } from "./language/analyze";
-import { DataModel } from "./odata2ts/data-model/DataModel";
 import { Disposable } from "./provider";
+import { Csdl } from "./schema";
 import { getBaseUrl } from "./util";
 
 /**
@@ -59,10 +59,10 @@ export class ODataDiagnosticProvider extends Disposable {
         const diagnostics: vscode.Diagnostic[] = result.error ? [syntaxDiagnostic(result.error)] : [];
 
         const profile = getSelectedPublicProfile(this.context);
-        let model: DataModel | undefined;
+        let csdl: Csdl | undefined;
         if (profile) {
             try {
-                model = await this.metadataService.getModel(profile);
+                csdl = this.metadataService.getCsdl(profile);
             } catch {
                 // no usable metadata: syntax diagnostics only
             }
@@ -72,7 +72,7 @@ export class ODataDiagnosticProvider extends Disposable {
         }
 
         const analysis = analyze(result.tree, result.text, {
-            model,
+            csdl,
             baseUrl: profile ? getBaseUrl(profile.baseUrl) : undefined,
             profileName: profile?.name,
         });

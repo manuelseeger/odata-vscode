@@ -11,11 +11,7 @@
 		"outDir": "out",
 		"strict": true,
 		"resolveJsonModule": true,
-		"types": ["node", "mocha"],
-
-		"jsx": "react",
-		"jsxFactory": "vscpp",
-		"jsxFragmentFactory": "vscppf"
+		"types": ["node", "mocha"]
 	},
 	"include": ["src/**/*"],
 	"exclude": [

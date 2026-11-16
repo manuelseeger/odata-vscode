@@ -1,11 +1,8 @@
 import { suite, test } from "mocha";
 
 import { MetadataModelService } from "../../services/MetadataModelService";
-import { AuthKind, IODataConfiguration, Profile } from "../../contracts/types";
-import { DataModel } from "../../odata2ts/data-model/DataModel";
+import { AuthKind, Profile } from "../../contracts/types";
 import * as assert from "assert";
-import * as fs from "fs";
-import path from "path";
 
 export const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
     <edmx:DataServices>
@@ -47,8 +44,8 @@ suite("MetadataModelService", () => {
         service = new MetadataModelService();
     });
 
-    suite("getModel", () => {
-        test("should get model", async () => {
+    suite("getCsdl", () => {
+        test("returns canonical names and types", () => {
             const profile: Profile = {
                 baseUrl: "http://example.com/odata",
                 metadata: metadataString,
@@ -59,13 +56,14 @@ suite("MetadataModelService", () => {
                 headers: {},
             };
 
-            const result = await service.getModel(profile);
+            const result = service.getCsdl(profile);
             assert.ok(result);
-            assert.strictEqual(result instanceof DataModel, true);
-            assert.strictEqual(result.getEntityTypes().length, 2);
+            assert.deepStrictEqual(result.types.map((type) => type.qname), ["testing.Order", "testing.Item"]);
+            assert.strictEqual(result.entitySets[0].name, "Orders");
+            assert.strictEqual(result.entitySets[0].type, "testing.Order");
         });
 
-        test("should throw error if metadata is missing", async () => {
+        test("returns no declarations if metadata is missing", () => {
             const profile: Profile = {
                 baseUrl: "http://example.com/odata",
                 metadata: "",
@@ -75,134 +73,59 @@ suite("MetadataModelService", () => {
                 },
                 headers: {},
             };
-            await assert.rejects(async () => {
-                await service.getModel(profile);
-            });
+            assert.strictEqual(service.getCsdl(profile), undefined);
         });
 
-        test("should throw error if profile missing", async () => {
-            await assert.rejects(async () => {
-                await service.getModel(null!);
-            });
+        test("rejects malformed metadata", () => {
+            assert.throws(() => service.getCsdl({ metadata: "<invalid />" } as Profile));
+        });
+
+        test("shares current declarations with summaries in either request order", () => {
+            const profile: Profile = {
+                baseUrl: "https://one.test/", name: "Default", metadata: metadataString,
+                auth: { kind: AuthKind.None }, headers: {},
+            };
+            for (const summaryFirst of [true, false]) {
+                service.clearCache();
+                if (summaryFirst) {
+                    service.getSchemaSummary(profile.metadata!, profile.baseUrl);
+                }
+                assert.strictEqual(service.getCsdl(profile)!.types[0].props[2].name, "CustomerName");
+                assert.match(service.getSchemaSummary(profile.metadata!, profile.baseUrl).yaml, /CustomerName/);
+                const changed = { ...profile, metadata: metadataString.replace("CustomerName", "BuyerName") };
+                assert.strictEqual(service.getCsdl(changed)!.types[0].props[2].name, "BuyerName");
+                const summary = service.getSchemaSummary(changed.metadata, changed.baseUrl);
+                assert.match(summary.yaml, /BuyerName/);
+                assert.doesNotMatch(summary.yaml, /CustomerName/);
+                assert.strictEqual(service.getCsdl(profile)!.types[0].props[2].name, "CustomerName");
+                assert.match(service.getSchemaSummary(changed.metadata, "https://two.test/").yaml, /https:\/\/two.test\//);
+            }
         });
     });
 
-    suite("filterMetadataXml", () => {
-        test("should filter namespace from XML", () => {
-            const config: IODataConfiguration = {
-                metadata: {
-                    filterNs: ["http://docs.oasis-open.org/odata/ns/edm"],
-                    filterXPath: [],
-                    xpathDefaultNsPrefix: "edm",
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            const result = service.getFilteredMetadataXml(metadataString, config);
-            assert.ok(result);
-            assert.strictEqual(result.includes("testing"), false);
-            assert.strictEqual(result.includes("DataServices"), true);
-        });
-
-        test("should throw error if XML is invalid", () => {
-            const invalidXml = "<invalid></invalid>";
-            const config = {
-                metadata: {
-                    filterNs: [],
-                    filterXPath: [],
-                    xpathDefaultNsPrefix: "edm",
-                    removeAnnotations: false,
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            assert.throws(() => {
-                service.getFilteredMetadataXml(invalidXml, config);
-            }, /The provided XML is not valid OData metadata./);
-        });
-
-        test("should filter XML with XPath", () => {
-            const config = {
-                metadata: {
-                    filterNs: [],
-                    filterXPath: ["//edm:EntityType[@Name='Order']"],
-                    xpathDefaultNsPrefix: "edm",
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            const result = service.getFilteredMetadataXml(metadataString, config);
-
-            assert.ok(result);
-            assert.strictEqual(
-                result.includes(`<EntityType Name="Order">`),
-                false,
-                "Order should be filtered out",
+    suite("schema summary", () => {
+        test("keeps metadata changes and service roots independent", () => {
+            const first = service.getSchemaSummary(metadataString, "https://one.test/");
+            const second = service.getSchemaSummary(metadataString, "https://two.test/");
+            const changed = service.getSchemaSummary(
+                metadataString.replace("CustomerName", "BuyerName"),
+                "https://one.test/",
             );
-            assert.strictEqual(
-                result.includes(`<EntityType Name="Item">`),
-                true,
-                "Item should remain in the XML",
+            assert.match(first.yaml, /CustomerName/);
+            assert.match(second.yaml, /https:\/\/two.test\//);
+            assert.match(changed.yaml, /BuyerName/);
+            assert.doesNotMatch(changed.yaml, /CustomerName/);
+            service.clearCache();
+            assert.deepStrictEqual(
+                service.getSchemaSummary(metadataString, "https://one.test/"),
+                first,
             );
         });
 
-        test("should remove annotations", () => {
-            const config = {
-                metadata: {
-                    filterNs: [],
-                    filterXPath: ["//edm:Annotation"],
-                    xpathDefaultNsPrefix: "edm",
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            const result = service.getFilteredMetadataXml(metadataString, config);
-            assert.ok(result);
-            assert.strictEqual(
-                result.includes(`<Annotation Term="Org.OData.Capabilities.V1.BatchSupportType">`),
-                false,
-                "Annotation should be removed",
-            );
-        });
-
-        test("should filter large documents", function () {
-            this.skip(); // Skip this test if running in a CI environment, it takes very long
-            this.timeout(15000);
-            const largeXml = fs.readFileSync(
-                path.join(__dirname, "..", "testdata", "msgraph.edmx"),
-                "utf-8",
-            );
-
-            const config = {
-                metadata: {
-                    filterNs: [],
-                    filterXPath: ["//edm:Annotation"],
-                    xpathDefaultNsPrefix: "edm",
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            const result = service.getFilteredMetadataXml(largeXml, config);
-            assert.ok(result);
-            assert.strictEqual(
-                result.includes(`<Annotation `),
-                false,
-                "Annotations should be removed",
+        test("rejects documents that are not OData metadata", () => {
+            assert.throws(
+                () => service.getSchemaSummary("<invalid />", "https://one.test/"),
+                /not valid OData metadata/,
             );
         });
     });
@@ -211,6 +134,10 @@ suite("MetadataModelService", () => {
         test("should return true for valid metadata XML", () => {
             const result = service.isMetadataXml(metadataString);
             assert.strictEqual(result, true);
+        });
+
+        test("rejects EDMX without a usable schema", () => {
+            assert.strictEqual(service.isMetadataXml('<x:Edmx xmlns:x="http://docs.oasis-open.org/odata/ns/edmx" />'), false);
         });
 
         test("should return false for invalid XML", () => {

@@ -1,8 +1,17 @@
-import { DataModel } from "../odata2ts/data-model/DataModel";
-import { DataTypes, PropertyModel } from "../odata2ts/data-model/DataTypeModel";
 import { ODataUri, QueryOption, walk } from "../parser/ast";
 import { parseDocument } from "../parser/parse";
-import { allProperties, analyze, Analysis, Site, TypeRef } from "./analyze";
+import {
+    boundFunctions,
+    Csdl,
+    derivedTypes,
+    findType,
+    formatTypeRef,
+    Member,
+    members,
+    memberType,
+    roots,
+} from "../schema";
+import { analyze, Analysis, Site, TypeRef } from "./analyze";
 
 export type EntryKind =
     | "property"
@@ -18,7 +27,7 @@ export interface CompletionEntry {
     label: string;
     kind: EntryKind;
     /** The property behind a property or navigation entry. */
-    property?: PropertyModel;
+    member?: Member;
     detail?: string;
 }
 
@@ -40,7 +49,7 @@ export interface CompletionContext {
 }
 
 export interface LanguageOptions {
-    model?: DataModel;
+    csdl?: Csdl;
     baseUrl?: string;
 }
 
@@ -80,7 +89,7 @@ export function completionContext(
         if (site.kind === "option") {
             context.options = site.nested ? "nested" : "top";
         } else {
-            context.entries = entriesFor(site, options.model);
+            context.entries = entriesFor(site, options.csdl);
             context.functions = site.kind === "expression";
         }
         return context;
@@ -139,23 +148,23 @@ function optionEndingAt(tree: ODataUri, offset: number): QueryOption | undefined
     return found;
 }
 
-function entriesFor(site: Site, model?: DataModel): CompletionEntry[] {
-    if (!model) {
+function entriesFor(site: Site, csdl?: Csdl): CompletionEntry[] {
+    if (!csdl) {
         return [];
     }
     switch (site.kind) {
         case "resource":
-            return containerEntries(model);
+            return containerEntries(csdl);
         case "segment":
         case "member":
-            return [...propertyEntries(site.type), ...operationEntries(site.type, model), ...castEntries(site.type)];
+            return [...propertyEntries(site.type, csdl), ...operationEntries(site.type, csdl), ...castEntries(site.type, csdl)];
         case "select":
-            return propertyEntries(site.type);
+            return propertyEntries(site.type, csdl);
         case "expand":
-            return propertyEntries(site.type).filter((e) => leadsToNavigation(e.property!, model));
+            return propertyEntries(site.type, csdl).filter((entry) => leadsToNavigation(entry.member!, csdl));
         case "expression":
             return [
-                ...propertyEntries(site.type),
+                ...propertyEntries(site.type, csdl),
                 ...site.variables.map((label): CompletionEntry => ({ label, kind: "variable" })),
                 ...site.aliases.map((label): CompletionEntry => ({ label, kind: "variable" })),
             ];
@@ -164,60 +173,54 @@ function entriesFor(site: Site, model?: DataModel): CompletionEntry[] {
     }
 }
 
-function containerEntries(model: DataModel): CompletionEntry[] {
-    const container = model.getEntityContainer();
-    if (!container) {
-        return [];
-    }
-    const entries = (members: Record<string, { odataName: string }>, kind: EntryKind) =>
-        Object.values(members).map((m): CompletionEntry => ({ label: m.odataName, kind }));
-    return [
-        ...entries(container.entitySets, "entitySet"),
-        ...entries(container.singletons, "singleton"),
-        ...entries(container.functions, "function"),
-        ...entries(container.actions, "action"),
-    ];
-}
-
-function propertyEntries(type: TypeRef): CompletionEntry[] {
-    if (type.kind !== "structured") {
-        return [];
-    }
-    return allProperties(type.type).map((property) => ({
-        label: property.odataName,
-        kind: property.dataType === DataTypes.ModelType ? "navigation" : "property",
-        property,
-        detail: property.odataType,
+function containerEntries(csdl: Csdl): CompletionEntry[] {
+    return roots(csdl).map((root): CompletionEntry => ({
+        label: root.record.name,
+        kind:
+            root.kind === "set"
+                ? "entitySet"
+                : root.kind === "singleton"
+                  ? "singleton"
+                  : root.kind === "actionImport"
+                    ? "action"
+                    : "function",
     }));
 }
 
-function operationEntries(type: TypeRef, model: DataModel): CompletionEntry[] {
+function propertyEntries(type: TypeRef, csdl: Csdl): CompletionEntry[] {
     if (type.kind !== "structured") {
         return [];
     }
-    return [type.type.fqName, ...type.type.baseClasses]
-        .flatMap((fqName) => model.getAllEntityOperations(fqName))
-        .map((operation) => ({
-            label: operation.fqName,
-            kind: operation.type === "Action" ? "action" : "function",
-        }));
+    return members(csdl, type.type).map((member) => ({
+        label: member.record.name,
+        kind: member.kind === "navigation" ? "navigation" : "property",
+        member,
+        detail: formatTypeRef(memberType(member)),
+    }));
 }
 
-function castEntries(type: TypeRef): CompletionEntry[] {
+function operationEntries(type: TypeRef, csdl: Csdl): CompletionEntry[] {
     if (type.kind !== "structured") {
         return [];
     }
-    return [...type.type.subtypes].map((label) => ({ label, kind: "type" }));
+    return boundFunctions(csdl, type.type).map((operation) => ({
+        label: operation.qname,
+        kind: "function",
+    }));
+}
+
+function castEntries(type: TypeRef, csdl: Csdl): CompletionEntry[] {
+    if (type.kind !== "structured") {
+        return [];
+    }
+    return derivedTypes(csdl, type.type.qname).map((label) => ({ label, kind: "type" as const }));
 }
 
 /** Navigation properties, and complex properties that contain some. */
-function leadsToNavigation(property: PropertyModel, model: DataModel): boolean {
-    if (property.dataType === DataTypes.ModelType) {
+function leadsToNavigation(member: Member, csdl: Csdl): boolean {
+    if (member.kind === "navigation") {
         return true;
     }
-    if (property.dataType !== DataTypes.ComplexType) {
-        return false;
-    }
-    const type = model.getComplexType(property.fqType);
-    return !!type && allProperties(type).some((p) => p.dataType === DataTypes.ModelType);
+    const type = findType(csdl, member.record.type.qname);
+    return !!type && type.kind === "complex" && members(csdl, type).some((item) => item.kind === "navigation");
 }

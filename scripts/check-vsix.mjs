@@ -9,6 +9,9 @@ const files = new Set(entries);
 const read = (name) =>
     execFileSync("unzip", ["-p", archive, name], { encoding: "utf8", maxBuffer: 30 * 1024 * 1024 });
 const manifest = JSON.parse(read("extension/package.json"));
+for (const name of ["@odata2ts/odata-core", "xml2js", "@types/xml2js"]) {
+    assert(!manifest.dependencies?.[name] && !manifest.devDependencies?.[name], `Removed dependency ${name} in packaged manifest`);
+}
 const requireFile = (name) => {
     const normalized = path.posix.normalize(name.replace(/^\.\//, ""));
     assert(
@@ -58,7 +61,7 @@ for (const font of fonts) {
 }
 for (const entry of entries) {
     assert(
-        !/(?:^|\/)(?:\.pi|\.git|\.github|\.vscode|\.vscode-test|src|scripts|docs|node_modules|out|coverage|test|tests|testdata|\.artifacts|\.secrets)(?:\/|$)/.test(
+        !/(?:^|\/)(?:\.pi|\.agents|\.git|\.github|\.vscode|\.vscode-test|src|scripts|docs|node_modules|out|coverage|test|tests|testdata|\.artifacts|\.secrets)(?:\/|$)/.test(
             entry,
         ),
         `Development file in VSIX ${entry}`,

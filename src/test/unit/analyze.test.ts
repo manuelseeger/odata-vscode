@@ -2,9 +2,8 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import { analyze, Analysis } from "../../language/analyze";
-import { digestMetadata } from "../../metadata";
-import { DataModel } from "../../odata2ts/data-model/DataModel";
 import { parseDocument } from "../../parser/parse";
+import { Csdl, findType, parseCsdl } from "../../schema";
 
 const root = "https://example.com/odata/";
 
@@ -80,17 +79,17 @@ const metadata = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.or
 </edmx:Edmx>`;
 
 suite("Semantic analysis", () => {
-    let model: DataModel;
+    let csdl: Csdl;
 
-    suiteSetup(async () => {
-        model = await digestMetadata(metadata);
+    suiteSetup(() => {
+        csdl = parseCsdl(metadata);
     });
 
     function run(suffix: string): Analysis {
         const text = root + suffix;
         const { tree } = parseDocument(text);
         assert.ok(tree, `no tree for ${text}`);
-        return analyze(tree!, text, { model, baseUrl: root, profileName: "Test" });
+        return analyze(tree!, text, { csdl, baseUrl: root, profileName: "Test" });
     }
 
     function messages(suffix: string): string[] {
@@ -249,7 +248,7 @@ suite("Semantic analysis", () => {
     test("finds the resource path without a matching base URL", () => {
         const text = "https://elsewhere.example.com/a/b/Me/Orders?$filter=Nope eq 1";
         const { tree } = parseDocument(text);
-        const analysis = analyze(tree!, text, { model, baseUrl: root });
+        const analysis = analyze(tree!, text, { csdl, baseUrl: root });
         assert.deepStrictEqual(
             analysis.diagnostics.map((d) => d.message),
             ["Property 'Nope' not found on type 'shop.Order'."],
@@ -265,13 +264,12 @@ suite("Semantic analysis", () => {
     for (const file of ["northwind.edmx", "trippin.edmx", "odatav2.edmx"]) {
         test(`digests ${file} and analyzes a query against it`, async () => {
             const xml = fs.readFileSync(path.join(__dirname, "..", "testdata", file), "utf8");
-            const digested = await digestMetadata(xml);
-            const container = digested.getEntityContainer();
-            const set = Object.values(container.entitySets)[0];
-            const property = set.entityType.props[0].odataName;
-            const text = `${root}${set.odataName}?$select=${property}&$filter=Nope eq 1`;
+            const digested = parseCsdl(xml);
+            const set = digested.entitySets[0];
+            const property = findType(digested, set.type)!.props[0].name;
+            const text = `${root}${set.name}?$select=${property}&$filter=Nope eq 1`;
             const { tree } = parseDocument(text);
-            const analysis = analyze(tree!, text, { model: digested, baseUrl: root });
+            const analysis = analyze(tree!, text, { csdl: digested, baseUrl: root });
             assert.deepStrictEqual(
                 analysis.diagnostics.map((d) => d.code),
                 ["unknown-property"],

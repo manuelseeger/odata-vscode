@@ -1,12 +1,17 @@
-import { DataModel } from "../odata2ts/data-model/DataModel";
 import {
-    ComplexType,
-    DataTypes,
-    EntityType,
+    boundFunctions,
+    Csdl,
     EnumType,
-    OperationType,
-    PropertyModel,
-} from "../odata2ts/data-model/DataTypeModel";
+    findEnum,
+    findRoot,
+    findType,
+    Function,
+    Member,
+    members,
+    resourceType,
+    StructuredType,
+    TypeRef as SchemaTypeRef,
+} from "../schema";
 import {
     AggregateItem,
     Apply,
@@ -40,7 +45,7 @@ import { BUILTIN_FUNCTIONS, FUNCTION_ARITY } from "./reference";
  */
 
 export type TypeRef =
-    | { kind: "structured"; type: EntityType | ComplexType; collection: boolean }
+    | { kind: "structured"; type: StructuredType; collection: boolean }
     | { kind: "enum"; type: EnumType; collection: boolean }
     | { kind: "primitive"; name: string; collection: boolean }
     /** Not known, or not checked. Names below an unknown type are never reported. */
@@ -83,10 +88,10 @@ export type SiteKind =
     | "nestedOption";
 
 export type Resolved =
-    | { kind: "property"; property: PropertyModel; owner: EntityType | ComplexType }
+    | { kind: "property"; member: Member; owner: StructuredType }
     | { kind: "containerMember"; name: string }
-    | { kind: "type"; type: EntityType | ComplexType | EnumType }
-    | { kind: "operation"; operation: OperationType }
+    | { kind: "type"; type: StructuredType | EnumType }
+    | { kind: "operation"; operation: Function }
     | { kind: "variable"; name: string; type: TypeRef }
     | { kind: "function"; name: string };
 
@@ -106,7 +111,7 @@ export interface Site {
 }
 
 export interface AnalyzeOptions {
-    model?: DataModel;
+    csdl?: Csdl;
     /** Service root of the endpoint, to tell it from the resource path. */
     baseUrl?: string;
     /** Name of the endpoint profile, for messages. */
@@ -134,10 +139,6 @@ export function analyze(tree: ODataUri, text: string, options: AnalyzeOptions = 
     return analyzer.run(tree, text);
 }
 
-export function allProperties(type: EntityType | ComplexType): PropertyModel[] {
-    return [...type.baseProps, ...type.props];
-}
-
 /** Type of a single element: what a path continues on after a key or inside a lambda. */
 function element(type: TypeRef): TypeRef {
     return type.kind === "unknown" ? type : { ...type, collection: false };
@@ -147,7 +148,7 @@ function typeName(type: TypeRef): string {
     switch (type.kind) {
         case "structured":
         case "enum":
-            return type.type.fqName;
+            return type.type.qname;
         case "primitive":
             return type.name;
         case "unknown":
@@ -156,20 +157,20 @@ function typeName(type: TypeRef): string {
 }
 
 class Analyzer {
-    private readonly model?: DataModel;
+    private readonly csdl?: Csdl;
     private readonly diagnostics: SemanticDiagnostic[] = [];
     private readonly sites: Site[] = [];
 
     constructor(private readonly options: AnalyzeOptions) {
-        this.model = options.model;
+        this.csdl = options.csdl;
     }
 
     run(tree: ODataUri, text: string): Analysis {
-        if (this.model || this.options.baseUrl) {
+        if (this.csdl || this.options.baseUrl) {
             splitServiceRoot(tree, text, {
                 baseUrl: this.options.baseUrl,
-                isContainerMember: this.model
-                    ? (name) => this.containerMember(name) !== undefined
+                isContainerMember: this.csdl
+                    ? (name) => findRoot(this.csdl!, name).kind !== "missing"
                     : undefined,
             });
         }
@@ -183,77 +184,58 @@ class Analyzer {
     // --- Model access ----------------------------------------------------------------------
 
     private containerMember(name: string): TypeRef | undefined {
-        const model = this.model!;
-        const container = model.getEntityContainer();
-        if (!container) {
+        const found = findRoot(this.csdl!, name);
+        if (found.kind === "missing") {
             return undefined;
         }
-        const byName = <T extends { odataName: string }>(members: Record<string, T>) =>
-            Object.values(members).find((m) => m.odataName === name);
-
-        const entitySet = byName(container.entitySets);
-        if (entitySet) {
-            return { kind: "structured", type: entitySet.entityType, collection: true };
-        }
-        const singleton = byName(container.singletons);
-        if (singleton) {
-            return { kind: "structured", type: singleton.entityType, collection: false };
-        }
-        const func = byName(container.functions);
-        if (func) {
-            const operation = model.getUnboundOperationType(func.operation);
-            if (operation?.returnType) {
-                return this.propertyType(operation.returnType);
-            }
-            const set = Object.values(container.entitySets).find(
-                (s) => s.odataName === func.entitySet,
-            );
-            return set ? { kind: "structured", type: set.entityType, collection: true } : UNKNOWN;
-        }
-        if (byName(container.actions)) {
+        if (found.kind === "ambiguous") {
             return UNKNOWN;
         }
-        return undefined;
+        const ref = resourceType(this.csdl!, found.value);
+        return ref ? this.typeFromRef(ref) : UNKNOWN;
     }
 
-    private propertyType(property: PropertyModel): TypeRef {
-        const collection = property.isCollection;
-        if (property.dataType === DataTypes.PrimitiveType) {
-            return { kind: "primitive", name: property.odataType, collection };
+    private typeFromRef(ref: SchemaTypeRef): TypeRef {
+        if (/^Edm\./i.test(ref.qname)) {
+            return { kind: "primitive", name: ref.qname, collection: ref.collection };
         }
-        return this.namedType(property.fqType, collection) ?? UNKNOWN;
+        return this.namedType(ref.qname, ref.collection) ?? UNKNOWN;
+    }
+
+    private knownType(name: string): boolean {
+        return !!this.namedType(name, false) || /^Edm\./i.test(name);
     }
 
     private namedType(name: string, collection: boolean): TypeRef | undefined {
-        const type = this.model?.getModel(name);
-        if (!type) {
-            return undefined;
+        const structured = findType(this.csdl!, name);
+        if (structured) {
+            return { kind: "structured", type: structured, collection };
         }
-        return type.dataType === DataTypes.EnumType
-            ? { kind: "enum", type: type as EnumType, collection }
-            : { kind: "structured", type: type as EntityType | ComplexType, collection };
+        const enumeration = findEnum(this.csdl!, name);
+        return enumeration ? { kind: "enum", type: enumeration, collection } : undefined;
+    }
+
+    private operationNamed(name: string, operations: Function[]): Function | undefined {
+        const unqualified = name.slice(name.lastIndexOf(".") + 1);
+        return operations.find((operation) => {
+            const short = operation.qname.slice(operation.qname.lastIndexOf(".") + 1);
+            return operation.qname === name || short === name || short === unqualified;
+        });
     }
 
     private boundOperation(
         type: Extract<TypeRef, { kind: "structured" }>,
         name: string,
-    ): OperationType | undefined {
-        const model = this.model!;
-        const unqualified = name.slice(name.lastIndexOf(".") + 1);
-        for (const fqName of [type.type.fqName, ...type.type.baseClasses]) {
-            // Whether a path addresses one entity or many is not always known here (a key may
-            // be given as a segment), so operations bound to either are accepted.
-            const operation = model.getAllEntityOperations(fqName).find(
-                (o) =>
-                    o.fqName === name ||
-                    o.odataName === name ||
-                    o.fqName.slice(o.fqName.lastIndexOf(".") + 1) === unqualified,
-            );
-            if (operation) {
-                return operation;
-            }
-        }
-        return undefined;
+    ): Function | undefined {
+        // A key may be a path segment, so the collection-ness of the binding is not known here.
+        return this.operationNamed(name, boundFunctions(this.csdl!, type.type));
+    }
+
+    private unboundOperation(name: string): Function | undefined {
+        return this.operationNamed(
+            name,
+            this.csdl!.functions.filter((operation) => !operation.bound),
+        );
     }
 
     /**
@@ -265,14 +247,16 @@ class Analyzer {
         name: string,
         aliases?: Set<string>,
     ): { type: TypeRef; resolved?: Resolved } | undefined {
-        if (parent.kind !== "structured" || !this.model) {
+        if (parent.kind !== "structured" || !this.csdl) {
             return { type: UNKNOWN };
         }
-        const property = allProperties(parent.type).find((p) => p.odataName === name);
+        const property = members(this.csdl!, parent.type).find((item) => item.record.name === name);
         if (property) {
             return {
-                type: this.propertyType(property),
-                resolved: { kind: "property", property, owner: parent.type },
+                type: this.typeFromRef(
+                    property.kind === "property" ? property.record.type : property.record.target,
+                ),
+                resolved: { kind: "property", member: property, owner: parent.type },
             };
         }
         if (name.includes(".")) {
@@ -290,7 +274,7 @@ class Analyzer {
         const operation = this.boundOperation(parent, name);
         if (operation) {
             return {
-                type: operation.returnType ? this.propertyType(operation.returnType) : UNKNOWN,
+                type: operation.returns ? this.typeFromRef(operation.returns.type) : UNKNOWN,
                 resolved: { kind: "operation", operation },
             };
         }
@@ -352,7 +336,7 @@ class Analyzer {
             }
             const span = segment.nameSpan ?? segment.span;
             const site = this.site(first ? "resource" : "segment", span, first ? UNKNOWN : current);
-            if (!this.model) {
+            if (!this.csdl) {
                 return;
             }
             if (first) {
@@ -401,20 +385,15 @@ class Analyzer {
     }
 
     private isEntitySetOrSingleton(name: string): boolean {
-        const container = this.model!.getEntityContainer();
-        return [...Object.values(container.entitySets), ...Object.values(container.singletons)].some(
-            (m) => m.odataName === name,
-        );
+        const found = findRoot(this.csdl!, name);
+        return found.kind === "found" && (found.value.kind === "set" || found.value.kind === "singleton");
     }
 
     private checkKey(key: Arg[], type: TypeRef) {
-        if (type.kind !== "structured" || !("keyNames" in type.type)) {
+        if (type.kind !== "structured" || !type.type.key.length) {
             return;
         }
-        const keys = (type.type as EntityType).keys?.map((k) => k.odataName) ?? [];
-        if (!keys.length) {
-            return;
-        }
+        const keys = type.type.key;
         for (const arg of key) {
             if (arg.name && !keys.includes(arg.name.name)) {
                 this.report(
@@ -563,13 +542,13 @@ class Analyzer {
             kind === "expand" &&
             !failed &&
             last?.kind === "property" &&
-            last.property.dataType !== DataTypes.ModelType
+            last.member.kind !== "navigation"
         ) {
             const name = item.path[item.path.length - 1];
             this.report(
                 "not-a-navigation",
                 name.span,
-                `'${last.property.odataName}' is not a navigation property of type '${last.owner.fqName}'.`,
+                `'${last.member.record.name}' is not a navigation property of type '${last.owner.qname}'.`,
             );
         }
 
@@ -733,7 +712,7 @@ class Analyzer {
                         atRoot = false;
                         this.bindArgs(segment.args, scope);
                         const site = this.site("resource", segment.nameSpan, UNKNOWN, scope);
-                        if (!this.model) {
+                        if (!this.csdl) {
                             return;
                         }
                         const member = this.containerMember(segment.name);
@@ -777,7 +756,7 @@ class Analyzer {
             site.resolved = member.resolved;
             return member.type;
         }
-        if (name.includes(".") && (this.model?.getModel(name) || /^Edm\./i.test(name))) {
+        if (name.includes(".") && this.knownType(name)) {
             // a type name, as argument of cast() or isof()
             return UNKNOWN;
         }
@@ -813,22 +792,22 @@ class Analyzer {
             }
             return UNKNOWN;
         }
-        if (!this.model) {
+        if (!this.csdl) {
             return UNKNOWN;
         }
-        const unbound = this.model.getUnboundOperationType(name);
+        const unbound = this.unboundOperation(name);
         if (unbound) {
             site.resolved = { kind: "operation", operation: unbound };
-            return unbound.returnType ? this.propertyType(unbound.returnType) : UNKNOWN;
+            return unbound.returns ? this.typeFromRef(unbound.returns.type) : UNKNOWN;
         }
         if (scope.type.kind === "structured") {
             const bound = this.boundOperation(scope.type, name);
             if (bound) {
                 site.resolved = { kind: "operation", operation: bound };
-                return bound.returnType ? this.propertyType(bound.returnType) : UNKNOWN;
+                return bound.returns ? this.typeFromRef(bound.returns.type) : UNKNOWN;
             }
         }
-        if (name.includes(".") && this.model.getModel(name)) {
+        if (name.includes(".") && this.knownType(name)) {
             return UNKNOWN;
         }
         this.report("unknown-function", segment.nameSpan, `Unknown function '${name}'.`);

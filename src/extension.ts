@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { ChatParticipantProvider } from "./chat";
+import { ChatToolsProvider } from "./chatTools";
 import { CommandProvider } from "./commands";
 import {
     DefaultCompletionItemProvider,
@@ -17,7 +17,6 @@ import { VSCodeFileReader } from "./provider";
 import { MetadataModelService } from "./services/MetadataModelService";
 import { QueryRunner } from "./services/QueryRunner";
 import { SignatureHelpProvider } from "./signatures";
-import { Tokenizer } from "./services/Tokenizer";
 import { HoverProvider } from "./hovers";
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -25,7 +24,6 @@ export async function activate(context: vscode.ExtensionContext) {
     const syntaxParser = new SyntaxParser();
     const metadataService = new MetadataModelService();
     const queryRunner = new QueryRunner(fileReader);
-    const tokenizer = new Tokenizer();
 
     const reference: odata.Reference = {
         v2: v2 as odata.Spec,
@@ -36,7 +34,6 @@ export async function activate(context: vscode.ExtensionContext) {
         profiles.getSelectedProfile(),
     );
     const profiles: ProfileTreeProvider = new ProfileTreeProvider(
-        tokenizer,
         metadataService,
         context,
         (profile, signal) => commands.requestProfileMetadata(profile, signal),
@@ -62,7 +59,11 @@ export async function activate(context: vscode.ExtensionContext) {
 
     try {
         context.subscriptions.push(
-            new ChatParticipantProvider(context, metadataService, tokenizer),
+            new ChatToolsProvider(
+                () => profiles.getSelectedProfile(),
+                metadataService,
+                (query) => commands.openQuery(query),
+            ),
         );
     } catch {}
 

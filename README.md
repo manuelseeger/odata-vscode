@@ -26,9 +26,9 @@ Minimal setup to enable Metadata-aware completion and Copilot integration:
 
 ![Endpoint Profiles](assets/endpoint%20profiles.png)
 
-In Copilot Chat, chat with participant `@odata`, example: 
+Enable `odata.chat.tools.enabled` in a trusted workspace. In Copilot Chat, use `/odata` to draft a query from the selected service's compact schema. The `odata_getSchema` tool reads the schema. The `odata_openQuery` tool opens the draft for review without running it.
 
-> **@odata** give me all Workitems assigned to John Doe in status New
+> **/odata** Show the five most recent orders.
 
 ## Commands
 
@@ -44,12 +44,13 @@ In Copilot Chat, chat with participant `@odata`, example:
 | Setting                        | Description                                                                                  | Default Value |
 |--------------------------------|----------------------------------------------------------------------------------------------|---------------|
 | `odata.defaultFormat`          | Set the default response format                                                              | `json`        |
-| `odata.metadata.filterNs`      | List of non-EDMX namespaces to filter out from metadata.                                     | `[]`          |
-| `odata.metadata.filterXPath`   | List of xpath expressions. Matching elements or attributes will be filtered out.             | `["//edm:Annotation"]` |
-| `odata.metadata.xpathDefaultNsPrefix` | A prefix for the default namespace (usually on &lt;Schema&gt;) used in your XPath expression | `edm`          |
+| `odata.chat.tools.enabled`    | Enable the Copilot tools used by `/odata` in trusted workspaces.                              | `false`       |
+| `odata.chat.schema.maxTokens` | Maximum approximate tokens in the compact schema shared with Copilot. Larger summaries return no schema. | `32000` |
 | `odata.strictParser`           | Whether to show query syntax errors as warnings (`false`) or errors (`true`).               | `true`        |
 | `odata.disableRunner`          | Disable the query runner, for example if your authentication is not supported.               | `false`       |
 | `odata.openResultInNewPane`    | Open result document in new pane when running queries. Disable to open results in active view.  | `true`        |
+
+`odata.metadata.filterNs`, `odata.metadata.filterXPath`, and `odata.metadata.xpathDefaultNsPrefix` have no effect. Copilot receives a compact query schema instead of XML, so metadata filters are not needed.
 
 ## Known Issues and Limitations
 
@@ -78,15 +79,12 @@ You can still use all features but the query runner. Create an endpoint profile 
 
 ### Metadata file too large
 
-Github Copilot has a character limit for requests. If your service metadata is above that, Copilot will refuse the request. Options:
-- If your metadata includes non-EDMX namespaces, maintain them in `odata.metadata.filterNs` to filter them out
-- Filter out parts of the metadata document you don't need with xpath expressions in `odata.metadata.filterXPath`
-- Manually shorten your metadata file in profiles, for example remove entity definitions you are not working with
+The `/odata` skill reads a compact YAML query schema through `odata_getSchema`. The schema uses cached metadata and includes the service root and OData version. It excludes descriptions, UI annotations, actions, and unreachable types. It never includes profile credentials or headers.
+
+The profile editor shows the summary size and whether it fits `odata.chat.schema.maxTokens`. If the summary exceeds this maximum, the tool returns its size and the current maximum without a schema. Raise the setting only if your Copilot model has enough context. The whole schema is returned or none of it. Summaries are never truncated. Opening a drafted query never runs it.
 
 ## Acknowledgment
 
 This extension is modeled after https://github.com/StanislawSwierc/vscode-odata.
 
-The OData syntax definition created by [Geoff Cox (@GeoffCox)](https://github.com/GeoffCox) is reused from vscode-odata. 
-
-The EDMX parser is a modified version of https://github.com/odata2ts/odata2ts by [@texttechne](https://github.com/texttechne).
+The OData syntax definition created by [Geoff Cox (@GeoffCox)](https://github.com/GeoffCox) is reused from vscode-odata.

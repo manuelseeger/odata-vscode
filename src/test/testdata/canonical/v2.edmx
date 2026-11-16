@@ -1,0 +1,31 @@
+<edmx:Edmx Version="1.0" xmlns:edmx="http://schemas.microsoft.com/ado/2007/06/edmx" xmlns:m="http://schemas.microsoft.com/ado/2007/08/dataservices/metadata">
+  <edmx:DataServices m:DataServiceVersion="2.0">
+    <Schema Namespace="Legacy" Alias="l" xmlns="http://schemas.microsoft.com/ado/2008/09/edm">
+      <EntityType Name="Order">
+        <Property Name="Date" Type="Edm.DateTime" />
+        <Property Name="Time" Type="Edm.Time" />
+        <Property Name="Value" Type="Edm.Float" />
+        <NavigationProperty Name="Lines" Relationship="l.OrderLines" FromRole="Order" ToRole="Line" />
+      </EntityType>
+      <EntityType Name="Line">
+        <Property Name="SKU" Type="Edm.String" />
+        <NavigationProperty Name="Order" Relationship="l.OrderLines" FromRole="Line" ToRole="Order" />
+      </EntityType>
+      <ComplexType Name="WriteOnly"><Property Name="value" Type="Edm.String" /></ComplexType>
+      <Association Name="OrderLines">
+        <End Role="Order" Type="l.Order" Multiplicity="0..1" />
+        <End Role="Line" Type="l.Line" Multiplicity="*" />
+      </Association>
+      <EntityContainer Name="C">
+        <EntitySet Name="Orders" EntityType="l.Order" />
+        <EntitySet Name="Lines" EntityType="l.Line" />
+        <AssociationSet Name="OrderLinesSet" Association="l.OrderLines">
+          <End Role="Order" EntitySet="Orders" /><End Role="Line" EntitySet="Lines" />
+        </AssociationSet>
+        <FunctionImport Name="ReadOrders" ReturnType="Collection(l.Order)" m:HttpMethod="GET" />
+        <FunctionImport Name="WriteOrders" ReturnType="l.WriteOnly" m:HttpMethod="POST" />
+        <FunctionImport Name="Unspecified" EntitySet="Orders" />
+      </EntityContainer>
+    </Schema>
+  </edmx:DataServices>
+</edmx:Edmx>

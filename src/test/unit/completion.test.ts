@@ -1,7 +1,6 @@
 import * as assert from "assert";
 import { completionContext, resolvedSiteAt } from "../../language/completion";
-import { digestMetadata } from "../../metadata";
-import { DataModel } from "../../odata2ts/data-model/DataModel";
+import { Csdl, formatTypeRef, memberType, parseCsdl } from "../../schema";
 import { metadataString } from "./metadataservice.test";
 
 const root = "https://example.com/odata/";
@@ -22,10 +21,10 @@ const metadata = metadataString.replace(
 );
 
 suite("Completion context", () => {
-    let model: DataModel;
+    let csdl: Csdl;
 
-    suiteSetup(async () => {
-        model = await digestMetadata(metadata);
+    suiteSetup(() => {
+        csdl = parseCsdl(metadata);
     });
 
     /** Complete at the position of "|" in the query. */
@@ -33,7 +32,7 @@ suite("Completion context", () => {
         const text = root + query;
         const offset = text.indexOf("|");
         assert.ok(offset >= 0, "no cursor in query");
-        return completionContext(text.replace("|", ""), offset, { model, baseUrl: root });
+        return completionContext(text.replace("|", ""), offset, { csdl, baseUrl: root });
     }
 
     function labels(query: string): string[] {
@@ -144,16 +143,16 @@ suite("Completion context", () => {
 
     test("resolves the name at a position", () => {
         const text = `${root}Orders?$expand=Items($select=Quantity;$filter=Product/Label eq 'x')`;
-        const resolve = (name: string) => resolvedSiteAt(text, text.indexOf(name) + 1, { model, baseUrl: root })?.resolved;
+        const resolve = (name: string) => resolvedSiteAt(text, text.indexOf(name) + 1, { csdl, baseUrl: root })?.resolved;
 
         const quantity = resolve("Quantity");
         assert.ok(quantity?.kind === "property");
-        assert.strictEqual(quantity.owner.fqName, "testing.Item");
-        assert.strictEqual(quantity.property.odataType, "Edm.Int32");
+        assert.strictEqual(quantity.owner.qname, "testing.Item");
+        assert.strictEqual(formatTypeRef(memberType(quantity.member)), "Edm.Int32");
 
         const label = resolve("Label");
         assert.ok(label?.kind === "property");
-        assert.strictEqual(label.owner.fqName, "testing.Product");
+        assert.strictEqual(label.owner.qname, "testing.Product");
 
         assert.strictEqual(resolve("Orders")?.kind, "containerMember");
         assert.strictEqual(resolve("eq"), undefined);

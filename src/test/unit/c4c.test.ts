@@ -3,10 +3,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { analyze } from "../../language/analyze";
 import { completionContext } from "../../language/completion";
-import { digestMetadata } from "../../metadata";
-import { DataModel } from "../../odata2ts/data-model/DataModel";
-import { ODataVersion } from "../../odata2ts/data-model/DataTypeModel";
 import { parseDocument } from "../../parser/parse";
+import { Csdl, parseCsdl } from "../../schema";
 
 /**
  * Queries against an extract of the metadata of SAP Cloud for Customer (c4codataapi), a
@@ -16,23 +14,23 @@ import { parseDocument } from "../../parser/parse";
 suite("SAP Cloud for Customer (OData V2)", () => {
     const root = "https://my000000.crm.ondemand.com/sap/c4c/odata/v1/c4codataapi/";
     const key = "'00163E0DBD9E1ED596F8F5E6B9B6B1A1'";
-    let model: DataModel;
+    let csdl: Csdl;
 
-    suiteSetup(async () => {
+    suiteSetup(() => {
         const xml = fs.readFileSync(path.join(__dirname, "..", "testdata", "c4c.edmx"), "utf8");
-        model = await digestMetadata(xml);
+        csdl = parseCsdl(xml);
     });
 
     function messages(query: string): string[] {
         const text = root + query;
         const result = parseDocument(text);
         assert.strictEqual(result.error, undefined, result.error?.message);
-        return analyze(result.tree!, text, { model, baseUrl: root }).diagnostics.map((d) => d.message);
+        return analyze(result.tree!, text, { csdl, baseUrl: root }).diagnostics.map((d) => d.message);
     }
 
     test("digests the metadata as OData V2", () => {
-        assert.strictEqual(model.getODataVersion(), ODataVersion.V2);
-        assert.strictEqual(model.getEntityTypes().length, 20);
+        assert.ok(!csdl.version.startsWith("4"), csdl.version);
+        assert.ok(csdl.entitySets.some((set) => set.name === "OpportunityCollection"));
     });
 
     const clean = [
@@ -110,7 +108,7 @@ suite("SAP Cloud for Customer (OData V2)", () => {
 
     function labels(query: string): string[] {
         const text = root + query;
-        return completionContext(text, text.length, { model, baseUrl: root }).entries.map((e) => e.label);
+        return completionContext(text, text.length, { csdl, baseUrl: root }).entries.map((e) => e.label);
     }
 
     test("completes entity sets, code lists and function imports", () => {
@@ -147,7 +145,7 @@ suite("SAP Cloud for Customer (OData V2)", () => {
         const start = Date.now();
         for (let i = 0; i < 50; i++) {
             const { tree } = parseDocument(text);
-            analyze(tree!, text, { model, baseUrl: root });
+            analyze(tree!, text, { csdl, baseUrl: root });
         }
         assert.ok(Date.now() - start < 1000, `took ${Date.now() - start} ms`);
     });
