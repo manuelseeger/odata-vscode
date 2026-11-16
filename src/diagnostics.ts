@@ -71,11 +71,18 @@ export class ODataDiagnosticProvider extends Disposable {
             return;
         }
 
-        const analysis = analyze(result.tree, result.text, {
-            csdl,
-            baseUrl: profile ? getBaseUrl(profile.baseUrl) : undefined,
-            profileName: profile?.name,
-        });
+        let analysis;
+        try {
+            analysis = analyze(result.tree, result.text, {
+                csdl,
+                baseUrl: profile ? getBaseUrl(profile.baseUrl) : undefined,
+                profileName: profile?.name,
+            });
+        } catch {
+            analysis = analyze(result.tree, result.text, {
+                baseUrl: profile ? getBaseUrl(profile.baseUrl) : undefined,
+            });
+        }
         for (const d of analysis.diagnostics) {
             const diagnostic = new vscode.Diagnostic(
                 spanToRange(d.span),

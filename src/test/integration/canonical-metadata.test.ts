@@ -114,7 +114,7 @@ suite("Canonical metadata editor behavior", () => {
         assert.deepStrictEqual(await warnings("under_score?$expand=related"), []);
         const invalid = await warnings("under_score?$expand=address");
         assert.strictEqual(invalid.length, 1);
-        assert.match(invalid[0].message, /navigational property address/);
+        assert.match(invalid[0].message, /'address' is not a navigation property of type 'A\.Item'/);
         const missing = await warnings("under_score?$select=address/Unknown");
         assert.strictEqual(missing.length, 1);
         assert.strictEqual(missing[0].range.start.character, (profile.baseUrl + "under_score?$select=address/").length);
@@ -132,14 +132,14 @@ suite("Canonical metadata editor behavior", () => {
     test("keeps resource matching independent of the profile URL and avoids root members on nested paths", async () => {
         const sessionRoot = "https://example.com/(S(abc))/odata/";
         assert.deepStrictEqual((await complete("under_score?$select=", sessionRoot)).map((item) => item.label), inheritedNames);
-        for (const path of ["under_score(1)/related", "under_score(1)/address"]) {
-            const labels = (await complete(`${path}?$select=`)).map((item) => item.label);
-            assert.ok(!labels.includes("lower_name"));
-            assert.ok(!labels.includes("OnlyB"));
-        }
+        const related = (await complete("under_score(1)/related?$select=")).map((item) => item.label);
+        assert.ok(related.includes("OnlyB"));
+        assert.ok(!related.includes("lower_name"));
+        const address = (await complete("under_score(1)/address?$select=")).map((item) => item.label);
+        assert.deepStrictEqual(address, ["ZIP_code", "city"]);
         const keyed = await warnings("under_score(1)?$select=Unknown");
         assert.strictEqual(keyed.length, 1);
-        assert.match(keyed[0].message, /Resource path 'under_score\(1\)' not found/);
+        assert.match(keyed[0].message, /Property 'Unknown' not found on type 'A\.Item'/);
     });
 
     test("shows canonical qualified hover types, inherited members, and bindings", async () => {
@@ -188,18 +188,28 @@ suite("Canonical metadata editor behavior", () => {
             assert.deepStrictEqual(await complete("under_score?$select="), []);
             assert.deepStrictEqual(await warnings("under_score?$select=Unknown"), []);
             assert.match(await hover("under_score", "under_score"), /\*\*Selected Profile\*\*: TestProfile/);
-            const document = await vscode.workspace.openTextDocument({ content: "$filter= " });
+            const document = await vscode.workspace.openTextDocument({
+                content: `${profile.baseUrl}under_score?$filter= `,
+            });
             const result = await defaults.provideCompletionItems(
-                document, new vscode.Position(0, 9), {} as vscode.CancellationToken, {} as vscode.CompletionContext,
+                document,
+                document.positionAt(document.getText().length),
+                {} as vscode.CancellationToken,
+                {} as vscode.CompletionContext,
             );
             assert.ok(result?.items.some((item) => item.label === "substringof"));
         }
     });
 
     test("uses V4 static completions for version 4.01", async () => {
-        const document = await vscode.workspace.openTextDocument({ content: "$filter= " });
+        const document = await vscode.workspace.openTextDocument({
+            content: `${profile.baseUrl}under_score?$filter= `,
+        });
         const result = await defaults.provideCompletionItems(
-            document, new vscode.Position(0, 9), {} as vscode.CancellationToken, {} as vscode.CompletionContext,
+            document,
+            document.positionAt(document.getText().length),
+            {} as vscode.CancellationToken,
+            {} as vscode.CompletionContext,
         );
         assert.ok(result?.items.some((item) => item.label === "contains"));
     });

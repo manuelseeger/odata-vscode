@@ -64,34 +64,33 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
             return;
         }
 
-        let metadata: Csdl | undefined;
         try {
-            metadata = this.metadataService.getCsdl(profile);
+            const metadata = this.metadataService.getCsdl(profile);
+            if (metadata) {
+                const site = resolvedSiteAt(document.getText(), document.offsetAt(position), {
+                    csdl: metadata,
+                    baseUrl: getBaseUrl(profile.baseUrl),
+                });
+                if (site?.resolved?.kind === "property") {
+                    const { member, owner } = site.resolved;
+                    return new vscode.Hover(
+                        new vscode.MarkdownString(
+                            `**Property**: ${member.record.name}\n\n**Type**: ${formatTypeRef(memberType(member))}\n\n**On type**: ${owner.qname}`,
+                        ),
+                        spanToRange(site.span),
+                    );
+                }
+
+                const found = findRoot(metadata, word);
+                if (found.kind === "found" && found.value.kind === "set") {
+                    return new vscode.Hover(
+                        this.getEntityTypeHover(metadata, found.value.record),
+                        wordRange,
+                    );
+                }
+            }
         } catch {
             return new vscode.Hover(this.getSelectedProfileHover(document, profile));
-        }
-        if (metadata) {
-            const site = resolvedSiteAt(document.getText(), document.offsetAt(position), {
-                csdl: metadata,
-                baseUrl: getBaseUrl(profile.baseUrl),
-            });
-            if (site?.resolved?.kind === "property") {
-                const { member, owner } = site.resolved;
-                return new vscode.Hover(
-                    new vscode.MarkdownString(
-                        `**Property**: ${member.record.name}\n\n**Type**: ${formatTypeRef(memberType(member))}\n\n**On type**: ${owner.qname}`,
-                    ),
-                    spanToRange(site.span),
-                );
-            }
-
-            const found = findRoot(metadata, word);
-            if (found.kind === "found" && found.value.kind === "set") {
-                return new vscode.Hover(
-                    this.getEntityTypeHover(metadata, found.value.record),
-                    wordRange,
-                );
-            }
         }
         return new vscode.Hover(this.getSelectedProfileHover(document, profile));
     }

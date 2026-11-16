@@ -20,6 +20,7 @@ function contextAt(
     metadataService: IMetadataModelService,
 ): { completion: CompletionContext; csdl?: Csdl } {
     const profile = getSelectedPublicProfile(context);
+    const baseUrl = profile ? getBaseUrl(profile.baseUrl) : undefined;
     let csdl: Csdl | undefined;
     if (profile) {
         try {
@@ -28,11 +29,16 @@ function contextAt(
             // complete without metadata
         }
     }
-    const completion = completionContext(document.getText(), document.offsetAt(position), {
-        csdl,
-        baseUrl: profile ? getBaseUrl(profile.baseUrl) : undefined,
-    });
-    return { completion, csdl };
+    try {
+        return {
+            completion: completionContext(document.getText(), document.offsetAt(position), { csdl, baseUrl }),
+            csdl,
+        };
+    } catch {
+        return {
+            completion: completionContext(document.getText(), document.offsetAt(position), { baseUrl }),
+        };
+    }
 }
 
 /**
