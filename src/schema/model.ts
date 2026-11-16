@@ -35,6 +35,7 @@ export interface StructuredType {
     kind: "entity" | "complex";
     base?: string;
     abstract: boolean;
+    open: boolean;
     key: string[];
     props: Prop[];
     navs: Nav[];

@@ -274,6 +274,7 @@ export function parseCsdl(xml: string): Csdl {
                         ? qualify(attr(element, "BaseType"), namespace)
                         : undefined,
                     abstract: attr(element, "Abstract") === "true",
+                    open: attr(element, "OpenType") === "true",
                     key: children(element, "Key").flatMap((key) =>
                         children(key, "PropertyRef").map((p) => attr(p, "Name")),
                     ),

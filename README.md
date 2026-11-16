@@ -12,6 +12,8 @@
 
 ### More Features
 - Syntax highlighting and formatting for OData queries
+- Diagnostics for syntax errors and for resources, properties, functions and query options your service does not know
+- Supports OData V2 and V4 / 4.01 query syntax, including `$apply`, `$compute`, `$search` and lambda expressions
 - Endpoint profiles with authentication and custom headers
 - Run queries directly in VSCode and get code-formatted results
 
@@ -57,9 +59,13 @@ Supported HTTP authentication with OData endpoints:
 - Client Certificate
 - Bearer token (copy / paste)
 
-Metadata-aware diagnostics and auto-completion only works for top-level entities and some expand entities. Complex nested queries like `?$expand=Entity($select=Prop1,Prop2)` are not supported for metadata-awareness. 
+Metadata-aware diagnostics and auto-completion follow the query at any depth: nested `$expand` and `$select` options, navigation and complex property paths, type casts, `any`/`all` lambda expressions, `$apply`, and special paths like `/$count`, `/$value` and `/$metadata`. What they do not cover:
 
-Specials paths like `/$metadata`, `/$count` don't show errors, but the parsed query will be off and metadata-awareness won't work. 
+- Value types are not checked. `Price eq 'abc'` gives no warning, and members of enumeration literals are not validated.
+- After `$apply`, names are checked against the original type plus all aliases of the transformations. A property that `groupby` or `aggregate` removed from the result is not reported.
+- Without a selected profile the service root is guessed from the shape of the URL. A singleton or parameterless operation followed by a navigation path (`/Me/Friends`) is only recognized with metadata.
+- Duration literals need the `duration'P1D'` form. The bare form `P1D` of OData 4.01 is read as a property name.
+- The formatter breaks lines at the resource path and at top-level query options only.
 
 ## Troubleshooting
 
@@ -81,6 +87,4 @@ The profile editor shows the summary size and whether it fits `odata.chat.schema
 
 This extension is modeled after https://github.com/StanislawSwierc/vscode-odata.
 
-The OData syntax definition created by [Geoff Cox (@GeoffCox)](https://github.com/GeoffCox) is reused from vscode-odata. 
-
-The EDMX parser is a modified version of https://github.com/odata2ts/odata2ts by [@texttechne](https://github.com/texttechne).
+The OData syntax definition created by [Geoff Cox (@GeoffCox)](https://github.com/GeoffCox) is reused from vscode-odata.

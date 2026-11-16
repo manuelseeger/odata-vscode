@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Metadata-aware diagnostics and completions work at any depth of a query: nested `$expand` and `$select` options, property paths, type casts, `any`/`all` lambda expressions with their range variables, `$apply`, `$compute` aliases, `$root` and `$it`.
+- The parser accepts `any`/`all`, `$apply`, `$compute`, `$search` expressions, `in`, `has`, `divby`, `case`, JSON parameter values, enumeration and typed literals, key-as-segment paths, 4.01 query options without `$`, and OData V2 literals (`datetime'..'`, `guid'..'`, `1.5m`, `X'..'`).
+- Special paths (`/$count`, `/$value`, `/$ref`, `/$metadata`, `/$batch`, `/$crossjoin(..)`) are recognized as part of the resource path.
+- Warnings for unknown and duplicate system query options, unknown functions, a wrong number of function arguments, key names that are no key properties, `$expand` of a property that is no navigation property, and `any`/`all` on a single value.
+- Completions for resource path segments, operators after an operand, `asc`/`desc`, query options inside `$expand(..)`, and lambda range variables. Built-in functions are only offered where an operand can start.
+- Hover shows the type of a property anywhere in the query.
+- A query with a syntax error is still checked against the metadata, as far as it can be read.
+
+### Changed
+
+- Metadata warnings name the type a property was looked up on, for example `Property 'Nope' not found on type 'NS.Customer'.`
+- Syntax error messages list what was expected in condensed form.
+- Completing a system query option inserts the `=` as well.
+- The service root of a query is taken from the selected profile's base URL, so resource paths of more than one segment are checked from their first segment.
+
+### Fixed
+
+- A syntax error stayed in the Problems view after it was fixed, if no profile was selected.
+- Operator precedence in `$filter` expressions follows the specification.
+
 ## [0.5.0] - 2026-11-16
 
 ### Added

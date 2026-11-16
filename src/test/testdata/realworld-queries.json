@@ -1,0 +1,2586 @@
+[
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "service document"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$metadata",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(1)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(ProductID=1)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(1)/ProductName",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(1)/ProductName/$value",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products/$count",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers('ALFKI')/Orders",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers('ALFKI')/Orders(10643)/Order_Details",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Order_Details(OrderID=10248,ProductID=11)",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "composite key"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Order_Details(OrderID=10248,ProductID=11)/Product/Category",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$top=10&$skip=20&$count=true",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$select=ProductID,ProductName,UnitPrice&$orderby=UnitPrice desc",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$orderby=Category/CategoryName asc,UnitPrice desc,ProductName",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=ProductName eq 'Chai'",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice gt 20 and UnitPrice le 50",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice lt 10 or UnitPrice ge 100",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=Discontinued eq false and UnitsInStock ne 0",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=not Discontinued",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=not contains(ProductName,'Sauce') and (CategoryID eq 2 or CategoryID eq 3)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=contains(ProductName,'ch')&$select=ProductName",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=startswith(ProductName,'Ch') and endswith(QuantityPerUnit,'bottles')",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=contains(tolower(ProductName), 'chef') or toupper(ProductName) eq 'TOFU'",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "whitespace after comma in function arguments (BWS)"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=length(ProductName) gt 20 and indexof(ProductName,'Sir') eq 0",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=substring(ProductName,1,3) eq 'hai' or substring(ProductName,4) eq 'f Anton''s Cajun Seasoning'",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=trim(ProductName) eq concat(concat('Aniseed',' '),'Syrup')",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice mul UnitsInStock gt 1000 and UnitsOnOrder add UnitsInStock lt ReorderLevel",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=(UnitPrice sub 5) div 2 gt 10 and UnitsInStock mod 2 eq 0",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=round(UnitPrice) eq 19 or floor(UnitPrice) eq 18 or ceiling(UnitPrice) eq 20",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=-UnitPrice lt -100",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "unary minus"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice eq 18.0000 or UnitPrice gt 1.5e2 or UnitPrice lt -2.5E-3",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "decimal and exponent literals"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=Category eq null and Supplier ne null",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=Category/CategoryName eq 'Beverages' and Supplier/Country in ('UK','USA','Japan')",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=ProductID in (1, 2, 3)",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "in operator with whitespace in list"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$filter=CompanyName eq 'B''s Beverages'",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "escaped '' quote in string literal"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$filter=Country eq 'Germany' and City ne 'Berlin'&$orderby=CompanyName&$top=5",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=OrderDate ge 1997-01-01T00:00:00Z and OrderDate lt 1998-01-01T00:00:00Z",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=year(OrderDate) eq 1997 and month(OrderDate) eq 7 and day(OrderDate) gt 15",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=hour(OrderDate) eq 0 and minute(OrderDate) eq 0 and second(OrderDate) eq 0 and fractionalseconds(OrderDate) lt 0.1",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=date(OrderDate) eq 1996-07-04 and time(OrderDate) lt 12:00:00",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "date and timeOfDay literals"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=ShippedDate gt now() or ShippedDate eq mindatetime() or RequiredDate lt maxdatetime()",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=totaloffsetminutes(OrderDate) eq 0 and Freight gt 100",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=Order_Details/any(d:d/Quantity gt 100)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=Order_Details/all(d:d/UnitPrice ge 10 and d/Discount eq 0)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=Order_Details/any()",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "any() without arguments"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$filter=Orders/any(o:o/Order_Details/any(d:d/Product/ProductName eq 'Chai' and d/Quantity gt 10))",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "nested lambda"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$filter=Orders/$count gt 10",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$orderby=Orders/$count desc&$top=3",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$expand=Customer",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$expand=Customer,Employee,Order_Details",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$expand=Order_Details($expand=Product($expand=Category,Supplier))",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$expand=Customer($select=CompanyName,ContactName)&$select=OrderID,OrderDate",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$expand=Orders($filter=Freight gt 100;$orderby=OrderDate desc;$top=3;$skip=1;$count=true;$select=OrderID,Freight;$expand=Order_Details($select=ProductID,Quantity))",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "nested expand with all options"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers('ALFKI')?$expand=Orders/$ref",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers('ALFKI')?$expand=Orders/$count",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$expand=Orders/$count($filter=Freight gt 50)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Employees?$expand=Employees1($levels=3)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Employees(2)?$expand=Employee1($levels=max;$select=FirstName,LastName)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(1)?$expand=*",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(1)?$expand=*/$ref",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(1)?$expand=*($levels=2)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$select=*",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$select=*&$expand=Category($select=*)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$format=json",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$format=application/json;odata.metadata=full",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$format=application/json;odata.metadata=minimal;IEEE754Compatible=true&$top=1",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$format=xml",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$search=chai",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$search=chai OR tofu",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$search=\"mountain bike\" AND NOT clothing",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$search=(bike OR scooter) AND electric&$top=10",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$search=blue green",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "implicit AND"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$compute=UnitPrice mul UnitsInStock as StockValue&$select=ProductName,StockValue&$orderby=StockValue desc",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Order_Details?$compute=UnitPrice mul Quantity as Gross,UnitPrice mul Quantity mul (1 sub Discount) as Net&$filter=Net gt 1000",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice divby 3 gt 1.5",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "4.01 divby"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=matchesPattern(ProductName,'^Ch.*')",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "4.01 matchesPattern"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$compute=case(UnitPrice gt 100:'high',UnitPrice gt 20:'medium',true:'low') as PriceBand",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "4.01 case"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice gt @min and UnitPrice lt @max&@min=10&@max=50",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "parameter aliases in $filter"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$crossjoin(Products,Categories)?$filter=Products/CategoryID eq Categories/CategoryID&$expand=Products($select=ProductName)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$all",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$all?$search=chai",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$all/NorthwindModel.Customer",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$entity?$id=Products(1)",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$entity/NorthwindModel.Product?$id=Products(1)&$select=ProductName",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$batch",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/$metadata?$format=xml",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(1)/Category/$ref",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers('ALFKI')/Orders/$ref?$id=Orders(10643)",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "delete reference from collection"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$skiptoken=20",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$skiptoken='ERNSH'",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$deltatoken=c2FtcGxlLXRva2Vu",
+    "valid": true,
+    "source": "Northwind V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$top=5&sap-language=EN&x-debug=true",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "custom query options"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?debug",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "custom query option without value"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?filter=UnitPrice gt 20&top=5&orderby=UnitPrice desc",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "4.01 system query options without $ prefix"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products/$filter(@f)/$count?@f=UnitPrice gt 20",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "4.01 filter path segment"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=ProductName eq %27Chai%27",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "percent-encoded quotes"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice%20gt%2020%20and%20Discontinued%20eq%20false&$orderby=UnitPrice%20desc",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "percent-encoded spaces"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$filter=CompanyName%20eq%20%27B%27%27s%20Beverages%27",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "percent-encoded string with escaped quote"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?%24filter=UnitPrice gt 20&%24top=5",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "percent-encoded $ in option names (needs percent-decoding of option names before matching)"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/\n    Products?\n        $top=5&\n        $filter=UnitPrice gt 5",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/\n    Orders?\n        $select=OrderID,OrderDate,Freight&\n        $expand=Customer($select=CompanyName),Order_Details($expand=Product)&\n        $filter=Freight gt 100 and year(OrderDate) eq 1997&\n        $orderby=Freight desc&\n        $top=20&\n        $count=true",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/\n    Customers('ALFKI')/Orders?\n        $filter=ShippedDate eq null&\n        $format=json",
+    "valid": true,
+    "source": "Northwind V4",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Customers",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Customers('ALFKI')",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Customers('ALFKI')/Orders?$top=5",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders(10248)/Customer/CompanyName/$value",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Order_Details(OrderID=10248,ProductID=11)",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products/$count",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products/$count?$filter=UnitPrice gt 20m",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$filter=UnitPrice gt 1.5m and UnitsInStock lt 10",
+    "valid": true,
+    "source": "Northwind V2",
+    "note": "V2 decimal suffix"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders?$filter=Freight ge 50.5M and EmployeeID eq 5",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$filter=substringof('Sauce',ProductName) eq true",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$filter=substringof('Sauce',ProductName)",
+    "valid": true,
+    "source": "Northwind V2",
+    "note": "bare boolean function"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Customers?$filter=startswith(CompanyName,'A') eq true and endswith(City,'n') eq false",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Customers?$filter=indexof(CompanyName,'Alfreds') eq 0 or length(CompanyName) gt 30",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Customers?$filter=replace(CompanyName,' ','') eq 'AlfredsFutterkiste' or tolower(Country) eq 'germany'",
+    "valid": true,
+    "source": "Northwind V2",
+    "note": "V2 replace()"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders?$filter=OrderDate ge datetime'1997-01-01T00:00:00' and OrderDate lt datetime'1998-01-01T00:00:00'",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders?$filter=OrderDate gt datetime'1996-07-04T00:00'",
+    "valid": true,
+    "source": "Northwind V2",
+    "note": "datetime without seconds"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders?$filter=year(OrderDate) eq 1997 and month(OrderDate) eq 12&$orderby=OrderDate desc,OrderID",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders?$inlinecount=allpages&$top=10&$skip=30",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders?$inlinecount=none",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders?$expand=Customer,Order_Details/Product&$select=OrderID,Customer/CompanyName,Order_Details/Product/ProductName",
+    "valid": true,
+    "source": "Northwind V2",
+    "note": "V2 expand/select paths"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Customers('ALFKI')/$links/Orders",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders(10643)/$links/Customer",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$format=json&$top=3",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$format=atom",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$skiptoken=20",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Customers?$filter=CompanyName eq 'B''s Beverages'",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$filter=round(UnitPrice) eq 19m and floor(UnitPrice) le 18m and ceiling(UnitPrice) ge 19m",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$filter=not (Discontinued eq true) and UnitPrice add 5 gt 10 and UnitPrice sub 5 lt 100 and UnitPrice mul 2 lt 500 and UnitPrice div 2 gt 1 and UnitsInStock mod 2 eq 0",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$filter=isof('NorthwindModel.Product')",
+    "valid": true,
+    "source": "Northwind V2",
+    "note": "V2 isof with quoted type name"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/$metadata",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/$batch",
+    "valid": true,
+    "source": "Northwind V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/\n    Orders?\n        $filter=OrderDate ge datetime'1997-01-01T00:00:00' and Freight gt 100m&\n        $expand=Customer&\n        $inlinecount=allpages&\n        $format=json",
+    "valid": true,
+    "source": "Northwind V2",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://services.odata.org/V2/OData/OData.svc/GetProductsByRating?rating=4",
+    "valid": true,
+    "source": "OData demo service V2",
+    "note": "V2 function import with query-string parameter"
+  },
+  {
+    "url": "https://services.odata.org/V2/OData/OData.svc/GetProductsByRating?rating=4&$top=3&$orderby=Price desc&$format=json",
+    "valid": true,
+    "source": "OData demo service V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/OData/OData.svc/Products(1)/$links/Category",
+    "valid": true,
+    "source": "OData demo service V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/OData/OData.svc/Products?$filter=Price le 3.5m and Rating ge 3 and ReleaseDate gt datetime'1995-01-01T00:00:00'",
+    "valid": true,
+    "source": "OData demo service V2"
+  },
+  {
+    "url": "https://services.odata.org/V2/OData/OData.svc/Suppliers?$filter=Address/City eq 'Redmond'&$select=Name,Address",
+    "valid": true,
+    "source": "OData demo service V2"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Products(0)/Categories/$ref",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Products?$filter=Price lt 10.00 and ReleaseDate ge 1992-01-01T00:00:00Z and DiscontinuedDate eq null",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/PersonDetails(1)/Photo",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Persons/ODataDemo.Customer?$select=Name,TotalExpense",
+    "valid": true,
+    "source": "OData demo service V4",
+    "note": "type cast in path"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Persons(1)/ODataDemo.Customer/TotalExpense",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Persons?$filter=isof(ODataDemo.Employee) or isof($it,ODataDemo.Customer)",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Persons?$filter=ODataDemo.Employee/Salary gt 50000 or cast(ODataDemo.Customer/TotalExpense,Edm.Int32) gt 100",
+    "valid": true,
+    "source": "OData demo service V4",
+    "note": "type cast in expression"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Products?$filter=cast(Rating,Edm.String) eq '4' and isof(Price,Edm.Double)",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Suppliers?$filter=geo.distance(Location,geography'SRID=4326;POINT(-122.03547668457 47.6316604614258)') lt 900.0",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Suppliers?$filter=geo.intersects(Location,geography'SRID=4326;POLYGON((-122.2 47.7,-122.2 47.5,-121.9 47.5,-121.9 47.7,-122.2 47.7))')",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Suppliers?$filter=geo.length(geography'SRID=4326;LINESTRING(-122.1 47.6,-122.0 47.7)') gt 1000",
+    "valid": true,
+    "source": "OData demo service V4"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Products(1)/ODataDemo.Discount",
+    "valid": true,
+    "source": "OData demo service V4",
+    "note": "bound action (POST)"
+  },
+  {
+    "url": "https://services.odata.org/V4/OData/OData.svc/Products/$each/ODataDemo.Discount",
+    "valid": true,
+    "source": "OData demo service V4",
+    "note": "4.01 $each with bound action"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips(0)/PlanItems",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips(0)/PlanItems/Microsoft.OData.SampleService.Models.TripPin.Flight",
+    "valid": true,
+    "source": "TripPin",
+    "note": "derived type cast on collection"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips(0)/PlanItems(11)/Microsoft.OData.SampleService.Models.TripPin.Flight/Airline",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips(0)/PlanItems/Microsoft.OData.SampleService.Models.TripPin.Flight/$count",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/AddressInfo",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Friends/$count?$filter=Gender eq Microsoft.OData.SampleService.Models.TripPin.PersonGender'Male'",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/Airports('KSFO')/Location/Address",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/Airports('KSFO')/Name/$value",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('O''Neil')",
+    "valid": true,
+    "source": "TripPin",
+    "note": "string key with escaped '' quote"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/Me",
+    "valid": true,
+    "source": "TripPin",
+    "note": "singleton"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/Me/Trips?$orderby=StartsAt desc&$top=1",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Gender eq Microsoft.OData.SampleService.Models.TripPin.PersonGender'Female'",
+    "valid": true,
+    "source": "TripPin",
+    "note": "enum literal"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Features has Microsoft.OData.SampleService.Models.TripPin.Feature'Feature1'",
+    "valid": true,
+    "source": "TripPin",
+    "note": "has operator"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Features has Microsoft.OData.SampleService.Models.TripPin.Feature'Feature1,Feature2'",
+    "valid": true,
+    "source": "TripPin",
+    "note": "has with multi-value enum literal"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=FirstName eq 'Scott' or LastName eq 'Whyte'&$select=UserName,FirstName,LastName",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Emails/any(e:endswith(e,'contoso.com'))",
+    "valid": true,
+    "source": "TripPin",
+    "note": "lambda over primitive collection"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Emails/any(e:e eq 'Russell@example.com')",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Friends/any(f:f/FirstName eq 'Scott' and f/Trips/any(t:t/Budget gt 3000))",
+    "valid": true,
+    "source": "TripPin",
+    "note": "nested lambda"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Trips/all(t:t/Budget lt 5000 or t/Tags/any(tag:tag eq 'business'))",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Friends/any(f:f/FirstName eq $it/FirstName)",
+    "valid": true,
+    "source": "TripPin",
+    "note": "$it inside lambda"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=AddressInfo/any(a:a/City/CountryRegion eq 'United States')",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=LastName eq $root/People('russellwhyte')/LastName",
+    "valid": true,
+    "source": "TripPin",
+    "note": "$root"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$select=UserName,Emails($filter=endswith($this,'contoso.com');$top=1)",
+    "valid": true,
+    "source": "TripPin",
+    "note": "$this, nested $select options"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$select=FirstName,AddressInfo/City/Name,AddressInfo/Address",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')?$select=AddressInfo($select=Address;$filter=City/Region eq 'ID')&$expand=Trips($select=Name)",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')?$expand=Trips($filter=Budget gt 2000;$orderby=StartsAt desc;$top=3;$select=Name,Budget;$expand=PlanItems($select=ConfirmationCode))",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')?$expand=Friends($levels=2;$select=UserName)",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')?$expand=Friends($search=Scott;$count=true)",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')?$expand=Trips($expand=PlanItems/Microsoft.OData.SampleService.Models.TripPin.Flight($expand=Airline,From,To))",
+    "valid": true,
+    "source": "TripPin",
+    "note": "type cast in $expand path"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips?$filter=StartsAt ge 2014-01-01T00:00:00Z and EndsAt lt 2014-12-31T23:59:59.999+01:00",
+    "valid": true,
+    "source": "TripPin",
+    "note": "dateTimeOffset with fractional seconds and offset"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips(0)/PlanItems?$filter=Duration gt duration'PT2H' and Duration le duration'P1DT2H30M'",
+    "valid": true,
+    "source": "TripPin",
+    "note": "duration literals"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips?$filter=TripId eq 0 or ShareId eq 9d9b2fa0-efbf-490e-a5e3-bac8f7d47354",
+    "valid": true,
+    "source": "TripPin",
+    "note": "guid literal"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips?$filter=Budget eq INF or Budget eq -INF or Budget ne NaN",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips?$filter=hassubset(Tags,['business','New York']) or hassubsequence(Tags,@t)&@t=[\"Trip in US\",\"business\"]",
+    "valid": true,
+    "source": "TripPin",
+    "note": "4.01 collection functions; array literal with single quotes directly in the expression, JSON array as alias value"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips?$filter=totalseconds(EndsAt sub StartsAt) gt 86400",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$orderby=length(FirstName) desc,LastName asc&$top=5",
+    "valid": true,
+    "source": "TripPin",
+    "note": "$orderby with expression"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$orderby=Trips/$count desc,tolower(LastName)",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$search=\"Russell Whyte\" OR Scott",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$search=NOT Scott",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/GetNearestAirport(lat=33,lon=-118)",
+    "valid": true,
+    "source": "TripPin",
+    "note": "unbound function with inline parameters"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/GetNearestAirport(lat=@lat,lon=@lon)?@lat=33.5&@lon=-118.25",
+    "valid": true,
+    "source": "TripPin",
+    "note": "function with parameter aliases"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Microsoft.OData.SampleService.Models.TripPin.GetFavoriteAirline()",
+    "valid": true,
+    "source": "TripPin",
+    "note": "bound function"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Microsoft.OData.SampleService.Models.TripPin.GetFriendsTrips(userName='scottketchum')?$select=Name&$top=2",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Trips(0)/Microsoft.OData.SampleService.Models.TripPin.GetInvolvedPeople()",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Microsoft.OData.SampleService.Models.TripPin.ShareTrip",
+    "valid": true,
+    "source": "TripPin",
+    "note": "bound action (POST)"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/ResetDataSource",
+    "valid": true,
+    "source": "TripPin",
+    "note": "action import (POST)"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Friends/$ref",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Friends('scottketchum')/$ref",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People('russellwhyte')/Photo/$value",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/Airports?$filter=contains(Location/Address,'San Francisco')",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/Airports?$filter=geo.distance(Location/Loc,geography'SRID=4326;POINT(-122.374722222222 37.6188888888889)') le 50000",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$filter=Microsoft.OData.SampleService.Models.TripPin.Employee/Cost gt 1000",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People/Microsoft.OData.SampleService.Models.TripPin.Manager?$expand=DirectReports($select=UserName)",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/People?$apply=groupby((Gender),aggregate($count as Count))",
+    "valid": true,
+    "source": "TripPin"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/\n    People?\n        $filter=Trips/any(t:t/Budget gt 3000)&\n        $expand=Trips($filter=Budget gt 3000;$select=Name,Budget)&\n        $select=UserName,FirstName,LastName",
+    "valid": true,
+    "source": "TripPin",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "singleton"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/messages?$select=subject,from,receivedDateTime&$top=25&$orderby=receivedDateTime desc",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/messages?$filter=isRead eq false and importance eq 'high'",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/messages?$filter=receivedDateTime ge 2024-01-01T00:00:00Z and from/emailAddress/address eq 'adele@contoso.com'",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/messages?$search=\"pizza\"",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/messages?$search=\"from:adele subject:budget\"&$top=10",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages?$filter=hasAttachments eq true&$expand=attachments($select=name,size)",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/events?$filter=start/dateTime ge '2024-06-01T00:00:00' and end/dateTime le '2024-06-30T23:59:59'&$orderby=start/dateTime",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=2024-06-01T00:00:00Z&endDateTime=2024-06-08T00:00:00Z&$select=subject,start,end",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "custom query options"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$filter=startswith(displayName,'A')&$select=id,displayName,mail&$top=50",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$filter=endswith(mail,'@contoso.com')&$count=true&$orderby=displayName",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$filter=accountEnabled eq true and userType eq 'Guest' and createdDateTime ge 2023-01-01T00:00:00Z",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$filter=assignedLicenses/any(l:l/skuId eq 184efa21-98c3-4e5d-95ab-d07053a96e67)",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "guid literal starting with digits inside lambda"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$filter=proxyAddresses/any(p:startswith(p,'smtp:adele'))",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$filter=mail in ('adele@contoso.com','alex@contoso.com')&$select=id,mail",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$filter=department ne null and not startswith(jobTitle,'Intern')&$count=true",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$search=\"displayName:wa\" OR \"mail:adele\"&$orderby=displayName&$count=true",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$expand=manager($select=id,displayName)&$select=id,displayName",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$expand=manager($levels=max;$select=id,displayName)&$count=true",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users/$count",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users('48d31887-5fad-4d73-a9f5-3c356e68a038')/manager",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users('adele@contoso.com')/memberOf/microsoft.graph.group?$select=id,displayName",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "type cast in path"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users/48d31887-5fad-4d73-a9f5-3c356e68a038/directReports",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "key-as-segment (4.01); cannot be distinguished from a property path without metadata"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/groups?$filter=groupTypes/any(c:c eq 'Unified')&$select=id,displayName",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/groups?$filter=not groupTypes/any(c:c eq 'Unified') and mailEnabled eq true&$count=true",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/groups('02bd9fd6-8f93-4758-87c3-1fb73740a315')/members/$count",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/groups('02bd9fd6-8f93-4758-87c3-1fb73740a315')/members/microsoft.graph.user/$count?$filter=accountEnabled eq true",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/groups('02bd9fd6-8f93-4758-87c3-1fb73740a315')/members/$ref",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/groups('02bd9fd6-8f93-4758-87c3-1fb73740a315')?$expand=members($select=id,displayName),owners($select=id)",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/memberOf/microsoft.graph.group?$filter=securityEnabled eq true&$orderby=displayName&$count=true",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/messages/delta()?$select=subject&$top=10",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "bound function without namespace is not strictly per ABNF (bound functions must be namespace-qualified) but syntactically a function call segment"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/mailFolders('Inbox')/messages/microsoft.graph.delta()?$deltatoken=LztZwWjo5IivWBhyxw5rACKxf7mPm0oW6JZZ7fvdI6E",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/users?$skiptoken=X%274453707402000100000017...%27",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "opaque skiptoken"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/reports/microsoft.graph.getOffice365ActiveUserDetail(period='D7')",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "bound function with inline parameter"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/microsoft.graph.reminderView(StartDateTime='2024-06-01T00:00:00',EndDateTime='2024-06-02T00:00:00')",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/me/microsoft.graph.sendMail",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "bound action (POST)"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/applications?$filter=web/redirectUris/any(u:startswith(u,'https://localhost'))&$count=true",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/devices?$filter=operatingSystem eq 'Windows' and approximateLastSignInDateTime le 2024-01-01T00:00:00Z&$top=100",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/sites?$search=contoso&$select=id,webUrl",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/$metadata",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/$batch",
+    "valid": true,
+    "source": "Microsoft Graph"
+  },
+  {
+    "url": "https://graph.microsoft.com/v1.0/\n    users?\n        $select=id,displayName,mail,userPrincipalName&\n        $filter=startswith(displayName,'A') and accountEnabled eq true&\n        $expand=manager($select=displayName)&\n        $orderby=displayName&\n        $top=25&\n        $count=true",
+    "valid": true,
+    "source": "Microsoft Graph",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$select=name,revenue&$filter=revenue gt 100000 and statecode eq 0&$orderby=revenue desc&$top=10",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "guid key"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)?$select=name&$expand=primarycontactid($select=fullname,emailaddress1),contact_customer_accounts($select=fullname;$top=5;$orderby=fullname asc)",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts(accountnumber='ABC123')?$select=name",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "alternate key"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/contacts(firstname='Joe',emailaddress1='abc@example.com')",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "composite alternate key"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)/name",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)/primarycontactid/$ref",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)/contact_customer_accounts?$select=fullname&$filter=statecode eq 0",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=_primarycontactid_value eq 7db3d4a9-1f4b-ec11-8c62-000d3a8c1f1b",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=contains(name,'(sample)') and address1_city ne null&$count=true",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/contacts?$filter=createdon ge 2024-01-01T00:00:00Z and createdon le 2024-12-31T23:59:59Z and birthdate lt 1990-01-01",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "date literal"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=primarycontactid/fullname eq 'Yvonne McKay (sample)'",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=contact_customer_accounts/any(c:c/jobtitle eq 'Purchasing Manager' and contains(c/emailaddress1,'example.com'))&$select=name",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=Account_Tasks/any()",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=Microsoft.Dynamics.CRM.LastXDays(PropertyName='createdon',PropertyValue=7)",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "namespace-qualified query function in $filter"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=Microsoft.Dynamics.CRM.LastXHours(PropertyName=@p1,PropertyValue=@p2)&@p1='modifiedon'&@p2=12",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "query function with parameter aliases"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=Microsoft.Dynamics.CRM.In(PropertyName='statecode',PropertyValues=[\"0\",\"1\"])",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "JSON array literal as function argument"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$filter=Microsoft.Dynamics.CRM.Between(PropertyName='numberofemployees',PropertyValues=[\"5\",\"2000\"]) and Microsoft.Dynamics.CRM.Today(PropertyName='modifiedon')",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$select=name&$expand=Account_Tasks($filter=contains(subject,'Task');$select=subject,scheduledend;$orderby=scheduledend desc)",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?$apply=aggregate(revenue with average as avg_revenue)",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/opportunities?$apply=groupby((statuscode),aggregate(estimatedvalue with sum as total,$count as count))",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/opportunities?$apply=filter(statecode eq 0)/groupby((parentaccountid/name),aggregate(estimatedvalue with max as largest))",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/WhoAmI()",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "unbound function"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/RetrieveVersion()",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/RetrieveTotalRecordCount(EntityNames=@p)?@p=[\"account\",\"contact\"]",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "JSON array as alias value"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/GetTimeZoneCodeByLocalizedName(LocalizedStandardName=@p1,LocaleId=@p2)?@p1='Pacific Standard Time'&@p2=1033",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/InitializeFrom(EntityMoniker=@p1,TargetEntityName=@p2,TargetFieldType=@p3)?@p1={\"@odata.id\":\"accounts(00000000-0000-0000-0000-000000000001)\"}&@p2='account'&@p3=Microsoft.Dynamics.CRM.TargetFieldType'ValidForCreate'",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "JSON object and enum literal as alias values"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts(00000000-0000-0000-0000-000000000001)/Microsoft.Dynamics.CRM.CalculateRollupField(FieldName='opendeals')",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "bound function"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/systemusers(00000000-0000-0000-0000-000000000002)/Microsoft.Dynamics.CRM.RetrievePrincipalAccess(Target=@tid)?@tid={\"@odata.id\":\"accounts(00000000-0000-0000-0000-000000000001)\"}",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/WinOpportunity",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "unbound action (POST)"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/queues(00000000-0000-0000-0000-000000000003)/Microsoft.Dynamics.CRM.AddToQueue",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "bound action (POST)"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='account')?$select=LogicalName,DisplayName&$expand=Attributes($select=LogicalName;$filter=AttributeType eq Microsoft.Dynamics.CRM.AttributeTypeCode'Picklist')",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "enum literal in nested $filter"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='account')/Attributes/Microsoft.Dynamics.CRM.PicklistAttributeMetadata?$select=LogicalName&$expand=OptionSet($select=Options)",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "type cast after collection navigation"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/EntityDefinitions(LogicalName='account')/Attributes(LogicalName='accountcategorycode')/Microsoft.Dynamics.CRM.PicklistAttributeMetadata/OptionSet",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/accounts?savedQuery=00000000-0000-0000-0000-000000000004",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "custom query option"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/contacts?$select=fullname&$filter=parentcustomerid_account/name eq 'Contoso' and (jobtitle eq 'CEO' or jobtitle eq 'CFO')&$orderby=createdon desc,fullname",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/$metadata?annotations=true",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse"
+  },
+  {
+    "url": "https://contoso.crm.dynamics.com/api/data/v9.2/\n    accounts?\n        $select=name,revenue,_ownerid_value&\n        $expand=primarycontactid($select=fullname)&\n        $filter=statecode eq 0 and revenue gt 1000000&\n        $orderby=revenue desc&\n        $top=50",
+    "valid": true,
+    "source": "Dynamics 365 / Dataverse",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/EPM_REF_APPS_SHOP_SRV/Products?$top=20&$skip=40&$inlinecount=allpages&$format=json",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/EPM_REF_APPS_SHOP_SRV/Products?$filter=substringof('Notebook',Name) eq true and Price le 1000.00m&$orderby=Price desc&sap-client=002",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/EPM_REF_APPS_SHOP_SRV/Products('HT-1000')?$expand=Supplier,Reviews&$select=Id,Name,Supplier/Name,Reviews/Rating",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/EPM_REF_APPS_SHOP_SRV/Products('HT-1000')/$value",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/$metadata?sap-language=EN&sap-documentation=heading",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrderSet('0500000001')/ToLineItems?$format=json",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrderLineItemSet(SalesOrderID='0500000001',ItemPosition='0000000010')",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "composite string key"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrderLineItemSet(SalesOrderID='0500000001',ItemPosition='0000000010')/ToProduct/ToSupplier",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrderSet('0500000001')/$links/ToLineItems",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrderSet?$filter=CreatedAt ge datetime'2023-01-01T00:00:00' and CreatedAt lt datetime'2023-02-01T00:00:00'&$inlinecount=allpages",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrderSet?$filter=GrossAmount gt 1000.50m and CurrencyCode eq 'EUR' and (LifecycleStatus eq 'N' or LifecycleStatus eq 'P')",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrderSet?$filter=CustomerName eq 'SAP' and startswith(SalesOrderID,'05') eq true&$expand=ToLineItems/ToProduct,ToBusinessPartner",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrderSet/$count?$filter=BillingStatus eq 'P'",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/ProductSet?$filter=WeightMeasure lt 2.0f and Width ge 3.0d and Depth le 10L and Price gt 1.5m",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "V2 numeric suffixes f/d/L/m"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/ProductSet?$filter=WeightMeasure lt 2.5F and Width ge 1.0E+10d and Height eq 100L",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "V2 numeric suffixes, case variants"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/ProductSet?$filter=toupper(Category) eq 'NOTEBOOKS' and length(Description) gt 10 and substring(ProductID,0,2) eq 'HT'&$select=ProductID,Name,Price",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/BusinessPartnerSet?$filter=indexof(CompanyName,'SAP') ge 0 or trim(EmailAddress) eq '' or concat(CompanyName,LegalForm) eq 'SAPSE'",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrder_Confirm?SalesOrderID='0500000001'",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "V2 function import with query-string parameter"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/SalesOrder_InvoiceCreated?SalesOrderID='0500000001'&sap-client=002&$format=json",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/$batch",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/ContactSet(guid'0050568D-393C-1EE4-9882-CEC33E1530CD')",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "V2 guid key"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/ContactSet?$filter=ContactGuid eq guid'0050568D-393C-1EE4-9882-CEC33E1530CD'",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://sapes5.sapdevcenter.com/sap/opu/odata/sap/GWSAMPLE_BASIC/ProductSet?$skiptoken=100&$top=100",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://gateway.example.com:44300/sap/opu/odata/sap/ZTIME_SRV/TimeEntrySet?$filter=StartTime ge time'PT8H30M' and StartTime lt time'PT17H00M00S'",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "V2 time literal"
+  },
+  {
+    "url": "https://gateway.example.com:44300/sap/opu/odata/sap/ZTIME_SRV/TimeEntrySet(Pernr='00001234',Date=datetime'2023-05-01T00:00:00',Counter=1L)",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "composite key with datetime and int64"
+  },
+  {
+    "url": "https://gateway.example.com:44300/sap/opu/odata/sap/ZEVENT_SRV/EventSet?$filter=ChangedAt gt datetimeoffset'2023-05-01T12:00:00Z' and ChangedAt le datetimeoffset'2023-05-01T18:30:00.1234567+02:00'",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "V2 datetimeoffset literal"
+  },
+  {
+    "url": "https://gateway.example.com:44300/sap/opu/odata/sap/ZDOC_SRV/DocumentSet?$filter=Hash eq X'23AB' or Hash eq binary'23ABFF'",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "V2 binary literals"
+  },
+  {
+    "url": "https://gateway.example.com:44300/sap/opu/odata/sap/ZDOC_SRV/DocumentSet(binary'0A1B2C')/$value",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://gateway.example.com:44300/sap/opu/odata/sap/ZDOC_SRV/GetDocuments?DateFrom=datetime'2023-01-01T00:00:00'&DateTo=datetime'2023-12-31T23:59:59'&MaxHits=50&Active=true",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "function import with typed query-string parameters"
+  },
+  {
+    "url": "https://gateway.example.com:44300/sap/opu/odata/sap/ZSTOCK_SRV/StockSet?$filter=Quantity eq -5 and Amount gt -1.5m and Flag eq true and Note eq null",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://gateway.example.com:44300/sap/opu/odata/sap/ZSTOCK_SRV/StockSet?search=pump&search-focus=Material&$top=10",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "SAP custom search options"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner('1000001')/to_BusinessPartnerAddress?$select=AddressID,CityName,Country&$format=json",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartner?$filter=BusinessPartnerCategory eq '2' and CreationDate ge datetime'2024-01-01T00:00:00'&$expand=to_BusinessPartnerAddress/to_EmailAddress&$top=50&$inlinecount=allpages",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata/sap/API_BUSINESS_PARTNER/A_BusinessPartnerAddress(BusinessPartner='1000001',AddressID='22')",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrder?$filter=SalesOrganization eq '1010' and OverallSDProcessStatus ne 'C' and TotalNetAmount gt 500.00m&$orderby=CreationDate desc,SalesOrder asc&$select=SalesOrder,SoldToParty,TotalNetAmount",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata/sap/API_SALES_ORDER_SRV/A_SalesOrderItem(SalesOrder='1',SalesOrderItem='10')/to_ScheduleLine",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata/sap/C_SALESORDERMANAGE_SRV/C_SalesOrderTP(SalesOrder='1',DraftUUID=guid'00000000-0000-0000-0000-000000000000',IsActiveEntity=true)/to_Item",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "draft key with guid and boolean"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata/sap/API_PRODUCT_SRV/A_Product?$filter=substringof('PUMP',Product) and LastChangeDateTime gt datetimeoffset'2024-03-01T00:00:00Z'",
+    "valid": true,
+    "source": "SAP Gateway V2"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata/sap/API_SALES_ORDER_SRV/\n    A_SalesOrder?\n        $filter=SalesOrganization eq '1010' and CreationDate ge datetime'2024-01-01T00:00:00'&\n        $expand=to_Item,to_Partner&\n        $inlinecount=allpages&\n        $top=100&\n        sap-client=100",
+    "valid": true,
+    "source": "SAP Gateway V2",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrder?$filter=SalesOrganization eq '1010' and CreationDate ge 2024-01-01&$expand=_Item($select=SalesOrderItem,Material;$filter=RequestedQuantity gt 10)&$count=true&$top=50",
+    "valid": true,
+    "source": "SAP S/4HANA V4"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrder('1')/_Item(SalesOrder='1',SalesOrderItem='10')",
+    "valid": true,
+    "source": "SAP S/4HANA V4"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrder('1')/SAP__self.Reject",
+    "valid": true,
+    "source": "SAP S/4HANA V4",
+    "note": "bound action (POST)"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrderItem?$apply=groupby((Material,Plant),aggregate(NetAmount with sum as TotalNet))&$orderby=TotalNet desc",
+    "valid": true,
+    "source": "SAP S/4HANA V4"
+  },
+  {
+    "url": "https://my300123-api.s4hana.ondemand.com/sap/opu/odata4/sap/api_salesorder/srvd_a2x/sap/salesorder/0001/SalesOrder?$search=\"pump station\"&$select=SalesOrder,SoldToParty&sap-language=EN",
+    "valid": true,
+    "source": "SAP S/4HANA V4"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$select=WorkItemId,Title,State&$filter=WorkItemType eq 'Bug' and State ne 'Closed'&$orderby=CreatedDate desc&$top=100",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$filter=WorkItemType eq 'User Story' and Iteration/IterationPath eq 'Fabrikam-Fiber\\Sprint 12'&$expand=AssignedTo($select=UserName),Iteration($select=IterationPath),Area($select=AreaPath)",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "backslash inside string literal"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=aggregate($count as Count)",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(WorkItemType eq 'Bug')/aggregate($count as Count)",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(WorkItemType eq 'Bug' and State ne 'Closed')/groupby((State,AssignedTo/UserName),aggregate($count as Count))",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(WorkItemType eq 'User Story' and startswith(Area/AreaPath,'Fabrikam-Fiber'))/groupby((Iteration/IterationPath),aggregate(StoryPoints with sum as TotalPoints,$count as Count))&$orderby=TotalPoints desc",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=groupby((WorkItemType,State),aggregate(StoryPoints with sum as Sum,StoryPoints with average as Avg,StoryPoints with min as Min,StoryPoints with max as Max,AssignedToUserSK with countdistinct as People))",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "all standard aggregation methods"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(State eq 'Closed' and ClosedDate ge 2024-01-01T00:00:00Z)/groupby((ClosedDateSK),aggregate($count as Count))/filter(Count gt 5)",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "filter after groupby"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(WorkItemType eq 'Bug')/groupby((Priority),aggregate($count as Count))/aggregate(Count with max as MaxCount)",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "chained aggregate"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(WorkItemType eq 'Bug')/compute(CompletedWork add RemainingWork as TotalWork)/groupby((AssignedTo/UserName),aggregate(TotalWork with sum as Work))",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(Tags/any(t:t/TagName eq 'regression'))/groupby((Area/AreaPath),aggregate($count as Count,cast(StoryPoints,Edm.Decimal) with sum as Points))",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "lambda inside filter transformation, cast inside aggregate"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItemSnapshot?$apply=filter(WorkItemType eq 'Bug' and DateValue ge 2024-01-01T00:00:00Z and DateValue le 2024-03-31T00:00:00Z)/groupby((DateValue,State),aggregate($count as Count))&$orderby=DateValue",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItemBoardSnapshot?$apply=filter(Team/TeamName eq 'Fabrikam Team' and BoardName eq 'Stories' and DateValue ge 2024-01-01T00:00:00Z)/groupby((DateValue,ColumnName,LaneName,State),aggregate($count as Count))",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(WorkItemType eq 'Bug')/topcount(10,StoryPoints)",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(WorkItemType eq 'Bug')/bottomcount(5,Priority)/groupby((State),aggregate($count as Count))",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=topsum(100,StoryPoints)",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=toppercent(20,StoryPoints)/aggregate(StoryPoints with sum as Top20)",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=bottomsum(10,RemainingWork)",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=bottompercent(50,RemainingWork)",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=concat(groupby((State),aggregate($count as Count)),aggregate($count as Total))",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=groupby((rollup(Project/ProjectName,Area/AreaPath)),aggregate(StoryPoints with sum as Points))",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "rollup"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=groupby((WorkItemType))",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "groupby without aggregate"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=identity/filter(State eq 'Active')",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=search(regression)/groupby((State),aggregate($count as Count))",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=groupby((State),aggregate($count as Count))/orderby(Count desc)/top(3)/skip(1)",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "Aggregation 4.01 orderby/top/skip transformations"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=groupby((AssignedTo/UserName),aggregate(Links/$count as LinkCount))",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/_odata/v4.0-preview/PipelineRuns?$apply=filter(Pipeline/PipelineName eq 'CI' and CompletedDate ge 2024-01-01T00:00:00Z)/aggregate($count as TotalCount,SucceededCount with sum as SucceededCount,FailedCount with sum as FailedCount)/compute(SucceededCount mul 100.0 div TotalCount as PassRate)",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/_odata/v4.0-preview/TestResultsDaily?$apply=filter(Pipeline/PipelineName eq 'CI' and DateSK ge 20240101 and Workflow eq 'Build')/groupby((Test/TestName),aggregate(ResultCount with sum as TotalCount,ResultPassCount with sum as PassedCount,ResultFailCount with sum as FailedCount))/filter(FailedCount gt 0)/compute(PassedCount div cast(TotalCount,Edm.Decimal) as PassRate)&$orderby=FailedCount desc&$top=20",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/Iterations?$filter=StartDate le now() and EndDate ge now()&$select=IterationName,StartDate,EndDate",
+    "valid": true,
+    "source": "Azure DevOps Analytics"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/\n    WorkItems?\n        $apply=filter(WorkItemType eq 'Bug' and State ne 'Closed')/groupby((AssignedTo/UserName,Priority),aggregate($count as Count))&\n        $orderby=Count desc",
+    "valid": true,
+    "source": "Azure DevOps Analytics",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists?$select=Title,Id,ItemCount&$filter=Hidden eq false and BaseTemplate eq 100&$orderby=Title",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "SharePoint method call with positional string argument (parses like a V2/V3 key predicate)"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items?$select=Title,Status,Author/Title,AssignedTo/EMail&$expand=Author,AssignedTo&$filter=Status eq 'Completed'&$orderby=Created desc&$top=100",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items(12)",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items(12)/FieldValuesAsText",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items?$filter=substringof('report',Title) and Modified ge datetime'2024-01-01T00:00:00Z'",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "V2/V3 datetime with Z"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items?$filter=startswith(Title,'Q1') and (Priority eq '(1) High' or Priority eq '(2) Normal')&$top=5000",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "parentheses inside string literals"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items?$filter=AuthorId eq 9 and DueDate lt datetime'2024-06-30T23:59:59Z' and PercentComplete lt 1",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items?$skiptoken=Paged%3DTRUE%26p_ID%3D100&$top=100",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "percent-encoded skiptoken"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists(guid'51925dd7-2108-481a-b1ef-4bfa4e69d48b')/items?$top=10",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "V3 guid key"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists(guid'51925dd7-2108-481a-b1ef-4bfa4e69d48b')/fields?$filter=Hidden eq false and ReadOnlyField eq false&$select=Title,InternalName,TypeAsString",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/GetFolderByServerRelativeUrl('/sites/dev/Shared Documents')/Files?$select=Name,ServerRelativeUrl,TimeLastModified&$orderby=TimeLastModified desc",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/GetFileByServerRelativeUrl('/sites/dev/Shared Documents/report.docx')/$value",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/GetFileByServerRelativeUrl('/sites/dev/Shared Documents/Bob''s notes.txt')/ListItemAllFields",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "escaped '' quote in method argument"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/siteusers?$filter=startswith(Title,'A') and IsSiteAdmin eq false&$select=Id,Title,Email",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/sitegroups(5)/users",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/currentuser?$select=Id,Title,LoginName&$expand=Groups",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/search/query?querytext='sharepoint'&rowlimit=10&selectproperties='Title,Path'",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "function with query-string parameters"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Documents')/items?$select=FileLeafRef,FileRef,Editor/Title&$expand=Editor&$filter=FSObjType eq 0&$orderby=Modified desc&$top=20",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/web/lists/getbytitle('Tasks')/items?$select=Title,Status&$filter=Status%20eq%20%27In%20Progress%27",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "percent-encoded"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/$metadata",
+    "valid": true,
+    "source": "SharePoint REST"
+  },
+  {
+    "url": "https://contoso.sharepoint.com/sites/dev/_api/\n    web/lists/getbytitle('Tasks')/items?\n        $select=Id,Title,Status&\n        $filter=Status ne 'Completed'&\n        $top=50",
+    "valid": true,
+    "source": "SharePoint REST",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Price eq 5 and ReleaseDate eq 2024-02-29 and OpensAt eq 07:59:59.999 and Updated eq 2024-02-29T07:59:59.999Z",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "date, timeOfDay, dateTimeOffset literals"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Thumbnail eq binary'T0RhdGE=' and Id eq 01234567-89ab-cdef-0123-456789abcdef",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "binary and guid literals"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=ShelfLife gt duration'P1DT2H' and Warranty le duration'P365D' and Delay eq duration'-PT15M30.5S'",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Weight eq INF or Weight eq -INF or Weight eq NaN or Weight eq null or InStock eq true or InStock eq false",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Color eq Sales.Color'Red' and Style has Sales.Pattern'Yellow'",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "enum literals"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Color in (Sales.Color'Red',Sales.Color'Green') or Name in ('Milk','Cheese')",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Name in [\"Milk\",\"Cheese\"]",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "JSON array as right operand of in"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Price add 2.5 sub 1 mul 2 div 4 divby 3 mod 2 gt 0",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "all arithmetic operators"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Price eq 1 or Price ne 2 or Price gt 3 or Price ge 4 or Price lt 5 or Price le 6",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "all comparison operators"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=not (Price gt 5) and not contains(Name,'x') and not Discontinued",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=((Price gt 5) and (Price lt 10)) or ((Rating eq 5))",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "nested parentheses"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Tags/any(t:t in ('new','sale')) and Reviews/all(r:r/Stars ge 3 and r/Comments/any(c:contains(c/Text,'great')))",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Sales.MostPopular(year=2024) and Category/Sales.IsSeasonal()",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "bound boolean functions in $filter"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Sales.Customer/Discount gt 0.1 and isof(Sales.DiscountedProduct) and cast(Price,Edm.Decimal) gt 5",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=year(Updated) eq 2024 and totalseconds(ShelfLife) gt 3600 and date(Updated) ne 2024-01-01 and time(Updated) ge 08:00",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=geo.distance(Location,geometry'SRID=0;Point(142.1 64.1)') lt 10 and geo.intersects(Location,@area)&@area=geography'SRID=4326;Polygon((1 1,1 2,2 2,2 1,1 1))'",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$expand=Category($select=Name;$expand=Parent($levels=5)),Supplier/Sales.PreferredSupplier($select=Name),Sales.DiscountedProduct/Campaign",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "type casts in $expand"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$expand=Reviews($filter=Stars ge 4;$orderby=Created desc,Stars;$skip=2;$top=3;$count=true;$search=great;$compute=Stars mul 20 as Percent;$select=Text,Percent;$levels=2)",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$expand=Reviews/$ref($filter=Stars ge 4;$orderby=Created desc;$top=5),Tags/$count($search=sale)",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$select=Name,Sales.DiscountedProduct/Discount,Sales.*,Dimensions/Height,Sales.Reorder",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "$select with cast, all-operations wildcard, complex path, action"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$select=Name,Dimensions($select=Height,Width),Variants($filter=InStock eq true;$orderby=Price;$top=2;$select=Sku,Price)",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$orderby=Price mul Quantity desc,tolower(Name) asc,Category/Name,Reviews/$count desc",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$compute=Price mul Quantity as Total,year(Updated) as UpdatedYear,concat(Name,' (new)') as Label&$select=Name,Total,UpdatedYear,Label&$filter=Total gt 100",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$search=blue OR (green AND NOT \"dark green\")&$count=true",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$search=NOT clothing AND (bike OR \"e-scooter\")&$filter=Price lt 500&$orderby=Price",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$apply=groupby((Category/Name,Supplier/Country),aggregate(Price with average as AvgPrice,Price mul Quantity with sum as Revenue,$count as Items))&$filter=Revenue gt 1000&$orderby=Revenue desc&$top=10",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Sales?$apply=filter(Amount gt 3)/groupby((Customer/Country,Product/Name),aggregate(Amount with sum as Total))/filter(Total ge 4)/orderby(Total desc)/top(5)",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Sales?$apply=compute(Amount mul Product/TaxRate as Tax)/aggregate(Tax with sum as TotalTax,Amount with countdistinct as DistinctAmounts)",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Sales?$apply=concat(aggregate(Amount with sum as Total),groupby((Product/Name),aggregate(Amount with max as MaxAmount)),topcount(2,Amount))",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Sales?$apply=groupby((rollup(Customer/Country,Customer/Name),Product/Name),aggregate(Amount with sum as Total))",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/ProductsByColor(color=Sales.Color'Red')?$top=3",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "function import with enum parameter"
+  },
+  {
+    "url": "https://example.com/odata/v4/ProductsByColors(colors=@c)?@c=[\"Red\",\"Green\"]",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "JSON array as alias value"
+  },
+  {
+    "url": "https://example.com/odata/v4/ProductsByAddress(address=@a)/$count?@a={\"Street\":\"One Microsoft Way\",\"City\":\"Redmond\",\"Zip\":98052,\"Verified\":true,\"Geo\":null}",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "JSON object as alias value"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products(1)/Sales.PriceIn(currency='EUR',date=2024-01-01)/Amount/$value",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "bound function followed by path"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products/Sales.TopSellers(count=10)/Sales.DiscountedProduct?$filter=Discount gt 0.2&$expand=Campaign",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "collection-bound function then type cast"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products(@id)?@id=1",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "key as parameter alias"
+  },
+  {
+    "url": "https://example.com/odata/v4/Orders(OrderId=@o,LineNo=@l)?@o=10248&@l=3",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Customers('A''B''''C')/Orders(Year=2024,Number='0001')/Items(3)/Product/Supplier/Address/City",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "deep navigation, multiple escaped quotes"
+  },
+  {
+    "url": "https://example.com/odata/v4/$entity?$id=https://example.com/odata/v4/Products(1)&$format=json",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "absolute $id"
+  },
+  {
+    "url": "https://example.com/odata/v4/$crossjoin(Customers,Orders,Products)?$filter=Customers/Id eq Orders/CustomerId and Orders/ProductId eq Products/Id&$top=100",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$format=application/json;odata.metadata=none;odata.streaming=true",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$schemaversion=2.1&$top=1",
+    "valid": true,
+    "source": "OData 4.01 spec-style"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$FILTER=Price gt 5&$Top=3&$OrderBy=Name",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "4.01 case-insensitive system query option names"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=Price gt 5&$orderby=Name asc&$top=10&$skip=5&$count=true&$select=Name,Price&$expand=Category&$search=bike&$format=json&$compute=Price mul 2 as Double&customOption=abc&@alias=5",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "many options at once"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$filter=contains(Name,%27it%27%27s%27)%20and%20Price%20lt%2010",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "percent-encoded"
+  },
+  {
+    "url": "https://example.com/odata/v4/Products?$expand=Category(%24select=Name%3B%24top=1)",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "percent-encoded $ and ; inside $expand options (needs percent-decoding of $)"
+  },
+  {
+    "url": "https://example.com/odata/v4/\n    Customers('ALFKI')/Orders?\n        $filter=Total gt 100 and Items/any(i:i/Product/Name eq 'Chai')&\n        $expand=Items($expand=Product($select=Name);$orderby=LineNo)&\n        $orderby=OrderDate desc&\n        $top=5",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "multi-line"
+  },
+  {
+    "url": "https://example.com/odata/v4/\n    GetNearestStore(lat=@lat,lon=@lon)?\n        @lat=47.64&\n        @lon=-122.13&\n        $select=Name,Address",
+    "valid": true,
+    "source": "OData 4.01 spec-style",
+    "note": "multi-line with aliases"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice gt",
+    "valid": false,
+    "source": "invalid",
+    "note": "dangling comparison operator, missing right operand"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice gt 5 and",
+    "valid": false,
+    "source": "invalid",
+    "note": "dangling logical operator"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=(UnitPrice gt 5",
+    "valid": false,
+    "source": "invalid",
+    "note": "unbalanced parenthesis (missing close)"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice gt 5)",
+    "valid": false,
+    "source": "invalid",
+    "note": "unbalanced parenthesis (extra close)"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=ProductName eq 'Chai",
+    "valid": false,
+    "source": "invalid",
+    "note": "unterminated string literal"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Customers?$filter=CompanyName eq 'O'Neil'",
+    "valid": false,
+    "source": "invalid",
+    "note": "unescaped quote inside string literal leaves garbage after the expression"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice 5",
+    "valid": false,
+    "source": "invalid",
+    "note": "two operands without an operator"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice gt gt 5",
+    "valid": false,
+    "source": "invalid",
+    "note": "duplicated operator"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice eq 5 or or UnitPrice eq 6",
+    "valid": false,
+    "source": "invalid",
+    "note": "duplicated logical operator"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice add eq 5",
+    "valid": false,
+    "source": "invalid",
+    "note": "arithmetic operator without right operand"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice > 5",
+    "valid": false,
+    "source": "invalid",
+    "note": "symbolic operator is not OData syntax"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice == 5",
+    "valid": false,
+    "source": "invalid",
+    "note": "symbolic operator is not OData syntax"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice gt 5 garbage",
+    "valid": false,
+    "source": "invalid",
+    "note": "garbage after complete expression"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=UnitPrice gt 5 $top=3",
+    "valid": false,
+    "source": "invalid",
+    "note": "missing & between options"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=",
+    "valid": false,
+    "source": "invalid",
+    "note": "missing $filter value"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$top=",
+    "valid": false,
+    "source": "invalid",
+    "note": "missing $top value"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$top=abc",
+    "valid": false,
+    "source": "invalid",
+    "note": "$top must be a non-negative integer"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$skip=1.5",
+    "valid": false,
+    "source": "invalid",
+    "note": "$skip must be a non-negative integer"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$count=yes",
+    "valid": false,
+    "source": "invalid",
+    "note": "$count must be true or false"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=contains(ProductName,'a'",
+    "valid": false,
+    "source": "invalid",
+    "note": "unclosed function call"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$filter=ProductID in (1,2",
+    "valid": false,
+    "source": "invalid",
+    "note": "unclosed list"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=Order_Details/any(d d/Quantity gt 1)",
+    "valid": false,
+    "source": "invalid",
+    "note": "lambda without colon after variable"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=Order_Details/any(d:)",
+    "valid": false,
+    "source": "invalid",
+    "note": "lambda with empty predicate"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=Order_Details/all()",
+    "valid": false,
+    "source": "invalid",
+    "note": "all() requires a lambda variable and predicate"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$filter=Order_Details/any(d:d/Quantity gt 1",
+    "valid": false,
+    "source": "invalid",
+    "note": "unclosed lambda"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$orderby=UnitPrice desc asc",
+    "valid": false,
+    "source": "invalid",
+    "note": "two sort directions"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$orderby=UnitPrice,",
+    "valid": false,
+    "source": "invalid",
+    "note": "trailing comma in $orderby"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$select=ProductName,,UnitPrice",
+    "valid": false,
+    "source": "invalid",
+    "note": "empty $select item"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$expand=Customer($select=CompanyName",
+    "valid": false,
+    "source": "invalid",
+    "note": "unclosed $expand options"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$expand=Order_Details($filter=)",
+    "valid": false,
+    "source": "invalid",
+    "note": "nested $filter without value"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Orders?$expand=Order_Details()",
+    "valid": false,
+    "source": "invalid",
+    "note": "empty $expand option list"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products(",
+    "valid": false,
+    "source": "invalid",
+    "note": "unclosed key predicate"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Order_Details(OrderID=10248,ProductID=)",
+    "valid": false,
+    "source": "invalid",
+    "note": "key property without value"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$compute=UnitPrice mul 2",
+    "valid": false,
+    "source": "invalid",
+    "note": "$compute item requires \"as <alias>\""
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$search=\"blue",
+    "valid": false,
+    "source": "invalid",
+    "note": "unterminated search phrase"
+  },
+  {
+    "url": "https://services.odata.org/V4/Northwind/Northwind.svc/Products?$search=(blue OR green",
+    "valid": false,
+    "source": "invalid",
+    "note": "unbalanced parenthesis in $search"
+  },
+  {
+    "url": "https://services.odata.org/V4/TripPinService/GetNearestAirport(lat=33,lon=)",
+    "valid": false,
+    "source": "invalid",
+    "note": "function parameter without value"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=groupby(State,aggregate($count as Count))",
+    "valid": false,
+    "source": "invalid",
+    "note": "groupby properties must be wrapped in parentheses"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=aggregate(StoryPoints with sum)",
+    "valid": false,
+    "source": "invalid",
+    "note": "aggregate expression requires \"as <alias>\""
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=filter(State eq 'Active')/",
+    "valid": false,
+    "source": "invalid",
+    "note": "trailing / after transformation"
+  },
+  {
+    "url": "https://analytics.dev.azure.com/fabrikam/Fabrikam-Fiber/_odata/v3.0-preview/WorkItems?$apply=groupby((State),aggregate($count as Count)",
+    "valid": false,
+    "source": "invalid",
+    "note": "unbalanced parenthesis in $apply"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Orders?$filter=OrderDate ge datetime'1997-01-01T00:00:00",
+    "valid": false,
+    "source": "invalid",
+    "note": "unterminated V2 datetime literal"
+  },
+  {
+    "url": "https://services.odata.org/V2/Northwind/Northwind.svc/Products?$filter=substringof('Sauce',ProductName eq true",
+    "valid": false,
+    "source": "invalid",
+    "note": "unclosed V2 function call"
+  }
+]

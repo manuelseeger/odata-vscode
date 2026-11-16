@@ -112,8 +112,61 @@ suite("ODataDiagnosticProvider", () => {
         assert.strictEqual(diagnostics?.length, 1);
         assert.strictEqual(
             diagnostics![0].message,
-            `'Resource Orders doesn't have a navigational property NonExistantProperty in profile TestProfile.`,
+            "Navigation property 'NonExistantProperty' not found on type 'testing.Order'.",
         );
         assert.strictEqual(diagnostics![0].severity, vscode.DiagnosticSeverity.Warning);
+    });
+
+    async function diagnose(query: string): Promise<vscode.Diagnostic[]> {
+        const odata = `${profile.baseUrl}${query}`;
+        const result = new SyntaxParser().processText(odata);
+        const queryDocument = await vscode.workspace.openTextDocument({ content: odata });
+        await diagnosticProvider.handleParseSucess(queryDocument.uri, result!);
+        return [...(diagnosticProvider.diagnostics.get(queryDocument.uri) ?? [])];
+    }
+
+    test("should check nested expand options against the expanded type", async () => {
+        assert.deepStrictEqual(
+            await diagnose("Orders?$expand=Items($select=ItemName,Quantity;$filter=Quantity gt 1)"),
+            [],
+        );
+
+        const diagnostics = await diagnose("Orders?$expand=Items($select=ItemName,OrderDate)");
+        assert.strictEqual(diagnostics.length, 1);
+        assert.strictEqual(
+            diagnostics[0].message,
+            "Property 'OrderDate' not found on type 'testing.Item'.",
+        );
+        // https://example.com/odata/Orders?$expand=Items($select=ItemName,OrderDate)
+        assert.strictEqual(diagnostics[0].range.start.character, 64);
+        assert.strictEqual(diagnostics[0].range.end.character, 73);
+    });
+
+    test("should check lambda expressions", async () => {
+        assert.deepStrictEqual(await diagnose("Orders?$filter=Items/any(i: i/Quantity gt 1)"), []);
+        const diagnostics = await diagnose("Orders?$filter=Items/any(i: i/OrderDate gt 1)");
+        assert.strictEqual(diagnostics.length, 1);
+        assert.strictEqual(
+            diagnostics[0].message,
+            "Property 'OrderDate' not found on type 'testing.Item'.",
+        );
+    });
+
+    test("should accept special paths", async () => {
+        assert.deepStrictEqual(await diagnose("$metadata"), []);
+        assert.deepStrictEqual(await diagnose("Orders/$count"), []);
+        assert.deepStrictEqual(await diagnose("Orders(1)/Items/$count?$filter=Quantity gt 1"), []);
+    });
+
+    test("should report syntax error and metadata warnings together", async () => {
+        const diagnostics = await diagnose("Orders?$select=Nope&$filter=OrderID eq ");
+        assert.deepStrictEqual(
+            diagnostics.map((d) => d.severity),
+            [vscode.DiagnosticSeverity.Error, vscode.DiagnosticSeverity.Warning],
+        );
+        assert.strictEqual(
+            diagnostics[1].message,
+            "Property 'Nope' not found on type 'testing.Order'.",
+        );
     });
 });

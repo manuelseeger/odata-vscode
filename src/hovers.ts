@@ -2,8 +2,10 @@ import * as vscode from "vscode";
 import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { odata, Profile } from "./contracts/types";
-import { Csdl, EntitySet, findRoot, findType, formatTypeRef, members, memberType } from "./schema";
+import { spanToRange } from "./diagnostics";
+import { resolvedSiteAt } from "./language/completion";
 import { Disposable } from "./provider";
+import { Csdl, EntitySet, findRoot, findType, formatTypeRef, members, memberType } from "./schema";
 import { formatFunctionLabel } from "./signatures";
 import { combineODataUrl, getBaseUrl } from "./util";
 
@@ -64,9 +66,28 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
 
         try {
             const metadata = this.metadataService.getCsdl(profile);
-            const found = metadata && findRoot(metadata, word);
-            if (metadata && found?.kind === "found" && found.value.kind === "set") {
-                return new vscode.Hover(this.getEntityTypeHover(metadata, found.value.record), wordRange);
+            if (metadata) {
+                const site = resolvedSiteAt(document.getText(), document.offsetAt(position), {
+                    csdl: metadata,
+                    baseUrl: getBaseUrl(profile.baseUrl),
+                });
+                if (site?.resolved?.kind === "property") {
+                    const { member, owner } = site.resolved;
+                    return new vscode.Hover(
+                        new vscode.MarkdownString(
+                            `**Property**: ${member.record.name}\n\n**Type**: ${formatTypeRef(memberType(member))}\n\n**On type**: ${owner.qname}`,
+                        ),
+                        spanToRange(site.span),
+                    );
+                }
+
+                const found = findRoot(metadata, word);
+                if (found.kind === "found" && found.value.kind === "set") {
+                    return new vscode.Hover(
+                        this.getEntityTypeHover(metadata, found.value.record),
+                        wordRange,
+                    );
+                }
             }
         } catch {
             return new vscode.Hover(this.getSelectedProfileHover(document, profile));

@@ -10,7 +10,8 @@
 		"allowJs": true, // Include .js files -> the parser
 		"outDir": "out",
 		"strict": true,
-		"resolveJsonModule": true
+		"resolveJsonModule": true,
+		"types": ["node", "mocha"]
 	},
 	"include": ["src/**/*"],
 	"exclude": [

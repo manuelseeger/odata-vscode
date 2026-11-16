@@ -1,5 +1,5 @@
 import {
-    ActionImport, Csdl, EntitySet, FunctionImport, LegacyOperationImport,
+    ActionImport, Csdl, EntitySet, EnumType, Function, FunctionImport, LegacyOperationImport,
     Nav, Prop, StructuredType, TypeRef,
 } from "./model";
 
@@ -131,4 +131,48 @@ export function resolveMemberPath(
         }
     }
     return member;
+}
+
+export function findEnum(csdl: Csdl, qname: string): EnumType | undefined {
+    return csdl.enums.find((type) => type.qname === qname);
+}
+
+/** This type and each type it inherits from, nearest first. */
+export function typeChain(csdl: Csdl, type: StructuredType): StructuredType[] {
+    const chain: StructuredType[] = [];
+    const seen = new Set<string>();
+    let current: StructuredType | undefined = type;
+    while (current && !seen.has(current.qname)) {
+        seen.add(current.qname);
+        chain.push(current);
+        current = current.base ? findType(csdl, current.base) : undefined;
+    }
+    return chain;
+}
+
+export function boundFunctions(csdl: Csdl, type: StructuredType): Function[] {
+    const names = new Set(typeChain(csdl, type).map((item) => item.qname));
+    return csdl.functions.filter((fn) => fn.bound && names.has(fn.bound.qname));
+}
+
+export function derivedTypes(csdl: Csdl, qname: string): string[] {
+    const children = new Map<string, string[]>();
+    for (const type of csdl.types) {
+        if (type.base) {
+            children.set(type.base, [...(children.get(type.base) ?? []), type.qname]);
+        }
+    }
+    const names: string[] = [];
+    const pending = [...(children.get(qname) ?? [])];
+    const seen = new Set<string>();
+    while (pending.length) {
+        const name = pending.pop()!;
+        if (seen.has(name)) {
+            continue;
+        }
+        seen.add(name);
+        names.push(name);
+        pending.push(...(children.get(name) ?? []));
+    }
+    return names;
 }
