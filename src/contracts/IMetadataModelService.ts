@@ -1,4 +1,5 @@
-import { IODataConfiguration, Profile } from "./types";
+import { Profile } from "./types";
+import { SchemaSummary } from "../schema";
 import { DataModel } from "../odata2ts/data-model/DataModel";
 
 export interface IMetadataModelService {
@@ -29,19 +30,11 @@ export interface IMetadataModelService {
     refreshModel(profile: Profile): Promise<DataModel>;
 
     /**
-     * Clears all cached data, including models, XML documents, and filtered metadata.
+     * Clears all cached data, including models, XML documents, and schema summaries.
      */
     clearCache(): void;
 
-    /**
-     * Filters the provided metadata XML based on the given configuration and returns the filtered XML.
-     *
-     * @param text - The metadata XML to filter.
-     * @param config - The configuration specifying filtering rules and namespaces.
-     * @returns The filtered metadata XML as a string.
-     * @throws An error if the provided XML is not valid OData metadata.
-     */
-    getFilteredMetadataXml(text: string, config: IODataConfiguration): string;
+    getSchemaSummary(text: string, root: string): SchemaSummary;
 
     /**
      * Checks if a data model exists for the given profile in the cache. If not, it processes the metadata

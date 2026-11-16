@@ -1,11 +1,9 @@
 import { suite, test } from "mocha";
 
 import { MetadataModelService } from "../../services/MetadataModelService";
-import { AuthKind, IODataConfiguration, Profile } from "../../contracts/types";
+import { AuthKind, Profile } from "../../contracts/types";
 import { DataModel } from "../../odata2ts/data-model/DataModel";
 import * as assert from "assert";
-import * as fs from "fs";
-import path from "path";
 
 export const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
     <edmx:DataServices>
@@ -87,122 +85,29 @@ suite("MetadataModelService", () => {
         });
     });
 
-    suite("filterMetadataXml", () => {
-        test("should filter namespace from XML", () => {
-            const config: IODataConfiguration = {
-                metadata: {
-                    filterNs: ["http://docs.oasis-open.org/odata/ns/edm"],
-                    filterXPath: [],
-                    xpathDefaultNsPrefix: "edm",
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            const result = service.getFilteredMetadataXml(metadataString, config);
-            assert.ok(result);
-            assert.strictEqual(result.includes("testing"), false);
-            assert.strictEqual(result.includes("DataServices"), true);
-        });
-
-        test("should throw error if XML is invalid", () => {
-            const invalidXml = "<invalid></invalid>";
-            const config = {
-                metadata: {
-                    filterNs: [],
-                    filterXPath: [],
-                    xpathDefaultNsPrefix: "edm",
-                    removeAnnotations: false,
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            assert.throws(() => {
-                service.getFilteredMetadataXml(invalidXml, config);
-            }, /The provided XML is not valid OData metadata./);
-        });
-
-        test("should filter XML with XPath", () => {
-            const config = {
-                metadata: {
-                    filterNs: [],
-                    filterXPath: ["//edm:EntityType[@Name='Order']"],
-                    xpathDefaultNsPrefix: "edm",
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            const result = service.getFilteredMetadataXml(metadataString, config);
-
-            assert.ok(result);
-            assert.strictEqual(
-                result.includes(`<EntityType Name="Order">`),
-                false,
-                "Order should be filtered out",
+    suite("schema summary", () => {
+        test("keeps metadata changes and service roots independent", () => {
+            const first = service.getSchemaSummary(metadataString, "https://one.test/");
+            const second = service.getSchemaSummary(metadataString, "https://two.test/");
+            const changed = service.getSchemaSummary(
+                metadataString.replace("CustomerName", "BuyerName"),
+                "https://one.test/",
             );
-            assert.strictEqual(
-                result.includes(`<EntityType Name="Item">`),
-                true,
-                "Item should remain in the XML",
+            assert.match(first.yaml, /CustomerName/);
+            assert.match(second.yaml, /https:\/\/two.test\//);
+            assert.match(changed.yaml, /BuyerName/);
+            assert.doesNotMatch(changed.yaml, /CustomerName/);
+            service.clearCache();
+            assert.deepStrictEqual(
+                service.getSchemaSummary(metadataString, "https://one.test/"),
+                first,
             );
         });
 
-        test("should remove annotations", () => {
-            const config = {
-                metadata: {
-                    filterNs: [],
-                    filterXPath: ["//edm:Annotation"],
-                    xpathDefaultNsPrefix: "edm",
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            const result = service.getFilteredMetadataXml(metadataString, config);
-            assert.ok(result);
-            assert.strictEqual(
-                result.includes(`<Annotation Term="Org.OData.Capabilities.V1.BatchSupportType">`),
-                false,
-                "Annotation should be removed",
-            );
-        });
-
-        test("should filter large documents", function () {
-            this.skip(); // Skip this test if running in a CI environment, it takes very long
-            this.timeout(15000);
-            const largeXml = fs.readFileSync(
-                path.join(__dirname, "..", "testdata", "msgraph.edmx"),
-                "utf-8",
-            );
-
-            const config = {
-                metadata: {
-                    filterNs: [],
-                    filterXPath: ["//edm:Annotation"],
-                    xpathDefaultNsPrefix: "edm",
-                },
-                defaultFormat: "json",
-                strictParser: true,
-                disableRunner: false,
-                openResultInNewPane: false,
-            } as IODataConfiguration;
-
-            const result = service.getFilteredMetadataXml(largeXml, config);
-            assert.ok(result);
-            assert.strictEqual(
-                result.includes(`<Annotation `),
-                false,
-                "Annotations should be removed",
+        test("rejects documents that are not OData metadata", () => {
+            assert.throws(
+                () => service.getSchemaSummary("<invalid />", "https://one.test/"),
+                /not valid OData metadata/,
             );
         });
     });

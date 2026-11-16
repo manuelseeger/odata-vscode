@@ -9,11 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add opt-in Copilot tools to share filtered metadata and open a drafted query for review. Enable `odata.chat.tools.enabled` to use them. Opening a query never runs it. Use **OData: Run** to execute it.
+- Add opt-in Copilot tools to share a compact YAML query schema and open a drafted query for review. Enable `odata.chat.tools.enabled` to use them. Opening a query never runs it. Use **OData: Run** to execute it.
+- Add `odata.chat.schema.maxTokens`, with a default of `32000`. Summaries above the maximum return no schema. The profile editor shows the summary size and whether it fits.
 
 ### Changed
 
 - Replace the `@odata` Copilot chat participant with the explicit `/odata` skill.
+- Replace `odata_getMetadata` with `odata_getSchema`. The tool returns the whole compact query schema instead of XML. `odata_openQuery` rejects a query for a different service root.
+- Remove the metadata filter settings. Existing `odata.metadata.filterNs`, `odata.metadata.filterXPath`, and `odata.metadata.xpathDefaultNsPrefix` values have no effect because Copilot receives the compact query schema instead of filtered XML.
 
 ## [0.4.1] - 2026-11-13
 

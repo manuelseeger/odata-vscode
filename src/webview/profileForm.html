@@ -89,23 +89,13 @@
     </form>
     <br/><br/>
     <hr class="vscode-divider"/>
-    <label class="vscode-label">Metadata size</label>
+    <label class="vscode-label">Compact schema size</label>
     <div id="tokenSummary" class="token-count">
-      <span class="vscode-label">Tokens:</span>
+      <span class="vscode-label">Approximate tokens:</span>
       <span id="tokenCountInfo" class="token-count-value"></span>
-      <span class="vscode-label">Tokens (filtered):</span>
-      <span id="filteredCountInfo" class="token-count-value"></span>
+      <span id="schemaFitInfo" class="token-count-value"></span>
     </div>
-    <p>Make sure the metadata fits into the Github Copilot input token limit. Use filtering in Settings to reduce size.</p>
-    <details id="copilotAdvancedSection" class="vscode-collapsible">
-      <summary>
-        <i class="codicon codicon-chevron-right icon-arrow"></i>
-        <h2 class="title">Github Copilot Models<span class="description">Github Copilot models and max input tokens</span></h2>
-      </summary>
-      <div>    
-          <div id="modelInfo">No info on Copilot models yet, retry.</div>
-      </div>
-    </details>
+    <p>The whole compact schema must fit <code>odata.chat.schema.maxTokens</code> for Copilot integration to work.</p>
     <script nonce="{{nonce}}" src="{{scriptUri}}"></script>
   </body>
 </html>

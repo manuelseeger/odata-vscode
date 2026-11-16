@@ -5,7 +5,7 @@ A user creates an endpoint profile (name, service URL, auth, headers) in the "Cr
 ## Sub-features
 
 - `profile-create` opens the form from the palette or from the view title `+` and saves the profile automatically when a field loses focus.
-- `profile-metadata` fills the Metadata textarea and the token counts with the "Request Metadata" button.
+- `profile-metadata` fills the Metadata textarea with the "Request Metadata" button. It shows the compact schema token count and whether it fits `odata.chat.schema.maxTokens`. Changes to the maximum update the open form.
 - `profile-list-select` lists profiles in the view and selects a saved profile when none is selected. `OData: Select Endpoint Profile` changes the selection.
 - `profile-get-metadata` refreshes the metadata of the selected profile with `OData: Get Metadata`.
 - `profile-edit` opens the inline action "Edit HTTP Profile" with the stored values.
@@ -32,6 +32,7 @@ Preconditions:
 - **Get Metadata.** Run `OData: Get Metadata`. The toast "Metadata updated successfully for profile Mock." shows, and `requests.jsonl` gets one more `$metadata` request.
 - **Edit.** Hover row `Mock` and click `Edit HTTP Profile`. The tab "Edit Profile: Mock" shows the stored name, URL, and metadata.
 - **Delete.** Add `Scratch` (URL `http://127.0.0.1:9/none/`) through the form. It is listed without a check. Hover it and click `Delete HTTP Profile`. The row disappears and `Mock` keeps the check.
+- Run `RUN_ID=$RUN_ID scripts/drive.mjs schema-size` after `profiles` to verify the configured maximum. It changes the maximum to one token through the workspace settings editor, checks the open profile, and restores the setting. Evidence is in `schema-size/`.
 - Command: `RUN_ID=$RUN_ID scripts/drive.mjs profiles`. Evidence: `profiles/01-form-open.png` … `10-after-delete.png`, `05-profiles-view.aria.txt`, `result.json`.
 
 ## Gotchas
@@ -41,4 +42,3 @@ Preconditions:
 - The tree renders slowly after you expand it. `vs.profileRows(until)` polls for this reason.
 - The journey does not drive `profile-auth` (Basic, Bearer, Client Cert) or headers. The mock service does not check auth. To verify auth, add a check of the `authorization` header in `requests.jsonl` and report it separately.
 - The Client Cert file pickers open a native file dialog. They do not work in headless mode. Type the path into the field.
-- The "Github Copilot Models" section of the form belongs to the Copilot feature. Ignore it.

@@ -34,7 +34,12 @@ export default async function (vs, ev, state) {
     const md = await form.locator("#metadata").inputValue();
     ev.check("Request Metadata fills the Metadata textarea", md.includes('EntitySet Name="Orders"'), md.length);
     const tokens = await form.locator("#tokenCountInfo").innerText();
-    ev.check("token count shown for metadata", /^\d+$/.test(tokens.trim()), tokens);
+    ev.check("compact schema token count is shown", /^\d+$/.test(tokens.trim()), tokens);
+    const fit = await form.locator("#schemaFitInfo").innerText();
+    ev.check("compact schema fits the configured maximum", fit.includes("Fits the configured maximum of 32000 tokens"), fit);
+    const formText = await form.locator("body").innerText();
+    ev.check("retired filter advice is absent", !formText.includes("Use filtering in Settings"));
+    ev.check("Copilot models table is absent", !formText.includes("Copilot Models") && (await form.locator("#modelInfo").count()) === 0);
     await ev.shot("metadata-received");
 
     const reqs = vs.requestLog().slice(before).map((r) => r.url);

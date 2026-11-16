@@ -54,7 +54,7 @@ export async function setupTests(
 
     // Stub workspace configuration for 'odata' to support get/update in tests
     const configStore: { [key: string]: any } = {
-        metadata: { filterNs: [], filterXPath: ["//edm:Annotation"], xpathDefaultNsPrefix: "edm" },
+        "chat.schema.maxTokens": 32000,
         defaultFormat: "json",
         strictParser: true,
         disableRunner: false,

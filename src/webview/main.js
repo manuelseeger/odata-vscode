@@ -76,7 +76,7 @@
         if (message.command === "requestFinished") {
             document.getElementById("progressRing").style.display = "none";
         } else if (message.command === "metadataStats") {
-            updateTokenCountUI(message.limits, message.tokenCount, message.filteredCount);
+            updateTokenCountUI(message.schemaTokens, message.maxTokens);
         } else if (message.command === "metadataReceived") {
             const progressRing = document.getElementById("progressRing");
             if (progressRing) progressRing.style.display = "none";
@@ -110,9 +110,10 @@
             document.getElementById("pfx").value = (profile.auth && profile.auth.pfx) || "";
             const recovery = document.getElementById("recoveryData");
             document.getElementById("recoveryDetails").hidden = profile.recoveryData === undefined;
-            recovery.textContent = profile.recoveryData === undefined
-                ? ""
-                : JSON.stringify(profile.recoveryData, null, 2);
+            recovery.textContent =
+                profile.recoveryData === undefined
+                    ? ""
+                    : JSON.stringify(profile.recoveryData, null, 2);
             document.getElementById("passphrase").value =
                 (profile.auth && profile.auth.passphrase) || "";
             updateAuthFields();
@@ -124,18 +125,8 @@
                     headersContainer.appendChild(row);
                 });
             }
-            if (
-                message.tokenCount !== undefined &&
-                message.filteredCount !== undefined &&
-                message.limits
-            ) {
-                updateTokenCountUI(message.limits, message.tokenCount, message.filteredCount);
-            } else {
-                document.getElementById("tokenCountInfo").textContent = "";
-                document.getElementById("filteredCountInfo").textContent = "";
-                const modelInfoEl = document.getElementById("modelInfo");
-                if (modelInfoEl) modelInfoEl.replaceChildren();
-            }
+            document.getElementById("tokenCountInfo").textContent = "";
+            document.getElementById("schemaFitInfo").textContent = "";
         }
     });
 
@@ -201,41 +192,12 @@
         };
     }
 
-    function updateTokenCountUI(limits, tokenCount, filteredCount) {
-        document.getElementById("tokenCountInfo").textContent = tokenCount;
-        document.getElementById("filteredCountInfo").textContent = filteredCount;
-        const copilotSection = document.getElementById("copilotAdvancedSection");
-        const modelInfoEl = document.getElementById("modelInfo");
-        if (Array.isArray(limits) && limits.length > 0 && typeof tokenCount === "number") {
-            const table = document.createElement("table");
-            table.className = "model-table";
-            const body = document.createElement("tbody");
-            for (const lim of limits) {
-                const isAbove = filteredCount > lim.maxTokens;
-                const isNear =
-                    !isAbove && Math.abs(filteredCount - lim.maxTokens) <= tokenCount * 0.1;
-                const className = isNear ? "near" : isAbove ? "above" : "";
-                const row = document.createElement("tr");
-                const name = document.createElement("td");
-                name.textContent = lim.name;
-                const limit = document.createElement("td");
-                limit.className = className;
-                limit.textContent = String(lim.maxTokens);
-                row.append(name, limit);
-                body.appendChild(row);
-            }
-            table.appendChild(body);
-            modelInfoEl.replaceChildren(table);
-        }
-        if (copilotSection && copilotSection.tagName === "DETAILS") {
-            copilotSection.addEventListener("toggle", () => {
-                const icon = copilotSection.querySelector(".icon-arrow");
-                if (copilotSection.open) {
-                    icon.classList.replace("codicon-chevron-right", "codicon-chevron-down");
-                } else {
-                    icon.classList.replace("codicon-chevron-down", "codicon-chevron-right");
-                }
-            });
-        }
+    function updateTokenCountUI(schemaTokens, maxTokens) {
+        document.getElementById("tokenCountInfo").textContent =
+            typeof schemaTokens === "number" ? String(schemaTokens) : "Unavailable";
+        document.getElementById("schemaFitInfo").textContent =
+            typeof schemaTokens === "number"
+                ? `${schemaTokens <= maxTokens ? "Fits" : "Exceeds"} the configured maximum of ${maxTokens} ${maxTokens === 1 ? "token" : "tokens"}.`
+                : "Load valid OData metadata to measure the compact schema.";
     }
 })();

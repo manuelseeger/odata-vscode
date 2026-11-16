@@ -20,7 +20,6 @@ suite("Profile storage and panel boundary", () => {
         auth: { kind: AuthKind.Basic, username: "test", password: "password-secret" },
         headers: { "X-Key": "header-secret" },
     });
-    const tokenizer = { approximateTokenCount: (value: string) => value.length };
 
     setup(() => {
         state = new Map();
@@ -56,7 +55,6 @@ suite("Profile storage and panel boundary", () => {
             },
         } as unknown as vscode.ExtensionContext;
         provider = new ProfileTreeProvider(
-            tokenizer,
             new MetadataModelService(),
             context,
             async () => undefined,
@@ -83,7 +81,6 @@ suite("Profile storage and panel boundary", () => {
         state.set(globalStates.profiles, [draft()]);
         state.set(globalStates.selectedProfile, draft());
         provider = new ProfileTreeProvider(
-            tokenizer,
             new MetadataModelService(),
             context,
             async () => undefined,
@@ -121,7 +118,6 @@ suite("Profile storage and panel boundary", () => {
         ]);
         state.set(globalStates.selectedProfile, draft("Stage"));
         provider = new ProfileTreeProvider(
-            tokenizer,
             new MetadataModelService(),
             context,
             async () => undefined,
@@ -290,7 +286,6 @@ suite("Profile storage and panel boundary", () => {
             ]);
             state.set(globalStates.selectedProfile, draft("Prod"));
             provider = new ProfileTreeProvider(
-                tokenizer,
                 new MetadataModelService(),
                 context,
                 async () => undefined,
@@ -342,7 +337,6 @@ suite("Profile storage and panel boundary", () => {
             ]);
             state.set(globalStates.selectedProfile, draft("Prod"));
             provider = new ProfileTreeProvider(
-                tokenizer,
                 new MetadataModelService(),
                 context,
                 async () => undefined,
@@ -387,7 +381,6 @@ suite("Profile storage and panel boundary", () => {
             intercepted++;
         });
         provider = new ProfileTreeProvider(
-            tokenizer,
             new MetadataModelService(),
             context,
             async (profile) => {
@@ -473,23 +466,16 @@ suite("Profile storage and panel boundary", () => {
         }
     });
 
-    test("panel ignores unknown messages, survives model failure, and cancels on dispose", async () => {
+    test("panel ignores unknown messages, reports schema size, and cancels on dispose", async () => {
         const originalCreate = vscode.window.createWebviewPanel;
-        const originalModels = vscode.lm.selectChatModels;
         let panel: vscode.WebviewPanel;
         let receive: (message: unknown) => Promise<void> = async () => undefined;
         let onDispose = () => undefined;
         let listenerCount = 0;
         let disposedListeners = 0;
         const posted: unknown[] = [];
-        let modelCalls = 0;
         let requestSignal: AbortSignal | undefined;
         let finish: ((value: string) => void) | undefined;
-        (vscode.lm as unknown as { selectChatModels: typeof originalModels }).selectChatModels =
-            async () => {
-                modelCalls++;
-                throw new Error("No model provider");
-            };
         (
             vscode.window as unknown as { createWebviewPanel: typeof originalCreate }
         ).createWebviewPanel = ((
@@ -541,7 +527,15 @@ suite("Profile storage and panel boundary", () => {
                     (message) => (message as { command: string }).command === "initProfile",
                 ),
             );
-            assert.strictEqual(modelCalls, 1);
+            const stats = posted
+                .filter((message) => (message as { command: string }).command === "metadataStats")
+                .at(-1) as { schemaTokens: number; maxTokens: number };
+            assert.ok(stats.schemaTokens > 0);
+            assert.strictEqual(stats.maxTokens, 32000);
+            await receive({ command: "saveProfile", data: { ...draft(), metadata: "" } });
+            const emptyStats = posted.at(-1) as { command: string; schemaTokens?: number };
+            assert.strictEqual(emptyStats.command, "metadataStats");
+            assert.strictEqual(emptyStats.schemaTokens, undefined);
             provider.requestProfileMetadata = async (_profile, signal) => {
                 requestSignal = signal;
                 return new Promise<string>((resolve) => {
@@ -621,8 +615,6 @@ suite("Profile storage and panel boundary", () => {
             (
                 vscode.window as unknown as { createWebviewPanel: typeof originalCreate }
             ).createWebviewPanel = originalCreate;
-            (vscode.lm as unknown as { selectChatModels: typeof originalModels }).selectChatModels =
-                originalModels;
         }
     });
 });
