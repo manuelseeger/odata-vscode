@@ -1,0 +1,44 @@
+<x:Edmx Version="4.01" xmlns:x="http://docs.oasis-open.org/odata/ns/edmx">
+  <x:DataServices>
+    <Schema Namespace="A" Alias="a" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityType Name="Base">
+        <Key><PropertyRef Name="ID" /></Key>
+        <Property Name="ID" Type="Edm.Int32" Nullable="false" />
+        <Property Name="URL_value" Type="Edm.String" />
+        <NavigationProperty Name="related" Type="Collection(B.Item)" />
+      </EntityType>
+      <EntityType Name="Item" BaseType="a.Base">
+        <Property Name="lower_name" Type="Edm.String" />
+        <Property Name="address" Type="a.Address" />
+        <Property Name="nominal" Type="a.Code" />
+      </EntityType>
+      <ComplexType Name="BaseAddress"><Property Name="ZIP_code" Type="Edm.String" /></ComplexType>
+      <ComplexType Name="Address" BaseType="a.BaseAddress"><Property Name="city" Type="Edm.String" /></ComplexType>
+      <TypeDefinition Name="Code" UnderlyingType="Edm.String" />
+      <ComplexType Name="WriteOnly"><Property Name="secret" Type="Edm.String" /></ComplexType>
+      <Function Name="lookup"><ReturnType Type="a.Address" /></Function>
+      <Function Name="choose"><Parameter Name="id" Type="Edm.Int32" /><ReturnType Type="a.Item" /></Function>
+      <Function Name="choose"><Parameter Name="code" Type="Edm.String" /><ReturnType Type="B.Item" /></Function>
+      <Function Name="primitive"><ReturnType Type="Edm.String" /></Function>
+      <Function Name="same"><Parameter Name="id" Type="Edm.Int32" /><ReturnType Type="Collection(a.Item)" /></Function>
+      <Function Name="same"><Parameter Name="code" Type="Edm.String" /><ReturnType Type="Collection(a.Item)" /></Function>
+      <Function Name="lookup" IsBound="true"><Parameter Name="binding" Type="a.Item" /><ReturnType Type="B.Item" /></Function>
+      <Function Name="lookup" IsBound="true"><Parameter Name="binding" Type="Collection(a.Item)" /><ReturnType Type="Collection(B.Item)" /></Function>
+      <Action Name="reset"><Parameter Name="value" Type="a.WriteOnly" /></Action>
+      <EntityContainer Name="C">
+        <EntitySet Name="under_score" EntityType="a.Item"><NavigationPropertyBinding Path="related" Target="OtherItems" /></EntitySet>
+        <EntitySet Name="OtherItems" EntityType="B.Item" />
+        <Singleton Name="current" Type="a.Item" />
+        <FunctionImport Name="GetAddress" Function="a.lookup" />
+        <FunctionImport Name="Choose" Function="a.choose" />
+        <FunctionImport Name="GetText" Function="a.primitive" />
+        <FunctionImport Name="GetItems" Function="a.same" />
+        <ActionImport Name="ResetData" Action="a.reset" />
+      </EntityContainer>
+    </Schema>
+    <Schema Namespace="B" xmlns="http://docs.oasis-open.org/odata/ns/edm">
+      <EntityType Name="Item"><Property Name="OnlyB" Type="Edm.Boolean" /></EntityType>
+      <Function Name="lookup"><ReturnType Type="B.Item" /></Function>
+    </Schema>
+  </x:DataServices>
+</x:Edmx>

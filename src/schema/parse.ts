@@ -170,6 +170,8 @@ export function parseCsdl(xml: string): Csdl {
         singletons: [],
         functions: [],
         functionImports: [],
+        actionImports: [],
+        legacyOperationImports: [],
     };
     const associations = new Map<string, Map<string, { type: string; multiplicity: string }>>();
     for (const schema of schemas) {
@@ -197,7 +199,11 @@ export function parseCsdl(xml: string): Csdl {
         from: string;
         to: string;
     }[] = [];
-    const associationSets: { relationship: string; ends: Map<string, string> }[] = [];
+    const associationSets: {
+        container: string;
+        relationship: string;
+        ends: Map<string, string>;
+    }[] = [];
     function queryFunction(element: Element, namespace: string, legacy = false): Function {
         const params = children(element, "Parameter").map((param) => prop(param, namespace));
         const bound = attr(element, "IsBound") === "true" ? params.shift()?.type : undefined;
@@ -292,6 +298,7 @@ export function parseCsdl(xml: string): Csdl {
                     if (entry.localName === "EntitySet" || entry.localName === "Singleton") {
                         const set: EntitySet = {
                             name,
+                            container: qname,
                             type: qualify(
                                 attr(
                                     entry,
@@ -315,6 +322,7 @@ export function parseCsdl(xml: string): Csdl {
                         if (attr(entry, "Function")) {
                             csdl.functionImports.push({
                                 name,
+                                container: qname,
                                 function: qualify(attr(entry, "Function"), namespace),
                                 entitySet: attr(entry, "EntitySet") || undefined,
                             });
@@ -325,12 +333,28 @@ export function parseCsdl(xml: string): Csdl {
                             csdl.functions.push(fn);
                             csdl.functionImports.push({
                                 name,
+                                container: qname,
                                 function: fn.qname,
                                 entitySet: attr(entry, "EntitySet") || undefined,
                             });
+                        } else {
+                            csdl.legacyOperationImports.push({
+                                name,
+                                container: qname,
+                                httpMethod: entry.getAttributeNS(metadataNamespace, "HttpMethod") || undefined,
+                                returns: queryFunction(entry, namespace, true).returns,
+                                entitySet: attr(entry, "EntitySet") || undefined,
+                            });
                         }
+                    } else if (entry.localName === "ActionImport") {
+                        csdl.actionImports.push({
+                            name,
+                            container: qname,
+                            action: qualify(attr(entry, "Action"), namespace),
+                        });
                     } else if (entry.localName === "AssociationSet") {
                         associationSets.push({
+                            container: qname,
                             relationship: qualify(attr(entry, "Association"), namespace),
                             ends: new Map(
                                 children(entry, "End").map((end) => [
@@ -358,7 +382,10 @@ export function parseCsdl(xml: string): Csdl {
             (nav) => nav.relationship === associationSet.relationship,
         )) {
             const source = csdl.entitySets.find(
-                (set) => set.name === associationSet.ends.get(nav.from),
+                (set) =>
+                    set.container === associationSet.container &&
+                    set.type === nav.type &&
+                    set.name === associationSet.ends.get(nav.from),
             );
             const target = associationSet.ends.get(nav.to);
             if (source && target) {

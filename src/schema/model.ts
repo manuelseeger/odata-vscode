@@ -49,6 +49,7 @@ export interface EnumType {
 
 export interface EntitySet {
     name: string;
+    container: string;
     type: string;
     bindings: Map<string, string>;
     restrictions: Restrictions;
@@ -65,7 +66,22 @@ export interface Function {
 
 export interface FunctionImport {
     name: string;
+    container: string;
     function: string;
+    entitySet?: string;
+}
+
+export interface ActionImport {
+    name: string;
+    container: string;
+    action: string;
+}
+
+export interface LegacyOperationImport {
+    name: string;
+    container: string;
+    httpMethod?: string;
+    returns?: Prop;
     entitySet?: string;
 }
 
@@ -78,6 +94,8 @@ export interface Csdl {
     singletons: EntitySet[];
     functions: Function[];
     functionImports: FunctionImport[];
+    actionImports: ActionImport[];
+    legacyOperationImports: LegacyOperationImport[];
 }
 
 export interface SchemaSummary {
