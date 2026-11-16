@@ -218,7 +218,7 @@
     "pretest": "npm run clean && npm run compile-tests",
     "test:integration": "vscode-test -l integration",
     "test:e2e": "vscode-test -l e2e",
-    "test:unit": "mocha -u tdd --require ts-node/register 'src/test/unit/**/*.test.ts'",
+    "test:unit": "ts-node --compiler-options \"{\\\"types\\\":[\\\"node\\\",\\\"mocha\\\"]}\" node_modules/mocha/bin/mocha.js -u tdd 'src/test/unit/**/*.test.ts'",
     "lint": "eslint src",
     "test": "npm run validate && npm run test:host",
     "clean": "rimraf out dist",
@@ -242,7 +242,6 @@
     "@types/node": "24.19.2",
     "@types/vscode": "1.145.0",
     "@types/vscode-webview": "1.57.5",
-    "@types/xml2js": "0.4.14",
     "@typescript-eslint/eslint-plugin": "8.72.2",
     "@typescript-eslint/parser": "8.72.2",
     "@vscode/test-cli": "0.0.15",
@@ -270,13 +269,11 @@
     }
   },
   "dependencies": {
-    "@odata2ts/odata-core": "0.7.1",
     "@vscode-elements/elements-lite": "0.4.0",
     "@vscode/codicons": "0.0.46-24",
     "@xmldom/xmldom": "0.9.12",
     "undici": "8.12.4",
-    "vscode-uri": "3.2.0",
-    "xml2js": "0.6.2"
+    "vscode-uri": "3.2.0"
   },
   "packageManager": "npm@10.9.9",
   "capabilities": {

@@ -7,7 +7,7 @@ import {
 } from "../../schema";
 
 const fixture = (name: string) => fs.readFileSync(
-    path.resolve(__dirname, "../../../src/test/testdata", `${name}.edmx`), "utf8",
+    path.resolve(__dirname, "../../../src/test/testdata/canonical", `${name === "canonical" ? "v4" : "v2"}.edmx`), "utf8",
 );
 
 function root(csdl: Csdl, name: string) {

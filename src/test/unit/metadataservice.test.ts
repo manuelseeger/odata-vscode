@@ -2,7 +2,6 @@ import { suite, test } from "mocha";
 
 import { MetadataModelService } from "../../services/MetadataModelService";
 import { AuthKind, Profile } from "../../contracts/types";
-import { DataModel } from "../../odata2ts/data-model/DataModel";
 import * as assert from "assert";
 
 export const metadataString = `<edmx:Edmx Version="4.0" xmlns:edmx="http://docs.oasis-open.org/odata/ns/edmx">
@@ -45,8 +44,8 @@ suite("MetadataModelService", () => {
         service = new MetadataModelService();
     });
 
-    suite("getModel", () => {
-        test("should get model", async () => {
+    suite("getCsdl", () => {
+        test("returns canonical names and types", () => {
             const profile: Profile = {
                 baseUrl: "http://example.com/odata",
                 metadata: metadataString,
@@ -57,13 +56,14 @@ suite("MetadataModelService", () => {
                 headers: {},
             };
 
-            const result = await service.getModel(profile);
+            const result = service.getCsdl(profile);
             assert.ok(result);
-            assert.strictEqual(result instanceof DataModel, true);
-            assert.strictEqual(result.getEntityTypes().length, 2);
+            assert.deepStrictEqual(result.types.map((type) => type.qname), ["testing.Order", "testing.Item"]);
+            assert.strictEqual(result.entitySets[0].name, "Orders");
+            assert.strictEqual(result.entitySets[0].type, "testing.Order");
         });
 
-        test("should throw error if metadata is missing", async () => {
+        test("returns no declarations if metadata is missing", () => {
             const profile: Profile = {
                 baseUrl: "http://example.com/odata",
                 metadata: "",
@@ -73,15 +73,33 @@ suite("MetadataModelService", () => {
                 },
                 headers: {},
             };
-            await assert.rejects(async () => {
-                await service.getModel(profile);
-            });
+            assert.strictEqual(service.getCsdl(profile), undefined);
         });
 
-        test("should throw error if profile missing", async () => {
-            await assert.rejects(async () => {
-                await service.getModel(null!);
-            });
+        test("rejects malformed metadata", () => {
+            assert.throws(() => service.getCsdl({ metadata: "<invalid />" } as Profile));
+        });
+
+        test("shares current declarations with summaries in either request order", () => {
+            const profile: Profile = {
+                baseUrl: "https://one.test/", name: "Default", metadata: metadataString,
+                auth: { kind: AuthKind.None }, headers: {},
+            };
+            for (const summaryFirst of [true, false]) {
+                service.clearCache();
+                if (summaryFirst) {
+                    service.getSchemaSummary(profile.metadata!, profile.baseUrl);
+                }
+                assert.strictEqual(service.getCsdl(profile)!.types[0].props[2].name, "CustomerName");
+                assert.match(service.getSchemaSummary(profile.metadata!, profile.baseUrl).yaml, /CustomerName/);
+                const changed = { ...profile, metadata: metadataString.replace("CustomerName", "BuyerName") };
+                assert.strictEqual(service.getCsdl(changed)!.types[0].props[2].name, "BuyerName");
+                const summary = service.getSchemaSummary(changed.metadata, changed.baseUrl);
+                assert.match(summary.yaml, /BuyerName/);
+                assert.doesNotMatch(summary.yaml, /CustomerName/);
+                assert.strictEqual(service.getCsdl(profile)!.types[0].props[2].name, "CustomerName");
+                assert.match(service.getSchemaSummary(changed.metadata, "https://two.test/").yaml, /https:\/\/two.test\//);
+            }
         });
     });
 
