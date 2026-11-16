@@ -112,9 +112,7 @@ suite("HoverProvider Integration", () => {
     });
 
     test("should return profile link if no metadata", async () => {
-        // Arrange
-        // Patch metadataService.getModel to return undefined
-        (hoverProvider as any).metadataService.getModel = async () => undefined;
+        profile.metadata = undefined;
         const odata = `${profile.baseUrl}Orders?$select=OrderID,OrderDate`;
         const document = await vscode.workspace.openTextDocument({ content: odata });
         const idx = odata.indexOf("Orders");

@@ -2,11 +2,7 @@ import * as vscode from "vscode";
 import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { odata, Profile } from "./contracts/types";
-import {
-    EntitySetType,
-    NavPropBindingType,
-    PropertyModel,
-} from "./odata2ts/data-model/DataTypeModel";
+import { Csdl, EntitySet, findRoot, findType, formatTypeRef, members, memberType } from "./schema";
 import { Disposable } from "./provider";
 import { formatFunctionLabel } from "./signatures";
 import { combineODataUrl, getBaseUrl } from "./util";
@@ -66,40 +62,28 @@ export class HoverProvider extends Disposable implements vscode.HoverProvider {
             return;
         }
 
-        const metadata = await this.metadataService.getModel(profile);
-        if (metadata) {
-            const entityContainer = metadata.getEntityContainer();
-            if (!entityContainer) {
-                return;
+        try {
+            const metadata = this.metadataService.getCsdl(profile);
+            const found = metadata && findRoot(metadata, word);
+            if (metadata && found?.kind === "found" && found.value.kind === "set") {
+                return new vscode.Hover(this.getEntityTypeHover(metadata, found.value.record), wordRange);
             }
-
-            const matchingMember = Object.values(entityContainer.entitySets).find(
-                (member) => member.odataName === word,
-            );
-            if (matchingMember) {
-                const hover = this.getEntityTypeHover(matchingMember);
-                return new vscode.Hover(hover, wordRange);
-            }
+        } catch {
+            return new vscode.Hover(this.getSelectedProfileHover(document, profile));
         }
-        // default show the selected profile and URL
         return new vscode.Hover(this.getSelectedProfileHover(document, profile));
     }
 
-    private getEntityTypeHover(member: EntitySetType): vscode.MarkdownString {
-        let hoverText = `**Entity Set**: ${member.odataName}\n\n`;
-
-        if (member.navPropBinding) {
-            hoverText += `**Navigation Property Binding**: ${member.navPropBinding.map((binding: NavPropBindingType) => `${binding.path} -> ${binding.target}`).join(", ")}\n\n`;
+    private getEntityTypeHover(metadata: Csdl, set: EntitySet): vscode.MarkdownString {
+        let hoverText = `**Entity Set**: ${set.name}\n\n`;
+        if (set.bindings.size) {
+            hoverText += `**Navigation Property Binding**: ${[...set.bindings].map(([path, target]) => `${path} -> ${target}`).join(", ")}\n\n`;
         }
-
-        if (member.entityType) {
-            hoverText += `**Entity Type**: ${member.entityType.odataName}\n\n`;
-
-            if (member.entityType.props) {
-                hoverText += `**Properties**: \n - ${member.entityType.props.map((prop: PropertyModel) => `${prop.odataName} (${prop.odataType})`).join("\n - ")}\n\n`;
-            }
+        const type = findType(metadata, set.type);
+        if (type) {
+            hoverText += `**Entity Type**: ${type.qname}\n\n`;
+            hoverText += `**Properties**: \n - ${members(metadata, type).map((member) => `${member.record.name} (${formatTypeRef(memberType(member))})`).join("\n - ")}\n\n`;
         }
-
         return new vscode.MarkdownString(hoverText);
     }
 

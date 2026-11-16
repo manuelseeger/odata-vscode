@@ -4,6 +4,7 @@ import { parseCsdl } from "./parse";
 
 export { parseCsdl } from "./parse";
 export * from "./model";
+export * from "./query";
 
 export function prune(csdl: Csdl): Csdl {
     const types = new Map(csdl.types.map((type) => [type.qname, type]));
@@ -221,7 +222,11 @@ export function renderYaml(csdl: Csdl, service: { root: string; version: string 
 }
 
 export function summarizeSchema(xml: string, root: string): SchemaSummary {
-    const csdl = prune(parseCsdl(xml));
+    return summarizeCsdl(parseCsdl(xml), root);
+}
+
+export function summarizeCsdl(document: Csdl, root: string): SchemaSummary {
+    const csdl = prune(document);
     const yaml = renderYaml(csdl, { root, version: csdl.version });
     return { yaml, tokens: new Tokenizer().approximateTokenCount(yaml) };
 }

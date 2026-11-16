@@ -1,17 +1,11 @@
 import * as vscode from "vscode";
-import { Profile } from "./contracts/types";
-import { DataModel } from "./odata2ts/data-model/DataModel";
 import {
-    EntityContainerModel,
-    EntityType,
-    ODataVersion,
-    PropertyModel,
-} from "./odata2ts/data-model/DataTypeModel";
-import { LocationRange } from "./parser/parser.js";
+    Csdl, findRoot, findType, formatTypeRef, Member, members, memberType,
+    resolveMemberPath, resourceStructuredType, RootResource, roots,
+} from "./schema";
 
 import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
-import { entityTypeFromResource, ResourceType } from "./metadata";
 import { Disposable } from "./provider";
 import { combineODataUrl } from "./util";
 import * as odataV2 from "./definitions/odataV2.json";
@@ -75,18 +69,14 @@ export class DefaultCompletionItemProvider
         });
         const profile = getSelectedPublicProfile(this.context);
 
-        if (!profile || !(await this.metadataService.hasModel(profile))) {
+        let model: Csdl | undefined;
+        try {
+            model = profile ? this.metadataService.getCsdl(profile) : undefined;
+        } catch {
             return new vscode.CompletionList(methodCompletions);
         }
-        const model = await this.metadataService.getModel(profile);
 
-        if (!model) {
-            return new vscode.CompletionList(methodCompletions);
-        }
-
-        const version = model.getODataVersion();
-
-        if (version === ODataVersion.V4) {
+        if (model?.version.startsWith("4.")) {
             const methodsV4 = odataV4.functions;
             methodsV4.forEach((methodObj) => {
                 const item = new vscode.CompletionItem(
@@ -123,16 +113,12 @@ export class SystemQueryCompletionItemProvider
         token: vscode.CancellationToken,
     ): vscode.ProviderResult<vscode.CompletionList> {
         if (document.getWordRangeAtPosition(position, /\$[a-zA-Z]*/)) {
-            // Merge system query options from both V2 and V4 into a single list for completion.
-            // We don't differentiate between V2 and V4 for system query options as many services
-            // mix and match them between versions.
             const combinedOptions = [...odataV2.systemQueryOptions, ...odataV4.systemQueryOptions];
             const completionItems = combinedOptions.map((option) => {
                 const completion = new vscode.CompletionItem(
                     option.name,
                     vscode.CompletionItemKind.Keyword,
                 );
-                // Remove the leading "$" for insertText and filterText
                 const text = option.name.startsWith("$") ? option.name.slice(1) : option.name;
                 completion.insertText = text;
                 completion.filterText = text;
@@ -174,135 +160,63 @@ export class MetadataCompletionItemProvider
         const profile = getSelectedPublicProfile(this.context);
         if (!profile) { return null; }
 
-        const model = await this.metadataService.getModel(profile!);
-        if (!model) {
-            return null;
-        }
-
-        const resourceType = this.getResourceEntityTypeFromDocument(document, model);
-        if (!resourceType) {
-            this.completeResourcePath(completions, model);
+        try {
+            const model = this.metadataService.getCsdl(profile);
+            if (!model) {
+                return null;
+            }
+            const resource = this.getResourceFromDocument(document, model);
+            if (!resource) {
+                this.completeResourcePath(completions, model);
+                return new vscode.CompletionList(completions);
+            }
+            const queryOption = this.findNearestSystemQueryOption(document, position);
+            if (!queryOption) {
+                return null;
+            }
+            this.completeMemberPath(completions, position, document, model, resource, queryOption === "$expand");
             return new vscode.CompletionList(completions);
-        }
-
-        // Traverse backward to find the nearest system query option
-        const queryOption = this.findNearestSystemQueryOption(document, position);
-        if (!queryOption) {
+        } catch {
             return null;
         }
-
-        switch (queryOption) {
-            case "$select":
-            case "$filter":
-                this.completePropertyPath(completions, position, document, model, resourceType);
-                break;
-            case "$expand":
-                this.completeExpandItem(completions, model, resourceType);
-                break;
-            default:
-                this.completePropertyPath(completions, position, document, model, resourceType);
-        }
-
-        return new vscode.CompletionList(completions);
     }
 
-    private completePropertyPath(
+    private completeMemberPath(
         completions: vscode.CompletionItem[],
         position: vscode.Position,
         document: vscode.TextDocument,
-        model: DataModel,
-        resourceType: ResourceType,
+        model: Csdl,
+        resource: RootResource,
+        navigationOnly: boolean,
     ) {
-        let entity: EntityType | undefined;
-
-        const lastSegment = this.getLastSegment(document, position);
-
-        if (lastSegment) {
-            const navProperty = lastSegment;
-            const parentEntity = entityTypeFromResource(resourceType, model);
-            const navEntityProp = parentEntity!.props.find(
-                (prop) => prop.name === navProperty && prop.dataType === "ModelType",
-            );
-
-            if (navEntityProp) {
-                entity = model.getEntityType(navEntityProp.fqType);
-            }
-        } else {
-            entity = entityTypeFromResource(resourceType, model);
-        }
-
-        if (entity) {
-            this.completePropertiesForEntity(completions, entity.fqName, model);
-        }
-    }
-
-    private completePropertiesForEntity(
-        completions: vscode.CompletionItem[],
-        entityTypeName: string,
-        model: DataModel,
-    ) {
-        const entity = model.getEntityType(entityTypeName);
-        if (!entity) {
+        let type = resourceStructuredType(model, resource);
+        if (!type) {
             return;
         }
-        for (const property of entity.props) {
-            const item = new vscode.CompletionItem(
-                property.name,
-                vscode.CompletionItemKind.Property,
-            );
-            item.documentation = getPropertyDoc(property);
+        const path = this.getMemberPrefix(document, position);
+        if (path.length) {
+            const member = resolveMemberPath(model, type, path);
+            type = member ? findType(model, memberType(member).qname) : undefined;
+        }
+        if (!type) {
+            return;
+        }
+        for (const member of members(model, type)) {
+            if (navigationOnly && member.kind !== "navigation") {
+                continue;
+            }
+            const item = new vscode.CompletionItem(member.record.name, vscode.CompletionItemKind.Property);
+            item.documentation = getPropertyDoc(member);
             completions.push(item);
         }
     }
 
-    private completeExpandItem(
-        completions: vscode.CompletionItem[],
-        model: DataModel,
-        resource: ResourceType,
-    ) {
-        const entity = entityTypeFromResource(resource!, model);
-        if (!entity) {
-            return;
-        }
-        const expandProps = entity.props.filter((p) => p.dataType === "ModelType");
-        for (const property of expandProps) {
-            const item = new vscode.CompletionItem(
-                property.name,
-                vscode.CompletionItemKind.Property,
-            );
-            item.documentation = getPropertyDoc(property);
-            completions.push(item);
+    private completeResourcePath(completions: vscode.CompletionItem[], model: Csdl) {
+        for (const name of new Set(roots(model).map((root) => root.record.name))) {
+            completions.push(new vscode.CompletionItem(name, vscode.CompletionItemKind.Class));
         }
     }
 
-    private completeResourcePath(completions: vscode.CompletionItem[], model: DataModel) {
-        const container: EntityContainerModel = model.getEntityContainer();
-        // add all container items to completions
-        if (container) {
-            const containerItems = [
-                ...Object.values(container.entitySets),
-                ...Object.values(container.singletons),
-                ...Object.values(container.functions),
-                ...Object.values(container.actions),
-            ];
-            for (const containerItem of containerItems) {
-                const item = new vscode.CompletionItem(
-                    containerItem.name,
-                    vscode.CompletionItemKind.Class,
-                );
-                completions.push(item);
-            }
-        }
-    }
-
-    /**
-     * Finds the nearest system query option (e.g., $select, $filter) in the document
-     * by traversing backward from the given position.
-     *
-     * @param document The text document being edited.
-     * @param position The position in the document to start searching from.
-     * @returns The nearest system query option as a string, or null if none is found.
-     */
     private findNearestSystemQueryOption(
         document: vscode.TextDocument,
         position: vscode.Position,
@@ -313,11 +227,9 @@ export class MetadataCompletionItemProvider
         while (line >= 0) {
             const lineText = document.lineAt(line).text;
 
-            // Check text up to the current character for the current line
             const textToCheck =
                 line === position.line ? lineText.substring(0, character) : lineText;
 
-            // Match system query options using a regex and return the last one found
             const match = textToCheck.match(/\$[a-zA-Z]+/g);
             if (match) {
                 return match[match.length - 1];
@@ -330,60 +242,27 @@ export class MetadataCompletionItemProvider
         return null;
     }
 
-    private getLastSegment(
-        document: vscode.TextDocument,
-        position: vscode.Position,
-    ): string | undefined {
-        const precedingText = document.getText(
-            new vscode.Range(new vscode.Position(position.line, 0), position),
-        );
-
-        // Match the last segment preceding a slash and optionally a word
-        const match = precedingText.match(/\b\w+(?=\s*\/\s*\w*\s*$)/);
-        return match ? match[0] : undefined;
+    private getMemberPrefix(document: vscode.TextDocument, position: vscode.Position): string[] {
+        const precedingText = document.getText(new vscode.Range(new vscode.Position(0, 0), position));
+        const match = precedingText.match(/([\p{L}\p{N}_.]+(?:\s*\/\s*[\p{L}\p{N}_.]+)*)\s*\/\s*[\p{L}\p{N}_.]*$/u);
+        return match ? match[1].split("/").map((part) => part.trim()) : [];
     }
 
-    private getResourceEntityTypeFromDocument(
-        document: vscode.TextDocument,
-        model: DataModel,
-    ): ResourceType | undefined {
-        const regex = /(?<=\/)(\w+)(?=\s*[\/?]|$)/g;
-        let resourcePath: string | undefined;
-
-        const lineText = combineODataUrl(document.getText());
-
-        const matches = lineText.match(regex);
-        if (matches) {
-            resourcePath = matches[matches.length - 1];
-        }
-
-        if (!resourcePath) {
+    private getResourceFromDocument(
+        document: vscode.TextDocument, model: Csdl,
+    ): RootResource | undefined {
+        const matches = combineODataUrl(document.getText()).match(/(?<=\/)\w+(?=\s*[/?]|$)/g);
+        const name = matches?.at(-1);
+        if (!name) {
             return undefined;
         }
-
-        const container: EntityContainerModel = model.getEntityContainer();
-        const containerItems = [
-            ...Object.values(container.entitySets),
-            ...Object.values(container.singletons),
-            ...Object.values(container.functions),
-            ...Object.values(container.actions),
-        ];
-        const item = containerItems.find((i) => i.name === resourcePath);
-        return item;
+        const found = findRoot(model, name);
+        return found.kind === "found" ? found.value : undefined;
     }
 }
 
-function isInSpan(position: vscode.Position, span: LocationRange): boolean {
-    if (span.start.line - 1 === position.line && span.end.line - 1 === position.line) {
-        return (
-            span.start.column - 1 <= position.character && span.end.column - 1 >= position.character
-        );
-    }
-    return false;
-}
-
-export function getPropertyDoc(property: PropertyModel): vscode.MarkdownString {
+export function getPropertyDoc(member: Member): vscode.MarkdownString {
     return new vscode.MarkdownString(
-        `**Name**: ${property.odataName}\n\n**Type**: ${property.odataType}`,
+        `**Name**: ${member.record.name}\n\n**Type**: ${formatTypeRef(memberType(member))}`,
     );
 }
