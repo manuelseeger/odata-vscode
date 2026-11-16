@@ -4,11 +4,21 @@ import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { Profile } from "./contracts/types";
 import { Disposable } from "./provider";
 import { requireTrustedWorkspace } from "./security";
-import { getBaseUrl } from "./util";
+import { combineODataUrl, getBaseUrl } from "./util";
 
 function serviceRoot(profile: Profile): string {
     const endpoint = new URL(profile.baseUrl);
     return getBaseUrl(endpoint.origin + endpoint.pathname);
+}
+
+function readableQuery(query: string): string {
+    try {
+        const candidate = decodeURI(query.replace(/%25/gi, "%2525"));
+        if (new URL(combineODataUrl(candidate)).href === new URL(combineODataUrl(query)).href) {
+            return candidate;
+        }
+    } catch {}
+    return query;
 }
 
 export interface OpenQueryInput {
@@ -77,19 +87,20 @@ export class OpenQueryTool implements vscode.LanguageModelTool<OpenQueryInput> {
             .trim()
             .replace(/^GET\s+/, "")
             .trim();
+        const root = profile && serviceRoot(profile);
         let sameService = false;
         try {
             sameService =
-                !!profile &&
-                query.startsWith(serviceRoot(profile)) &&
-                new URL(query).href.startsWith(serviceRoot(profile));
+                !!root &&
+                query.startsWith(root) &&
+                new URL(combineODataUrl(query)).href.startsWith(root);
         } catch {}
         if (!sameService) {
             throw new Error(
                 "The selected profile changed. Call odata_getSchema again before opening a query for the selected service.",
             );
         }
-        await this.openQuery(options.input.query);
+        await this.openQuery(readableQuery(query));
         return new vscode.LanguageModelToolResult([
             new vscode.LanguageModelTextPart(
                 'The query was opened in an OData editor. It was not run. The user can run it with "OData: Run".',

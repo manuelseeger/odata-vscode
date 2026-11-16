@@ -50,8 +50,6 @@ Enable `odata.chat.tools.enabled` in a trusted workspace. In Copilot Chat, use `
 | `odata.disableRunner`          | Disable the query runner, for example if your authentication is not supported.               | `false`       |
 | `odata.openResultInNewPane`    | Open result document in new pane when running queries. Disable to open results in active view.  | `true`        |
 
-`odata.metadata.filterNs`, `odata.metadata.filterXPath`, and `odata.metadata.xpathDefaultNsPrefix` have no effect. Copilot receives a compact query schema instead of XML, so metadata filters are not needed.
-
 ## Known Issues and Limitations
 
 Supported HTTP authentication with OData endpoints: 
@@ -59,11 +57,10 @@ Supported HTTP authentication with OData endpoints:
 - Client Certificate
 - Bearer token (copy / paste)
 
-Metadata-aware diagnostics and auto-completion follow the query at any depth: nested `$expand` and `$select` options, navigation and complex property paths, type casts, `any`/`all` lambda expressions, `$apply`, and special paths like `/$count`, `/$value` and `/$metadata`. What they do not cover:
+Metadata-aware diagnostics and auto-completion do not cover:
 
 - Value types are not checked. `Price eq 'abc'` gives no warning, and members of enumeration literals are not validated.
 - After `$apply`, names are checked against the original type plus all aliases of the transformations. A property that `groupby` or `aggregate` removed from the result is not reported.
-- Without a selected profile the service root is guessed from the shape of the URL. A singleton or parameterless operation followed by a navigation path (`/Me/Friends`) is only recognized with metadata.
 - Duration literals need the `duration'P1D'` form. The bare form `P1D` of OData 4.01 is read as a property name.
 - The formatter breaks lines at the resource path and at top-level query options only.
 
