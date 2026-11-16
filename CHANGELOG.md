@@ -9,11 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.0] - 2026-11-16
 
-### Breaking changes
-
-- Use the explicit `/odata` Copilot skill to draft queries. Enable `odata.chat.tools.enabled` to use its tools. (#22)
-- The metadata filter settings `odata.metadata.filterNs`, `odata.metadata.filterXPath`, and `odata.metadata.xpathDefaultNsPrefix` are removed. (#24)
-
 ### Added
 
 - Opt-in Copilot tools share a compact YAML query schema and open a drafted query for review. Opening a query never runs it. Use **OData: Run** to execute it. The tools require workspace trust. (#22, #24)
@@ -22,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Use the explicit `/odata` Copilot skill to draft queries. Enable `odata.chat.tools.enabled` to use its tools. (#22)
+- The metadata filter settings `odata.metadata.filterNs`, `odata.metadata.filterXPath`, and `odata.metadata.xpathDefaultNsPrefix` are removed. (#24)
 - The editor and Copilot use one metadata reader for OData V2 and V4. Metadata-aware completions, diagnostics, and hovers resolve qualified types and inherited members. Hovers show qualified type names. (#26)
 - The `odata_getSchema` tool shares the service root, OData version, and compact query schema. The `odata_openQuery` tool rejects queries for a different service root. (#24)
 - CI uses Node 24 actions and Ubuntu 24.04 runners. (#18)
