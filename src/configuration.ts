@@ -1,12 +1,8 @@
 import * as vscode from "vscode";
-import {
-    IODataConfiguration,
-    IODataMetadataConfiguration,
-    ODataFormat,
-    PublicProfile,
-} from "./contracts/types";
+import { IODataConfiguration, ODataFormat, PublicProfile } from "./contracts/types";
 
 import { parseProfileDraft, publicProfile } from "./profileData";
+import { DEFAULT_SCHEMA_MAX_TOKENS } from "./schema";
 
 export function getSelectedPublicProfile(
     context: vscode.ExtensionContext,
@@ -46,7 +42,14 @@ export function getConfig(): IODataConfiguration {
     const extensionSettings = vscode.workspace.getConfiguration(APP_NAME);
 
     const config: IODataConfiguration = {
-        metadata: extensionSettings.get("metadata") as IODataMetadataConfiguration,
+        chat: {
+            schema: {
+                maxTokens: extensionSettings.get(
+                    "chat.schema.maxTokens",
+                    DEFAULT_SCHEMA_MAX_TOKENS,
+                ),
+            },
+        },
         defaultFormat: extensionSettings.get("defaultFormat") as ODataFormat,
         strictParser: extensionSettings.get("strictParser", true),
         disableRunner: extensionSettings.get("disableRunner", false),

@@ -46,19 +46,6 @@
   width: 100%!important;
 }
 
-#copilotAdvancedSection summary {
-  margin-top: 1em;
-  background-color: var(--vscode-editor-background);
-}
-.model-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.model-table th, .model-table td {
-  border: 1px solid var(--vscode-editorWidget-border);
-  padding: 4px 8px;
-  text-align: left;
-}
 #outputSection strong {
   display: block;
   margin-top: 0.5em;
@@ -69,19 +56,8 @@
   color: var(--vscode-editor-foreground);
 }
 
-#filteredCountInfo {
+#schemaFitInfo {
   color: var(--vscode-editorInfo-foreground);
-}
-
-.model-table {
-  width: 50%;
-   color: var(--vscode-editor-foreground);
-}
-.model-table td.above {
-  color: var(--vscode-editorError-foreground); 
-}
-.model-table td.near {
-  color: var(--vscode-editorWarning-foreground);
 }
 
 #tokenSummary {

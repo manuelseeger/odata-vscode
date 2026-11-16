@@ -1,15 +1,15 @@
-import { Document, DOMParser, Node, XMLSerializer } from "@xmldom/xmldom";
+import { Document, DOMParser } from "@xmldom/xmldom";
 import { createHash } from "crypto";
-import * as xpath from "xpath";
 import { IMetadataModelService } from "../contracts/IMetadataModelService";
-import { IODataConfiguration, Profile } from "../contracts/types";
+import { Profile } from "../contracts/types";
+import { SchemaSummary, summarizeSchema } from "../schema";
 import { digestMetadata } from "../metadata";
 import { DataModel } from "../odata2ts/data-model/DataModel";
 
 export class MetadataModelService implements IMetadataModelService {
     private modelCache: { [profileKey: string]: DataModel } = {};
     private domCache: { [hash: string]: Document } = {};
-    private filteredXmlCache: { [key: string]: string } = {};
+    private schemaCache = new Map<string, Map<string, SchemaSummary>>();
 
     constructor() {}
 
@@ -50,7 +50,7 @@ export class MetadataModelService implements IMetadataModelService {
         // Clear all caches
         this.modelCache = {};
         this.domCache = {};
-        this.filteredXmlCache = {};
+        this.schemaCache.clear();
     }
 
     public isMetadataXml(text: string): boolean {
@@ -63,71 +63,19 @@ export class MetadataModelService implements IMetadataModelService {
         }
     }
 
-    public getFilteredMetadataXml(text: string, config: IODataConfiguration): string {
-        const textHash = this.hash(text);
-        // don't use content from cache if config changed
-        const configHash = this.hash(JSON.stringify(config.metadata));
-        const cacheKey = `${textHash}_${configHash}`;
-        if (this.filteredXmlCache[cacheKey]) {
-            return this.filteredXmlCache[cacheKey];
+    public getSchemaSummary(text: string, root: string): SchemaSummary {
+        const hash = this.hash(text);
+        let summaries = this.schemaCache.get(hash);
+        if (!summaries) {
+            summaries = new Map();
+            this.schemaCache.set(hash, summaries);
         }
-
-        // Use cached XML parsing
-        const xmlDoc = this.getCachedXml(text);
-        const root = xmlDoc.documentElement;
-
-        if (!root || !this.isMetadata(xmlDoc)) {
-            throw new Error("The provided XML is not valid OData metadata.");
+        let summary = summaries.get(root);
+        if (!summary) {
+            summary = summarizeSchema(text, root);
+            summaries.set(root, summary);
         }
-
-        // build a list of nodes to be filtered out from the document
-        const select = xpath.useNamespaces({
-            [config.metadata.xpathDefaultNsPrefix]: this.getFirstSchemaNamespace(xmlDoc) || "",
-        });
-
-        const filtered: Node[] = [];
-        for (const xpathExpression of config.metadata.filterXPath) {
-            const matches = select(xpathExpression, root as unknown as globalThis.Node);
-
-            if (xpath.isArrayOfNodes(matches)) {
-                for (const node of matches) {
-                    if (xpath.isElement(node)) {
-                        filtered.push(node as unknown as Node);
-                    } else if (xpath.isAttribute(node)) {
-                        filtered.push(node as unknown as Node);
-                    }
-                }
-            } else {
-                if (xpath.isElement(matches)) {
-                    filtered.push(matches as unknown as Node);
-                } else if (xpath.isAttribute(matches)) {
-                    filtered.push(matches as unknown as Node);
-                }
-            }
-        }
-
-        // serialized while applying the filter
-        const nodeFilter = (node: Node): boolean => {
-            return !(
-                filtered.some((a) => a.isSameNode(node)) ||
-                config.metadata.filterNs.includes(node.namespaceURI || "")
-            );
-        };
-
-        const adaptedFilter = (node: Node): Node | null => {
-            return nodeFilter(node) ? node : null;
-        };
-
-        const serializer = new XMLSerializer();
-        const cleanedXml = serializer.serializeToString(
-            xmlDoc,
-            // @ts-ignore
-            adaptedFilter,
-        );
-
-        // Save filtered result in cache
-        this.filteredXmlCache[cacheKey] = cleanedXml;
-        return cleanedXml;
+        return summary;
     }
 
     private async digestMetadata(metadata: string): Promise<DataModel> {
@@ -160,19 +108,5 @@ export class MetadataModelService implements IMetadataModelService {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Get the namespace URI of the first <Schema> element in the XML document.
-     *
-     * There are multiple versions of the EDM namespace out there, fetch the one used in this
-     * document.
-     *
-     * @param xmlDoc - The XML document to search in.
-     * @returns The namespace URI of the first <Schema> element, or null if not found.
-     */
-    private getFirstSchemaNamespace(xmlDoc: Document): string | null {
-        const schemaElement = xmlDoc.getElementsByTagName("Schema")[0];
-        return schemaElement ? schemaElement.namespaceURI : null;
     }
 }

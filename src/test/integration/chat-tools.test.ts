@@ -4,7 +4,8 @@ import { createServer } from "http";
 import { AddressInfo } from "net";
 import * as path from "path";
 import * as vscode from "vscode";
-import { GetMetadataTool, MetadataToolResult, OpenQueryTool } from "../../chatTools";
+import { GetSchemaTool, OpenQueryTool } from "../../chatTools";
+import { Tokenizer } from "../../services/Tokenizer";
 import { CommandProvider } from "../../commands";
 import { globalStates } from "../../configuration";
 import { AuthKind, Profile } from "../../contracts/types";
@@ -55,7 +56,7 @@ suite("OData language model tools", () => {
             await config.update("chat.tools.enabled", true, vscode.ConfigurationTarget.Global);
             const enabled = names();
             console.log(`OData lm.tools availability ${JSON.stringify({ disabled, enabled })}`);
-            assert.ok(enabled.includes("odata_getMetadata"));
+            assert.ok(enabled.includes("odata_getSchema"));
             assert.ok(enabled.includes("odata_openQuery"));
         } finally {
             await config.update("chat.tools.enabled", original, vscode.ConfigurationTarget.Global);
@@ -63,13 +64,13 @@ suite("OData language model tools", () => {
     });
 
     test("reports how to select a missing profile", async () => {
-        const tool = new GetMetadataTool(async () => undefined, new MetadataModelService());
+        const tool = new GetSchemaTool(async () => undefined, new MetadataModelService());
         await assert.rejects(() => tool.invoke(), /OData: Select Endpoint Profile/);
     });
 
     for (const metadata of [undefined, "not metadata"]) {
         test(`reports how to load missing or invalid metadata (${metadata})`, async () => {
-            const tool = new GetMetadataTool(
+            const tool = new GetSchemaTool(
                 async () => profile(metadata),
                 new MetadataModelService(),
             );
@@ -81,18 +82,16 @@ suite("OData language model tools", () => {
         ["trippin.edmx", "4.0", "Person"],
         ["odatav2.edmx", "2.0", "Product"],
     ]) {
-        test(`returns safe service context and filtered ${version} metadata`, async () => {
-            const tool = new GetMetadataTool(
+        test(`returns safe service context and compact ${version} YAML schema`, async () => {
+            const tool = new GetSchemaTool(
                 async () => profile(await fixture(file)),
                 new MetadataModelService(),
             );
             const text = resultText(await tool.invoke());
-            const result: MetadataToolResult = JSON.parse(text);
-            assert.deepStrictEqual(Object.keys(result).sort(), ["baseUrl", "metadata", "version"]);
-            assert.strictEqual(result.baseUrl, "https://example.test/service/");
-            assert.strictEqual(result.version, version);
-            assert.match(result.metadata, new RegExp(`EntityType Name="${entity}"`));
-            assert.doesNotMatch(result.metadata, /<Annotation\s/);
+            assert.ok(text.includes('root: "https://example.test/service/"'));
+            assert.ok(text.includes(`version: "${version}"`));
+            assert.ok(text.includes(`  ${entity}:\n`));
+            assert.doesNotMatch(text, /<Annotation|<EntityType/);
             for (const secret of [
                 "Private profile name",
                 "url-user",
@@ -109,46 +108,109 @@ suite("OData language model tools", () => {
         });
     }
 
-    test("honors configured namespace and XPath metadata filters", async () => {
+    test("returns no schema over the default maximum and the whole schema after raising it", async () => {
         const config = vscode.workspace.getConfiguration("odata");
-        const keys = ["metadata.filterNs", "metadata.filterXPath"];
-        const original = keys.map((key) => config.inspect<string[]>(key)?.globalValue);
+        const key = "chat.schema.maxTokens";
+        const original = config.inspect<number>(key)?.globalValue;
+        const service = new MetadataModelService();
+        const tool = new GetSchemaTool(async () => profile(await fixture("msgraph.edmx")), service);
         try {
-            await config.update(
-                keys[0],
-                ["http://docs.oasis-open.org/odata/ns/edm"],
-                vscode.ConfigurationTarget.Global,
+            await config.update(key, undefined, vscode.ConfigurationTarget.Global);
+            await assert.rejects(
+                () => tool.invoke(),
+                (error: Error) => {
+                    assert.match(error.message, /approximately \d+ tokens/);
+                    assert.match(error.message, /maximum is 32000/);
+                    assert.match(error.message, /odata.chat.schema.maxTokens/);
+                    assert.match(error.message, /No schema was returned/);
+                    assert.doesNotMatch(error.message, /sets:|types:|<Schema|microsoft.graph/);
+                    return true;
+                },
             );
-            const tool = new GetMetadataTool(
+            await config.update(key, 1000000, vscode.ConfigurationTarget.Global);
+            const whole = resultText(await tool.invoke());
+            assert.match(whole, /namespace: microsoft.graph/);
+            assert.match(whole, /getPstnCalls/);
+            const tokens = new Tokenizer().approximateTokenCount(whole);
+            assert.ok(tokens > 32000);
+            assert.ok(whole.endsWith("\n"));
+            await config.update(key, tokens - 1, vscode.ConfigurationTarget.Global);
+            await assert.rejects(
+                () => tool.invoke(),
+                new RegExp(`approximately ${tokens} tokens.*maximum is ${tokens - 1}`),
+            );
+            await config.update(key, tokens, vscode.ConfigurationTarget.Global);
+            assert.strictEqual(resultText(await tool.invoke()), whole);
+        } finally {
+            await config.update(key, original, vscode.ConfigurationTarget.Global);
+        }
+    });
+
+    test("ignores existing retired filter settings", async () => {
+        await vscode.commands.executeCommand("workbench.action.openSettingsJson");
+        const document = vscode.window.activeTextEditor!.document;
+        const original = document.getText();
+        const values = {
+            "odata.metadata.filterNs": ["http://docs.oasis-open.org/odata/ns/edm"],
+            "odata.metadata.filterXPath": ["//edm:EntityType"],
+            "odata.metadata.xpathDefaultNsPrefix": "old",
+        };
+        async function save(text: string) {
+            const edit = new vscode.WorkspaceEdit();
+            edit.replace(
+                document.uri,
+                new vscode.Range(
+                    document.positionAt(0),
+                    document.positionAt(document.getText().length),
+                ),
+                text,
+            );
+            assert.ok(await vscode.workspace.applyEdit(edit));
+            assert.ok(await document.save());
+        }
+        try {
+            const entries = Object.entries(values)
+                .map(([key, value]) => `${JSON.stringify(key)}: ${JSON.stringify(value)}`)
+                .join(",\n");
+            await save(original.replace("{", `{\n${entries},\n`));
+            for (
+                let attempt = 0;
+                attempt < 100 &&
+                vscode.workspace.getConfiguration("odata").get("metadata.xpathDefaultNsPrefix") !==
+                    "old";
+                attempt++
+            ) {
+                await new Promise((resolve) => setTimeout(resolve, 20));
+            }
+            assert.strictEqual(
+                vscode.workspace.getConfiguration("odata").get("metadata.xpathDefaultNsPrefix"),
+                "old",
+            );
+            const tool = new GetSchemaTool(
                 async () => profile(await fixture("trippin.edmx")),
                 new MetadataModelService(),
             );
-            const filteredNs: MetadataToolResult = JSON.parse(resultText(await tool.invoke()));
-            assert.doesNotMatch(filteredNs.metadata, /<Schema/);
-            await config.update(keys[0], [], vscode.ConfigurationTarget.Global);
-            await config.update(
-                keys[1],
-                ["//edm:EntityType[@Name='Person']"],
-                vscode.ConfigurationTarget.Global,
-            );
-            const filteredXPath: MetadataToolResult = JSON.parse(resultText(await tool.invoke()));
-            assert.doesNotMatch(filteredXPath.metadata, /EntityType Name="Person"/);
-            assert.match(filteredXPath.metadata, /EntityType Name="Photo"/);
+            const text = resultText(await tool.invoke());
+            assert.match(text, /Person:/);
+            assert.match(text, /Flight:/);
         } finally {
-            for (const [index, key] of keys.entries()) {
-                await config.update(key, original[index], vscode.ConfigurationTarget.Global);
-            }
+            await save(original);
         }
     });
 
     test("requires trust before profile access or opening an editor", async () => {
         const descriptor = Object.getOwnPropertyDescriptor(vscode.workspace, "isTrusted")!;
-        const metadata = new GetMetadataTool(async () => {
+        const metadata = new GetSchemaTool(async () => {
             assert.fail("Untrusted tools must not read a profile");
         }, new MetadataModelService());
-        const open = new OpenQueryTool(async () => {
-            assert.fail("Untrusted tools must not open a query");
-        });
+        const open = new OpenQueryTool(
+            async () => {
+                assert.fail("Untrusted tools must not read a profile");
+            },
+            async () => {
+                assert.fail("Untrusted tools must not open a query");
+            },
+        );
         Object.defineProperty(vscode.workspace, "isTrusted", {
             configurable: true,
             get: () => false,
@@ -168,9 +230,29 @@ suite("OData language model tools", () => {
         }
     });
 
+    for (const query of [
+        "https://other.test/service/Orders",
+        "https://example.test/service-other/Orders",
+        "https://example.test/service/../foreign/Orders",
+    ]) {
+        test(`refuses a foreign service root ${query}`, async () => {
+            const tool = new OpenQueryTool(
+                async () => profile(),
+                async () => assert.fail("Must not open a foreign query"),
+            );
+            await assert.rejects(
+                () => tool.invoke({ input: { query }, toolInvocationToken: undefined }),
+                /selected profile changed.*odata_getSchema/,
+            );
+        });
+    }
+
     test("shows the exact query in confirmation without opening it", () => {
-        const tool = new OpenQueryTool(async () =>
-            assert.fail("Preparation must have no side effects"),
+        const tool = new OpenQueryTool(
+            async () => {
+                assert.fail("Preparation must not read a profile");
+            },
+            async () => assert.fail("Preparation must have no side effects"),
         );
         const query = "GET https://example.test/service/People?$select=FirstName";
         const prepared = tool.prepareInvocation({ input: { query } });
@@ -207,7 +289,10 @@ suite("OData language model tools", () => {
             async () => selected,
             false,
         );
-        const tool = new OpenQueryTool((query) => commands.openQuery(query));
+        const tool = new OpenQueryTool(
+            async () => selected,
+            (query) => commands.openQuery(query),
+        );
         const query = `${baseUrl}Orders?$top=1`;
         try {
             const result = await tool.invoke({

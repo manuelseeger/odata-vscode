@@ -2,11 +2,11 @@ import { randomBytes } from "crypto";
 import * as vscode from "vscode";
 import { APP_NAME, commands, getConfig, globalStates, internalCommands } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
-import { ITokenizer } from "./contracts/ITokenizer";
 import { AuthKind, Profile, ProfileSecrets, StoredProfile } from "./contracts/types";
 import { parseEndpoint, parseProfileDraft, parseProfile, publicProfile } from "./profileData";
 import { Disposable } from "./provider";
 import { requireTrustedWorkspace } from "./security";
+import { getBaseUrl } from "./util";
 
 export class ProfileItem extends vscode.TreeItem {
     constructor(public profile: StoredProfile) {
@@ -26,7 +26,6 @@ export class ProfileTreeProvider
     private writes: Promise<void> = Promise.resolve();
 
     constructor(
-        private tokenizer: ITokenizer,
         private metadataService: IMetadataModelService,
         private context: vscode.ExtensionContext,
         private requestMetadata: (
@@ -470,11 +469,21 @@ export class ProfileTreeProvider
                     : undefined,
             });
             if (value?.metadata) {
-                const payload = await this.buildMetadataPayload(value.metadata);
+                const payload = await this.buildMetadataPayload(value.metadata, value.baseUrl);
                 post({ command: "metadataStats", ...payload });
             }
         };
         events.push(
+            vscode.workspace.onDidChangeConfiguration((event) => {
+                if (
+                    event.affectsConfiguration("odata.chat.schema.maxTokens") &&
+                    profile?.metadata
+                ) {
+                    void this.buildMetadataPayload(profile.metadata, profile.baseUrl).then(
+                        (payload) => post({ command: "metadataStats", ...payload }),
+                    );
+                }
+            }),
             panel.onDidDispose(() => {
                 active = false;
                 controller.abort();
@@ -504,6 +513,11 @@ export class ProfileTreeProvider
                                 }
                                 await this.saveProfile(data.data, profile?.name);
                                 profile = parseProfile(data.data);
+                                const payload = await this.buildMetadataPayload(
+                                    profile.metadata || "",
+                                    profile.baseUrl,
+                                );
+                                post({ command: "metadataStats", ...payload });
                             });
                         await panelWrites;
                     } else if (data.command === "requestMetadata") {
@@ -516,7 +530,10 @@ export class ProfileTreeProvider
                                 await this.saveProfile({ ...next, metadata }, profile?.name);
                                 profile = { ...next, metadata };
                                 post({ command: "metadataReceived", data: metadata });
-                                const payload = await this.buildMetadataPayload(metadata);
+                                const payload = await this.buildMetadataPayload(
+                                    metadata,
+                                    next.baseUrl,
+                                );
                                 if (active && current === revision) {
                                     post({ command: "metadataStats", ...payload });
                                 }
@@ -595,24 +612,15 @@ export class ProfileTreeProvider
             .replace(/\{\{nonce\}\}/g, nonce);
     }
 
-    private async buildMetadataPayload(metadata: string) {
-        const tokenCount = this.tokenizer.approximateTokenCount(metadata);
-        let filteredCount = tokenCount;
+    private async buildMetadataPayload(metadata: string, baseUrl: string) {
+        const maxTokens = getConfig().chat.schema.maxTokens;
+        let schemaTokens: number | undefined;
         try {
-            filteredCount = this.tokenizer.approximateTokenCount(
-                this.metadataService.getFilteredMetadataXml(metadata, getConfig()),
-            );
+            const endpoint = new URL(baseUrl);
+            const root = getBaseUrl(endpoint.origin + endpoint.pathname);
+            schemaTokens = this.metadataService.getSchemaSummary(metadata, root).tokens;
         } catch {}
-        let limits: { name: string; maxTokens: number }[] = [];
-        if (vscode.workspace.isTrusted) {
-            try {
-                limits = (await vscode.lm.selectChatModels()).map((model) => ({
-                    name: model.name,
-                    maxTokens: model.maxInputTokens,
-                }));
-            } catch {}
-        }
-        return { data: metadata, tokenCount, filteredCount, limits };
+        return { schemaTokens, maxTokens };
     }
 
     async deleteProfile(profile: Profile): Promise<void> {

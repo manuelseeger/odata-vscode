@@ -8,7 +8,6 @@ import { Profile } from "../../contracts/types";
 import { ProfileTreeProvider } from "../../profiles";
 import { MetadataModelService } from "../../services/MetadataModelService";
 import { QueryRunner } from "../../services/QueryRunner";
-import { Tokenizer } from "../../services/Tokenizer";
 import { setupTests } from "./testutil";
 import { CommandProvider } from "../../commands";
 
@@ -25,11 +24,9 @@ suite("ProfileTreeProvider", () => {
         const queryResponses = {};
         ({ profile, context, queryRunner, runnerMock } = await setupTests(queryResponses));
         metadataService = new MetadataModelService();
-        const tokenizer = new Tokenizer();
         commandProvider = new CommandProvider(context, queryRunner, async () => profile, false);
 
         profileTreeProvider = new ProfileTreeProvider(
-            tokenizer,
             metadataService,
             context,
             (value, signal) => commandProvider.requestProfileMetadata(value, signal),

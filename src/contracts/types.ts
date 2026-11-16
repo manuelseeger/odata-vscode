@@ -54,14 +54,8 @@ export interface IODataMetadataConfigurationMapEntry {
     path: string;
 }
 
-export interface IODataMetadataConfiguration {
-    filterNs: string[];
-    filterXPath: string[];
-    xpathDefaultNsPrefix: string;
-}
-
 export interface IODataConfiguration {
-    metadata: IODataMetadataConfiguration;
+    chat: { schema: { maxTokens: number } };
     defaultFormat: ODataFormat;
     strictParser: boolean;
     disableRunner: boolean;

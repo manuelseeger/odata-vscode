@@ -94,7 +94,6 @@ suite("Profile command callbacks", () => {
         vscode.window.registerTreeDataProvider = () => new vscode.Disposable(() => undefined);
         try {
             provider = new ProfileTreeProvider(
-                { approximateTokenCount: (value: string) => value.length },
                 new MetadataModelService(),
                 context,
                 async () => undefined,
