@@ -58,8 +58,8 @@ suite("Canonical metadata editor behavior", () => {
         restoreWorkspaceConfiguration();
     });
 
-    async function complete(relative: string) {
-        const document = await vscode.workspace.openTextDocument({ content: profile.baseUrl + relative });
+    async function complete(relative: string, baseUrl = profile.baseUrl) {
+        const document = await vscode.workspace.openTextDocument({ content: baseUrl + relative });
         return (await completions.provideCompletionItems(
             document, document.positionAt(document.getText().length), {} as vscode.CancellationToken,
         ))?.items ?? [];
@@ -99,7 +99,7 @@ suite("Canonical metadata editor behavior", () => {
         assert.ok(docs.includes("**Name**: related\n\n**Type**: Collection(B.Item)"));
         assert.ok(docs.includes("**Name**: nominal\n\n**Type**: A.Code"));
         assert.deepStrictEqual((await complete("OtherItems?$select=")).map((item) => item.label), ["OnlyB"]);
-        assert.deepStrictEqual(await warnings("under_score(1)?$select=ID,URL_value,lower_name,nominal"), []);
+        assert.deepStrictEqual(await warnings("under_score?$select=ID,URL_value,lower_name,nominal"), []);
         const wrongCase = await warnings("under_score?$select=Lower_name");
         assert.strictEqual(wrongCase.length, 1);
         assert.match(wrongCase[0].message, /Lower_name/);
@@ -121,12 +121,25 @@ suite("Canonical metadata editor behavior", () => {
     });
 
     test("uses function return types without EntitySet and skips ambiguous overload warnings", async () => {
-        assert.deepStrictEqual((await complete("GetAddress()?$select=")).map((item) => item.label), ["ZIP_code", "city"]);
-        assert.deepStrictEqual((await complete("GetItems(code='x')?$select=")).map((item) => item.label), inheritedNames);
-        assert.deepStrictEqual(await complete("Choose(id=1)?$select="), []);
-        assert.deepStrictEqual(await complete("GetText()?$select="), []);
+        assert.deepStrictEqual((await complete("GetAddress?$select=")).map((item) => item.label), ["ZIP_code", "city"]);
+        assert.deepStrictEqual((await complete("GetItems?$select=")).map((item) => item.label), inheritedNames);
+        assert.deepStrictEqual(await complete("Choose?$select="), []);
+        assert.deepStrictEqual(await complete("GetText?$select="), []);
         assert.deepStrictEqual(await warnings("GetAddress?$select=ZIP_code,city"), []);
-        assert.deepStrictEqual(await warnings("Choose(id=1)?$select=Unknown"), []);
+        assert.deepStrictEqual(await warnings("Choose?$select=Unknown"), []);
+    });
+
+    test("keeps resource matching independent of the profile URL and avoids root members on nested paths", async () => {
+        const sessionRoot = "https://example.com/(S(abc))/odata/";
+        assert.deepStrictEqual((await complete("under_score?$select=", sessionRoot)).map((item) => item.label), inheritedNames);
+        for (const path of ["under_score(1)/related", "under_score(1)/address"]) {
+            const labels = (await complete(`${path}?$select=`)).map((item) => item.label);
+            assert.ok(!labels.includes("lower_name"));
+            assert.ok(!labels.includes("OnlyB"));
+        }
+        const keyed = await warnings("under_score(1)?$select=Unknown");
+        assert.strictEqual(keyed.length, 1);
+        assert.match(keyed[0].message, /Resource path 'under_score\(1\)' not found/);
     });
 
     test("shows canonical qualified hover types, inherited members, and bindings", async () => {
@@ -172,9 +185,9 @@ suite("Canonical metadata editor behavior", () => {
         const cycle = profile.metadata!.replace('BaseType="a.Base"', 'BaseType="a.Item"');
         for (const metadata of [undefined, "<invalid />", cycle]) {
             profile.metadata = metadata;
-            assert.deepStrictEqual(await complete("Orders?$select="), []);
-            assert.deepStrictEqual(await warnings("Orders?$select=Unknown"), []);
-            assert.match(await hover("Orders", "Orders"), /\*\*Selected Profile\*\*: TestProfile/);
+            assert.deepStrictEqual(await complete("under_score?$select="), []);
+            assert.deepStrictEqual(await warnings("under_score?$select=Unknown"), []);
+            assert.match(await hover("under_score", "under_score"), /\*\*Selected Profile\*\*: TestProfile/);
             const document = await vscode.workspace.openTextDocument({ content: "$filter= " });
             const result = await defaults.provideCompletionItems(
                 document, new vscode.Position(0, 9), {} as vscode.CancellationToken, {} as vscode.CompletionContext,

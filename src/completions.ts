@@ -7,7 +7,7 @@ import {
 import { getSelectedPublicProfile, ODataMode } from "./configuration";
 import { IMetadataModelService } from "./contracts/IMetadataModelService";
 import { Disposable } from "./provider";
-import { combineODataUrl, getBaseUrl } from "./util";
+import { combineODataUrl } from "./util";
 import * as odataV2 from "./definitions/odataV2.json";
 import * as odataV4 from "./definitions/odataV4.json";
 
@@ -165,7 +165,7 @@ export class MetadataCompletionItemProvider
             if (!model) {
                 return null;
             }
-            const resource = this.getResourceFromDocument(document, model, profile.baseUrl);
+            const resource = this.getResourceFromDocument(document, model);
             if (!resource) {
                 this.completeResourcePath(completions, model);
                 return new vscode.CompletionList(completions);
@@ -249,12 +249,13 @@ export class MetadataCompletionItemProvider
     }
 
     private getResourceFromDocument(
-        document: vscode.TextDocument, model: Csdl, baseUrl: string,
+        document: vscode.TextDocument, model: Csdl,
     ): RootResource | undefined {
-        const url = combineODataUrl(document.getText());
-        const base = getBaseUrl(baseUrl);
-        const relative = url.startsWith(base) ? url.slice(base.length) : url;
-        const name = relative.split(/[(/?]/, 1)[0];
+        const matches = combineODataUrl(document.getText()).match(/(?<=\/)\w+(?=\s*[/?]|$)/g);
+        const name = matches?.at(-1);
+        if (!name) {
+            return undefined;
+        }
         const found = findRoot(model, name);
         return found.kind === "found" ? found.value : undefined;
     }

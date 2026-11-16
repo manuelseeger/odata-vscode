@@ -51,7 +51,7 @@ export class ODataDiagnosticProvider extends Disposable {
                 return;
             }
             const resourcePath = relative.resourcePath;
-            const name = syntaxNodeToString(resourcePath).split(/[(/]/, 1)[0];
+            const name = syntaxNodeToString(resourcePath);
             const found = findRoot(metadata, name);
             if (found.kind === "missing") {
                 diagnostics.push(new vscode.Diagnostic(
