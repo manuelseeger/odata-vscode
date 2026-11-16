@@ -11,7 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Opt-in Copilot tools share a compact YAML query schema and open a drafted query for review. Opening a query never runs it. Use **OData: Run** to execute it. The tools require workspace trust. (#22, #24)
 - `odata.chat.schema.maxTokens`, with a default of `32000`, limits the schema size. Summaries above the maximum return no schema. The profile editor shows the summary size and whether it fits. (#24)
 - Built-in function hovers show overload signatures, descriptions, and parameters, including when no endpoint profile is selected. (#20)
 
