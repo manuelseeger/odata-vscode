@@ -169,4 +169,15 @@ $filter=Name eq 'John'`;
             "https://example.com/odata/Orders?$filter=Id gt 1 and Id lt 9&$top=5",
         );
     });
+
+    test("should keep nested options inside $expand", () => {
+        const input =
+            "https://analytics.dev.azure.com/ORG/PROJECT/_odata/v4.0-preview/TestPoints?$top=3&$select=TestPointId&$expand=TestSuite($select=Title,TitleLevel2,TestPlanTitle)";
+        assert.strictEqual(combineODataUrl(input), input);
+    });
+
+    test("should keep '?' and '=' inside string literals", () => {
+        const input = "https://example.com/odata/Docs?$filter=Title eq 'a=b?c'&$top=1";
+        assert.strictEqual(combineODataUrl(input), input);
+    });
 });

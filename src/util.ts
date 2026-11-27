@@ -32,7 +32,9 @@ export function combineODataUrl(input: string): string {
         });
 
     // Split the URL into host/resource path and query parameters
-    let [baseUrl, queryParams] = singleLine.split("?");
+    const queryStart = singleLine.indexOf("?");
+    const baseUrl = queryStart < 0 ? singleLine : singleLine.slice(0, queryStart);
+    const queryParams = queryStart < 0 ? "" : singleLine.slice(queryStart + 1);
 
     // Remove all whitespace from the base URL
     const cleanedBaseUrl: string = baseUrl.replace(/\s+/g, "");
@@ -44,13 +46,10 @@ export function combineODataUrl(input: string): string {
             .split("&")
             .map((param) => param.trim())
             .map((param) => {
-                let [key, value] = param.split("=");
-                // Handle cases where key or value might be undefined
-                key = key ? key.trim() : "";
-                value = value ? value.trim() : "";
-                const trimmedKey: string = key.trim();
-                const trimmedValue: string = value.trim().replace(/\s+/g, " "); // Condense whitespace
-                return `${trimmedKey}=${trimmedValue}`;
+                const valueStart = param.indexOf("=");
+                const key = valueStart < 0 ? param : param.slice(0, valueStart);
+                const value = valueStart < 0 ? "" : param.slice(valueStart + 1);
+                return `${key.trim()}=${value.trim().replace(/\s+/g, " ")}`;
             })
             .join("&");
         formattedParams = `?${formattedParams}`;
